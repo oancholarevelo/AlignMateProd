@@ -1,0 +1,59 @@
+{
+  "expo": {
+    "name": "AlignMate",
+    "slug": "PostureApp",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.trescorp.alignmate"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "fonts": [
+      {
+        "asset": "./assets/fonts/Nunito-Regular.ttf",
+        "family": "Nunito-Regular"
+      },
+      {
+        "asset": "./assets/fonts/Nunito-Bold.ttf",
+        "family": "Nunito-Bold"
+      },
+      {
+        "asset": "./assets/fonts/Nunito-SemiBold.ttf",
+        "family": "Nunito-SemiBold"
+      },
+      {
+        "asset": "./assets/fonts/Nunito-ExtraBold.ttf",
+        "family": "Nunito-ExtraBold"
+      },
+      {
+        "asset": "./assets/fonts/Nunito-Light.ttf",
+        "family": "Nunito-Light"
+      }
+    ],
+    "plugins": [
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "d73c18ef-f542-4b96-ba6d-393cfe8b8cd4"
+      }
+    }
+  }
+}

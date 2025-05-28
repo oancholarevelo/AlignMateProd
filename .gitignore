@@ -1,0 +1,29 @@
+.vercel
+
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Expo
+.expo/
+dist/
+web-build/
+
+# Build outputs
+build/
+*.tgz
+
+# Environment variables
+.env*
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
