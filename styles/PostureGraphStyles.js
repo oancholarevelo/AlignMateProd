@@ -306,10 +306,6 @@ const styles = StyleSheet.create({
     paddingTop: 30,
     zIndex: 10,
   },
-  barClickArea: {
-    flex: 1,
-    height: "100%",
-  },
 
   // Stats containers
   statsContainer: {
@@ -946,6 +942,187 @@ const styles = StyleSheet.create({
     color: "#666",
     textAlign: "center",
     fontStyle: "italic",
+  },
+  enhancedChartCard: {
+    backgroundColor: THEME.cardBackground,
+    borderRadius: 20,
+    padding: 0,
+    marginBottom: 24,
+    shadowColor: THEME.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: THEME.border,
+    overflow: 'hidden',
+  },
+
+  chartHeader: {
+    backgroundColor: '#F8F9FA',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: THEME.border,
+    alignItems: 'center',
+  },
+
+  chartTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: THEME.text,
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+
+  chartSubtitle: {
+    fontSize: 14,
+    color: THEME.textLight,
+    fontStyle: 'italic',
+    textAlign: 'center',
+  },
+
+  chartLegend: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 12,
+    gap: 12,
+  },
+
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+
+  legendColor: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 6,
+  },
+
+  legendText: {
+    fontSize: 12,
+    color: THEME.textLight,
+    fontWeight: '500',
+  },
+
+  chartContainer: {
+    padding: 20,
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  enhancedChart: {
+    borderRadius: 12,
+    backgroundColor: 'transparent',
+    marginVertical: 8,
+  },
+
+  chartFooter: {
+    backgroundColor: '#F8F9FA',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: THEME.border,
+  },
+
+  chartStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+
+  chartStatItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+
+  chartStatLabel: {
+    fontSize: 12,
+    color: THEME.textLight,
+    fontWeight: '500',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+
+  chartStatValue: {
+    fontSize: 16,
+    color: THEME.text,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+
+  // History Chart Specific Styles - UPDATED for consistency
+  historyInsights: {
+    marginTop: 8,
+    alignItems: 'center',
+  },
+
+  insightsTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: THEME.text,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+
+  insightsList: {
+    gap: 8,
+    alignItems: 'center',
+  },
+
+  insightText: {
+    fontSize: 13,
+    color: THEME.textLight,
+    lineHeight: 18,
+    fontWeight: '500',
+    textAlign: 'center',
+    paddingHorizontal: 12,
+  },
+
+  // Enhanced Chart Hint - UPDATED for consistency
+  chartHint: {
+    fontSize: 14,
+    color: THEME.primary,
+    textAlign: 'center',
+    marginBottom: 16,
+    fontStyle: 'italic',
+    fontWeight: '500',
+    backgroundColor: 'rgba(92, 163, 119, 0.1)',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    alignSelf: 'center',
+    marginHorizontal: 20,
+  },
+
+  // Interactive Elements - UPDATED for consistency
+  barClickOverlay: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    right: 20,
+    bottom: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    alignItems: 'stretch',
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+    paddingTop: 20,
+    zIndex: 10,
+  },
+
+  barClickArea: {
+    flex: 1,
+    height: '100%',
+    borderRadius: 8,
+    backgroundColor: 'transparent',
+    marginHorizontal: 2,
   },
 });
 

@@ -771,6 +771,109 @@ const PostureGraph = () => {
     setAggregatedData(aggregated);
   }, []);
 
+  const getEnhancedChartConfig = (type = 'bar') => {
+  const baseConfig = {
+    backgroundGradientFrom: "#FFFFFF",
+    backgroundGradientFromOpacity: 1,
+    backgroundGradientTo: "#F8F9FA", 
+    backgroundGradientToOpacity: 0.8,
+    fillShadowGradient: THEME.primary,
+    fillShadowGradientFrom: THEME.primary,
+    fillShadowGradientFromOpacity: 0.8,
+    fillShadowGradientTo: THEME.primary,
+    fillShadowGradientToOpacity: 0.1,
+    color: (opacity = 1) => `rgba(92, 163, 119, ${opacity})`,
+    labelColor: (opacity = 1) => `rgba(27, 18, 18, ${opacity})`,
+    strokeWidth: 3,
+    barPercentage: 0.7,
+    useShadowColorFromDataset: false,
+    decimalPlaces: 1,
+    propsForLabels: {
+      fontSize: 12,
+      fontWeight: "600",
+      rotation: 0,
+    },
+    propsForVerticalLabels: {
+      fontSize: 11,
+      fontWeight: "500",
+    },
+    propsForHorizontalLabels: {
+      fontSize: 11,
+      fontWeight: "500",
+    },
+    style: {
+      borderRadius: 16,
+    },
+  };
+
+  if (type === 'line') {
+    return {
+      ...baseConfig,
+      propsForDots: {
+        r: "5",
+        strokeWidth: "3",
+        stroke: THEME.primary,
+        fill: "#FFFFFF",
+        strokeDasharray: "",
+      },
+      propsForBackgroundLines: {
+        strokeDasharray: "5,5",
+        stroke: "rgba(0,0,0,0.1)",
+        strokeWidth: 1,
+      },
+    };
+  }
+
+  return baseConfig;
+};
+
+// Enhanced color function for posture bars
+const getPostureBarColor = (value, opacity = 1, animated = false) => {
+  let baseColor;
+  
+  if (value <= PITCH_GOOD_THRESHOLD) {
+    baseColor = `rgba(92, 163, 119, ${opacity})`; // Green
+  } else if (value <= PITCH_WARNING_THRESHOLD) {
+    baseColor = `rgba(255, 193, 7, ${opacity})`; // Amber
+  } else {
+    baseColor = `rgba(248, 122, 83, ${opacity})`; // Red
+  }
+  
+  return baseColor;
+};
+
+// Enhanced gradient colors for history chart
+const getHistoryChartColors = () => ({
+  good: [
+    'rgba(92, 163, 119, 0.9)',   // Solid green
+    'rgba(92, 163, 119, 0.7)',   // Medium green
+    'rgba(92, 163, 119, 0.5)'    // Light green
+  ],
+  warning: [
+    'rgba(255, 193, 7, 0.9)',    // Solid amber
+    'rgba(255, 193, 7, 0.7)',    // Medium amber
+    'rgba(255, 193, 7, 0.5)'     // Light amber
+  ],
+  bad: [
+    'rgba(248, 122, 83, 0.9)',   // Solid red
+    'rgba(248, 122, 83, 0.7)',   // Medium red
+    'rgba(248, 122, 83, 0.5)'    // Light red
+  ]
+});
+
+// Add animation state
+const [chartAnimation] = useState(new Animated.Value(0));
+
+useEffect(() => {
+  if (aggregatedData.length > 0) {
+    Animated.timing(chartAnimation, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: false,
+    }).start();
+  }
+}, [aggregatedData, chartAnimation]);
+
   const toggleQuickLogs = useCallback(() => {
     setShowQuickLogs(!showQuickLogs);
     // Close other panels if logs are being shown
@@ -1659,95 +1762,132 @@ const PostureGraph = () => {
         </Text>
       </View>
 
-      {/* Posture Pitch Chart */}
-      <SectionHeader title="Today's Posture Pitch (Degrees)" />
+      {/* Enhanced Posture Pitch Chart */}
+    <SectionHeader title="Today's Posture Analysis" />
 
-      {data.length === 0 ? (
-        <View style={styles.noDataContainer}>
-          <Text style={styles.noDataText}>No posture data recorded yet</Text>
-          <Text style={styles.noDataSubtext}>
-            Data will appear here once your sensor starts sending measurements
-          </Text>
-        </View>
-      ) : aggregatedData.length === 0 ? (
-        <View style={styles.noDataContainer}>
-          <Text style={styles.noDataText}>No data for today yet</Text>
-          <Text style={styles.noDataSubtext}>
-            Start using your posture sensor to see today's measurements
-          </Text>
-        </View>
-      ) : (
-        <>
-          <Text style={styles.chartHint}>
-            Tap on any bar to see detailed posture information for that time
-            period
-          </Text>
+    {data.length === 0 ? (
+      <View style={styles.noDataContainer}>
+        <Text style={styles.noDataText}>No posture data recorded yet</Text>
+        <Text style={styles.noDataSubtext}>
+          Data will appear here once your sensor starts sending measurements
+        </Text>
+      </View>
+    ) : aggregatedData.length === 0 ? (
+      <View style={styles.noDataContainer}>
+        <Text style={styles.noDataText}>No data for today yet</Text>
+        <Text style={styles.noDataSubtext}>
+          Start using your posture sensor to see today's measurements
+        </Text>
+      </View>
+    ) : (
+      <>
+        <Text style={styles.chartHint}>
+          📊 Tap any bar to explore detailed posture insights
+        </Text>
 
-          <Card style={styles.chartCard}>
+        <Animated.View 
+          style={[
+            styles.enhancedChartCard,
+            {
+              opacity: chartAnimation,
+              transform: [{
+                translateY: chartAnimation.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [20, 0],
+                })
+              }]
+            }
+          ]}
+        >
+          {/* Chart Header with Legend */}
+          <View style={styles.chartHeader}>
+            <Text style={styles.chartTitle}>Posture Pitch Angles</Text>
+            <View style={styles.chartLegend}>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendColor, { backgroundColor: THEME.primary }]} />
+                <Text style={styles.legendText}>Good (≤{PITCH_GOOD_THRESHOLD}°)</Text>
+              </View>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendColor, { backgroundColor: THEME.warning }]} />
+                <Text style={styles.legendText}>Warning ({PITCH_GOOD_THRESHOLD}-{PITCH_WARNING_THRESHOLD}°)</Text>
+              </View>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendColor, { backgroundColor: THEME.danger }]} />
+                <Text style={styles.legendText}>Poor ({PITCH_WARNING_THRESHOLD}°)</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Enhanced Bar Chart */}
+          <View style={styles.chartContainer}>
             <BarChart
               data={{
                 labels: aggregatedData.map((item) => item.label),
                 datasets: [
                   {
                     data: aggregatedData.map((item) => item.value),
+                    colors: aggregatedData.map((item, index) => 
+                      () => getPostureBarColor(item.value, 0.8)
+                    ),
                   },
                 ],
               }}
               width={CHART_WIDTH}
-              height={220}
+              height={240}
               chartConfig={{
-                backgroundGradientFrom: "#fff",
-                backgroundGradientTo: "#f8f8f8",
+                ...getEnhancedChartConfig('bar'),
                 color: (opacity = 1, index) => {
-                  if (!aggregatedData[index])
-                    return `rgba(33, 32, 156, ${opacity})`;
-
-                  const value = aggregatedData[index].value;
-
-                  if (value <= PITCH_GOOD_THRESHOLD) {
-                    return `rgba(92, 163, 119, ${opacity})`;
-                  } else if (value <= PITCH_WARNING_THRESHOLD) {
-                    return `rgba(255, 165, 0, ${opacity})`;
-                  } else {
-                    return `rgba(248, 122, 83, ${opacity})`;
-                  }
-                },
-                labelColor: (opacity = 1) => `rgba(35, 18, 11, ${opacity})`,
-                barPercentage: 0.6,
-                decimalPlaces: 1,
-                propsForLabels: {
-                  fontSize: 10,
-                  rotation: 0,
+                  if (!aggregatedData[index]) return `rgba(92, 163, 119, ${opacity})`;
+                  return getPostureBarColor(aggregatedData[index].value, opacity);
                 },
               }}
-              style={styles.chart}
+              style={styles.enhancedChart}
               yAxisLabel=""
               yAxisSuffix="°"
               fromZero={true}
               showValuesOnTopOfBars={true}
+              withCustomBarColorFromData={true}
             />
+            
+            {/* Interactive overlay for bar clicks */}
             <View style={styles.barClickOverlay}>
               {aggregatedData.map((item, index) => (
                 <TouchableOpacity
                   key={index}
                   style={styles.barClickArea}
                   onPress={() => handleBarClick(index)}
+                  activeOpacity={0.7}
                 />
               ))}
             </View>
-          </Card>
-
-          {/* Optional: Show data point count for each time block */}
-          <View style={styles.chartDataInfo}>
-            <Text style={styles.chartDataInfoText}>
-              Data points:{" "}
-              {aggregatedData
-                .map((block) => `${block.label}: ${block.dataCount}`)
-                .join(" • ")}
-            </Text>
           </View>
-        </>
-      )}
+
+          {/* Chart Footer with Stats */}
+          <View style={styles.chartFooter}>
+            <View style={styles.chartStats}>
+              <View style={styles.chartStatItem}>
+                <Text style={styles.chartStatLabel}>Avg Angle</Text>
+                <Text style={styles.chartStatValue}>
+                  {(aggregatedData.reduce((sum, item) => sum + item.value, 0) / aggregatedData.length).toFixed(1)}°
+                </Text>
+              </View>
+              <View style={styles.chartStatItem}>
+                <Text style={styles.chartStatLabel}>Best Period</Text>
+                <Text style={styles.chartStatValue}>
+                  {aggregatedData.reduce((min, item) => item.value < min.value ? item : min).label}
+                </Text>
+              </View>
+              <View style={styles.chartStatItem}>
+                <Text style={styles.chartStatLabel}>Data Points</Text>
+                <Text style={styles.chartStatValue}>
+                  {aggregatedData.reduce((sum, item) => sum + item.dataCount, 0)}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </Animated.View>
+      </>
+    )}
 
       {/* Today's Summary */}
       <SectionHeader title="Today's Summary" />
@@ -1894,40 +2034,110 @@ const PostureGraph = () => {
         </Card>
       )}
 
-      {/* Posture History */}
-      {historyData.length > 0 && (
-        <>
-          <SectionHeader title="Posture History" />
-          <Card style={styles.historyChartCard}>
+      {/* Enhanced Posture History */}
+    {historyData.length > 0 && (
+      <>
+        <SectionHeader title="7-Day Posture Trends" />
+        
+        <Animated.View 
+          style={[
+            styles.enhancedChartCard,
+            {
+              opacity: chartAnimation,
+              transform: [{
+                scale: chartAnimation.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.95, 1],
+                })
+              }]
+            }
+          ]}
+        >
+          {/* History Chart Header */}
+          <View style={styles.chartHeader}>
+            <Text style={styles.chartTitle}>Weekly Progress Overview</Text>
+            <Text style={styles.chartSubtitle}>
+              Track your posture improvement over time
+            </Text>
+          </View>
+
+          {/* Enhanced Stacked Bar Chart */}
+          <View style={styles.chartContainer}>
             <StackedBarChart
               data={{
                 labels: historyData
                   .slice(-7)
                   .map((item) => formatDate(item.date)),
-                legend: ["Good Posture", "Warning", "Bad Posture"],
+                legend: ["Excellent", "Needs Work", "Poor"],
                 data: historyData
                   .slice(-7)
-                  .map((item) => [item.good, item.warning || 0, item.bad]),
-                barColors: [THEME.primary, THEME.warning, THEME.danger],
+                  .map((item) => [
+                    Math.round(item.good), 
+                    Math.round(item.warning || 0), 
+                    Math.round(item.bad)
+                  ]),
+                barColors: [
+                  THEME.primary,    // Good - Green
+                  THEME.warning,    // Warning - Amber  
+                  THEME.danger      // Bad - Red
+                ],
               }}
               width={CHART_WIDTH}
-              height={220}
+              height={240}
               chartConfig={{
-                backgroundGradientFrom: "#fff",
-                backgroundGradientTo: "#f8f8f8",
-                color: (opacity = 1) => `rgba(33, 32, 156, ${opacity})`,
-                labelColor: (opacity = 1) => `rgba(35, 18, 11, ${opacity})`,
-                propsForLabels: {
-                  fontSize: 10,
-                  rotation: 0,
-                },
+                ...getEnhancedChartConfig('bar'),
+                color: (opacity = 1) => `rgba(92, 163, 119, ${opacity})`,
+                stackedBar: true,
               }}
-              style={styles.chart}
+              style={styles.enhancedChart}
               horizontalLabelRotation={0}
               verticalLabelRotation={0}
             />
-          </Card>
-        </>
+          </View>
+
+          {/* History Chart Footer with Insights */}
+          <View style={styles.chartFooter}>
+            <View style={styles.historyInsights}>
+              <Text style={styles.insightsTitle}>📈 Weekly Insights</Text>
+              <View style={styles.insightsList}>
+                {(() => {
+                  const latest = historyData[historyData.length - 1];
+                  const previous = historyData[historyData.length - 2];
+                  
+                  if (latest && previous) {
+                    const improvement = latest.good - previous.good;
+                    return (
+                      <Text style={[
+                        styles.insightText,
+                        { color: improvement > 0 ? THEME.primary : THEME.danger }
+                      ]}>
+                        {improvement > 0 
+                          ? `🎉 ${improvement.toFixed(1)}% improvement from yesterday!`
+                          : `⚠️ ${Math.abs(improvement).toFixed(1)}% decline from yesterday`
+                        }
+                      </Text>
+                    );
+                  }
+                  
+                  return (
+                    <Text style={styles.insightText}>
+                      Keep tracking to see your progress trends!
+                    </Text>
+                  );
+                })()}
+                
+                <Text style={styles.insightText}>
+                  🎯 Best day: {historyData.reduce((best, day) => 
+                    day.good > best.good ? day : best
+                  ).date.split('-').slice(1).join('/')} ({historyData.reduce((best, day) => 
+                    day.good > best.good ? day : best
+                  ).good.toFixed(0)}% good posture)
+                </Text>
+              </View>
+            </View>
+          </View>
+        </Animated.View>
+      </>
       )}
 
       {/* Quick Logs */}
