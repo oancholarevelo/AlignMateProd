@@ -35,7 +35,7 @@ const Logout = () => {
       setTimeout(() => {
         // Use window.location for a complete page reload
         // This ensures all components unmount and Firebase listeners are cleaned up
-        window.location.href = "/login";
+        window.location.href = "/";
       }, 300);
     } catch (error) {
       console.error("Error during logout:", error);
