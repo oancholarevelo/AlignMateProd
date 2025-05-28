@@ -31,13 +31,81 @@ const Register = () => {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [showTermsOfAgreement, setShowTermsOfAgreement] = useState(false);
+  const [passwordErrors, setPasswordErrors] = useState([]);
   const navigate = useNavigate();
   const googleProvider = new GoogleAuthProvider();
+
+  // Password validation function
+  const validatePassword = (password) => {
+    const errors = [];
+    
+    // Check minimum length
+    if (password.length < 8) {
+      errors.push("At least 8 characters");
+    }
+    
+    // Check for uppercase letter
+    if (!/[A-Z]/.test(password)) {
+      errors.push("One uppercase letter");
+    }
+    
+    // Check for lowercase letter
+    if (!/[a-z]/.test(password)) {
+      errors.push("One lowercase letter");
+    }
+    
+    // Check for number
+    if (!/\d/.test(password)) {
+      errors.push("One number");
+    }
+    
+    // Check for special character
+    if (!/[@$!%*?&]/.test(password)) {
+      errors.push("One special character (@$!%*?&)");
+    }
+    
+    // Check for common weak passwords
+    const commonPasswords = [
+      'password', '123456', '12345678', 'qwerty', 'abc123', 
+      'password123', '123456789', 'welcome', 'admin', 'letmein'
+    ];
+    if (commonPasswords.includes(password.toLowerCase())) {
+      errors.push("Password is too common");
+    }
+    
+    return errors;
+  };
+
+  // Email validation function
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Handle password change with real-time validation
+  const handlePasswordChange = (text) => {
+    setPassword(text);
+    const errors = validatePassword(text);
+    setPasswordErrors(errors);
+  };
 
   const handleRegister = () => {
     // Validate name is not empty
     if (!name.trim()) {
       alert("Please enter your name");
+      return;
+    }
+
+    // Validate email format
+    if (!validateEmail(email)) {
+      alert("Please enter a valid email address");
+      return;
+    }
+
+    // Validate password security
+    const passwordValidationErrors = validatePassword(password);
+    if (passwordValidationErrors.length > 0) {
+      alert(`Password must have:\n• ${passwordValidationErrors.join('\n• ')}`);
       return;
     }
 
@@ -87,7 +155,29 @@ const Register = () => {
             navigate("/login");
           });
       })
-      .catch((error) => alert(error.message));
+      .catch((error) => {
+        // Handle specific Firebase Auth errors
+        let errorMessage = "Registration failed. Please try again.";
+        
+        switch (error.code) {
+          case 'auth/email-already-in-use':
+            errorMessage = "This email is already registered. Please use a different email or try logging in.";
+            break;
+          case 'auth/weak-password':
+            errorMessage = "Password is too weak. Please choose a stronger password.";
+            break;
+          case 'auth/invalid-email':
+            errorMessage = "Please enter a valid email address.";
+            break;
+          case 'auth/operation-not-allowed':
+            errorMessage = "Email registration is not enabled. Please contact support.";
+            break;
+          default:
+            console.error("Registration error:", error);
+        }
+        
+        alert(errorMessage);
+      });
   };
 
   const handleGoogleSignIn = () => {
@@ -172,6 +262,16 @@ const Register = () => {
     </Modal>
   );
 
+  const isFormValid = () => {
+    return (
+      name.trim() !== "" &&
+      validateEmail(email) &&
+      passwordErrors.length === 0 &&
+      password !== "" &&
+      acceptedTerms
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -206,20 +306,60 @@ const Register = () => {
             placeholder="Name"
             placeholderTextColor="#1B1212"
             onChangeText={setName}
+            value={name}
           />
           <TextInput
-            style={styles.input}
+            style={[styles.input, !validateEmail(email) && email !== "" && styles.inputError]}
             placeholder="Email"
             placeholderTextColor="#1B1212"
             onChangeText={setEmail}
+            value={email}
+            keyboardType="email-address"
+            autoCapitalize="none"
           />
           <TextInput
-            style={styles.input}
+            style={[styles.input, passwordErrors.length > 0 && password !== "" && styles.inputError]}
             placeholder="Password"
             placeholderTextColor="#1B1212"
             secureTextEntry
-            onChangeText={setPassword}
+            onChangeText={handlePasswordChange}
+            value={password}
           />
+
+          {/* Password Requirements Display */}
+          {password !== "" && passwordErrors.length > 0 && (
+            <View style={styles.passwordRequirements}>
+              <Text style={styles.passwordRequirementsTitle}>Password must have:</Text>
+              {passwordErrors.map((error, index) => (
+                <Text key={index} style={styles.passwordRequirementItem}>
+                  • {error}
+                </Text>
+              ))}
+            </View>
+          )}
+
+          {/* Password Strength Indicator */}
+          {password !== "" && (
+            <View style={styles.passwordStrengthContainer}>
+              <View style={styles.passwordStrengthBar}>
+                <View 
+                  style={[
+                    styles.passwordStrengthFill,
+                    {
+                      width: `${Math.max(20, (5 - passwordErrors.length) * 20)}%`,
+                      backgroundColor: 
+                        passwordErrors.length === 0 ? '#5CA377' :
+                        passwordErrors.length <= 2 ? '#FFA500' : '#FF6B6B'
+                    }
+                  ]}
+                />
+              </View>
+              <Text style={styles.passwordStrengthText}>
+                {passwordErrors.length === 0 ? 'Strong' :
+                 passwordErrors.length <= 2 ? 'Medium' : 'Weak'}
+              </Text>
+            </View>
+          )}
 
           {/* Terms and Privacy Policy Section */}
           <View style={styles.termsContainer}>
@@ -255,9 +395,9 @@ const Register = () => {
           </View>
 
           <TouchableOpacity
-            style={[styles.button, !acceptedTerms && styles.buttonDisabled]}
+            style={[styles.button, !isFormValid() && styles.buttonDisabled]}
             onPress={handleRegister}
-            disabled={!acceptedTerms}
+            disabled={!isFormValid()}
           >
             <Text style={styles.buttonText}>Register</Text>
           </TouchableOpacity>
@@ -341,6 +481,50 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#1B1212",
+  },
+  inputError: {
+    borderColor: "#FF6B6B",
+    backgroundColor: "#FFF5F5",
+  },
+  passwordRequirements: {
+    width: "80%",
+    backgroundColor: "#FFF5F5",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: "#FF6B6B",
+  },
+  passwordRequirementsTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#FF6B6B",
+    marginBottom: 8,
+  },
+  passwordRequirementItem: {
+    fontSize: 12,
+    color: "#FF6B6B",
+    marginBottom: 2,
+  },
+  passwordStrengthContainer: {
+    width: "80%",
+    marginBottom: 16,
+  },
+  passwordStrengthBar: {
+    height: 4,
+    backgroundColor: "#E0E0E0",
+    borderRadius: 2,
+    marginBottom: 4,
+  },
+  passwordStrengthFill: {
+    height: "100%",
+    borderRadius: 2,
+    transition: "all 0.3s ease",
+  },
+  passwordStrengthText: {
+    fontSize: 12,
+    textAlign: "center",
+    fontWeight: "600",
   },
   termsContainer: {
     width: "80%",
