@@ -37,7 +37,8 @@ const ProtectedRoute = ({ children }) => {
   }
 
   console.log("Current User:", user);
-  return user ? children : <Navigate to="/login" />;
+  // Redirect to landing page instead of login for better UX
+  return user ? children : <Navigate to="/" />;
 };
 
 export default ProtectedRoute;
