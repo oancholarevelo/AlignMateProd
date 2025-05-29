@@ -22,6 +22,7 @@ import Achievements from "./Achievements";
 import PostureDetail from "./PostureDetail";
 import LogViewer from "./LogViewer";
 import ResearchForm from "./ResearchForm";
+import ContactUs from "./ContactUs";
 import { styles, THEME } from "../styles/PostureGraphStyles";
 
 // Constants based on IMU sensor and ML model
@@ -152,6 +153,7 @@ const PostureGraph = () => {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [showDeviceLogs, setShowDeviceLogs] = useState(false);
   const [showQuickLogs, setShowQuickLogs] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
   const [recentImportantLogs, setRecentImportantLogs] = useState([]);
   const [showLogAlert, setShowLogAlert] = useState(false);
   const [showResearchForm, setShowResearchForm] = useState(false);
@@ -352,7 +354,7 @@ const PostureGraph = () => {
     try {
       const achievementsRef = ref(database, `users/${userUID}/achievements`);
       const snapshot = await get(achievementsRef);
-      
+
       if (snapshot.exists()) {
         const data = snapshot.val();
         setAchievementsData({
@@ -409,7 +411,9 @@ const PostureGraph = () => {
       const now = new Date();
       const today = now.toISOString().split("T")[0];
 
-      const history = Array.isArray(currentData.history) ? [...currentData.history] : [];
+      const history = Array.isArray(currentData.history)
+        ? [...currentData.history]
+        : [];
       const newEntry = {
         date: today,
         time: now.toISOString(),
@@ -456,7 +460,7 @@ const PostureGraph = () => {
     let lastProcessedTimestamp = null;
 
     const postureRef = ref(database, `users/${userUID}/postureData`);
-    
+
     const postureListener = onValue(postureRef, (snapshot) => {
       const postureData = snapshot.val();
 
@@ -479,18 +483,25 @@ const PostureGraph = () => {
       if (now - dataTime > 180000) return; // Skip stale data
 
       // Check posture prediction
-      const hasValidPrediction = latestData && typeof latestData.finalPrediction === "string";
-      const isGoodPosture = hasValidPrediction && latestData.finalPrediction === "Good";
-      const isBadPosture = hasValidPrediction && latestData.finalPrediction === "Bad";
+      const hasValidPrediction =
+        latestData && typeof latestData.finalPrediction === "string";
+      const isGoodPosture =
+        hasValidPrediction && latestData.finalPrediction === "Good";
+      const isBadPosture =
+        hasValidPrediction && latestData.finalPrediction === "Bad";
 
       console.log("Posture tracking:", {
-        prediction: hasValidPrediction ? latestData.finalPrediction : "undefined",
+        prediction: hasValidPrediction
+          ? latestData.finalPrediction
+          : "undefined",
         goodCount: goodPostureReadingsCount,
       });
 
       if (isGoodPosture) {
         goodPostureReadingsCount++;
-        console.log(`Good posture reading! Count: ${goodPostureReadingsCount}/30`);
+        console.log(
+          `Good posture reading! Count: ${goodPostureReadingsCount}/30`
+        );
 
         // Award point after 30 good readings (approximately 1 minute)
         if (goodPostureReadingsCount >= 30) {
@@ -499,7 +510,9 @@ const PostureGraph = () => {
         }
       } else if (isBadPosture) {
         // Reset counter on bad posture
-        console.log(`Bad posture detected. Resetting count from ${goodPostureReadingsCount} to 0`);
+        console.log(
+          `Bad posture detected. Resetting count from ${goodPostureReadingsCount} to 0`
+        );
         goodPostureReadingsCount = 0;
       }
       // Warning posture maintains the count without incrementing
@@ -2735,6 +2748,23 @@ const PostureGraph = () => {
         />
       </Card>
 
+      {/* Contact Us Section */}
+      <Card style={styles.settingsCard}>
+        <Text style={styles.settingsCardTitle}>Contact & Support</Text>
+        <Text style={styles.settingsDescription}>
+          Need help? Have questions? Found a bug? We're here to help you get the
+          most out of AlignMate.
+        </Text>
+
+        <Button
+          title="Contact Support"
+          type="primary"
+          icon={ICONS.email}
+          onPress={() => setShowContactModal(true)}
+          style={styles.settingsButton}
+        />
+      </Card>
+
       {/* Logout */}
       <View style={styles.logoutContainer}>
         <Logout />
@@ -2750,8 +2780,8 @@ const PostureGraph = () => {
 
   // Achievements Tab content
   const renderAchievements = () => (
-    <Achievements 
-      onBack={() => handleTabChange("dashboard")} 
+    <Achievements
+      onBack={() => handleTabChange("dashboard")}
       achievementsData={achievementsData}
       userUID={userUID}
     />
@@ -2874,6 +2904,15 @@ const PostureGraph = () => {
         onClose={() => setShowResearchForm(false)}
         userUID={userUID}
         userName={userName}
+      />
+
+      {/* Contact Us Modal */}
+      <ContactUs
+        isVisible={showContactModal}
+        onClose={() => setShowContactModal(false)}
+        userUID={userUID}
+        userName={userName}
+        isModal={true}
       />
     </Animated.View>
   );

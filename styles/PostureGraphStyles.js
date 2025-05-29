@@ -768,58 +768,66 @@ const styles = StyleSheet.create({
     width: "100%", // Full width for proper centering
     lineHeight: 20, // Added for better readability
   },
-
-  // Name editing styles
-  nameEditContainer: {
-    width: "100%",
-    alignItems: "center",
-  },
   nameDisplayContainer: {
     alignItems: "center",
   },
   nameInput: {
     width: "100%",
-    maxWidth: 250,
     padding: 12,
-    border: `2px solid ${THEME.primary}`,
+    fontSize: 16,
+    backgroundColor: THEME.cardBackground,
+    border: `2px solid ${THEME.border}`,
     borderRadius: 8,
-    fontSize: 18,
-    fontWeight: "600",
-    color: THEME.text,
-    textAlign: "center",
-    backgroundColor: "#FFFFFF",
-    marginBottom: 16,
     outline: "none",
-    fontFamily: "inherit",
+    boxSizing: "border-box",
+    // ADD THESE FONT PROPERTIES:
+    fontFamily:
+      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+    fontWeight: "400",
+    color: THEME.text,
+    transition: "border-color 0.2s ease",
   },
+
+  // Also update these if they exist:
+  nameEditContainer: {
+    width: "100%",
+    marginTop: 8,
+  },
+
   nameEditButtons: {
     flexDirection: "row",
-    justifyContent: "center",
-    gap: 12,
+    justifyContent: "flex-end",
+    marginTop: 12,
+    gap: 8,
   },
+
   nameEditButton: {
+    paddingHorizontal: 16,
     paddingVertical: 8,
-    paddingHorizontal: 20,
-    borderRadius: 8,
+    borderRadius: 6,
     borderWidth: 1,
-    borderColor: THEME.textLight,
-    backgroundColor: "#FFFFFF",
-    minWidth: 80,
-    alignItems: "center",
+    borderColor: THEME.border,
+    backgroundColor: THEME.cardBackground,
   },
+
   nameEditButtonSave: {
     backgroundColor: THEME.primary,
     borderColor: THEME.primary,
   },
+
   nameEditButtonTextCancel: {
-    color: THEME.textLight,
-    fontWeight: "500",
     fontSize: 14,
+    color: THEME.textLight,
+    fontFamily:
+      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
   },
+
   nameEditButtonTextSave: {
+    fontSize: 14,
     color: "#FFFFFF",
     fontWeight: "600",
-    fontSize: 14,
+    fontFamily:
+      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
   },
   editNameButton: {
     flexDirection: "row",
