@@ -1,7 +1,7 @@
 export default `# Privacy Policy
 
 ## Introduction
-This Privacy Policy outlines how AlignMate ("we," "our," or "us") collects, uses, processes, discloses, and safeguards your personal information when you use our posture monitoring wearable device and companion mobile application (collectively, the "Service"). This policy is designed to comply with the Data Privacy Act of 2012 (Republic Act No. 10173) of the Philippines and other applicable data protection laws.
+This Privacy Policy outlines how AlignMate ("we," "our," or "us") collects, uses, processes, discloses, and safeguards your personal information when you use our posture monitoring wearable device and web application (collectively, the "Service"). This policy is designed to comply with the Data Privacy Act of 2012 (Republic Act No. 10173) of the Philippines and other applicable data protection laws.
 
 By using our Service, you consent to the collection and use of your information in accordance with this Privacy Policy.
 
@@ -21,10 +21,10 @@ By using our Service, you consent to the collection and use of your information 
 - **Health Goals**: User-defined posture improvement objectives and preferences
 
 ### Technical and Usage Data
-- **Device Information**: Device model, operating system, unique device identifiers
+- **Device Information**: Browser type, operating system, device type
 - **Application Usage**: Features used, session duration, interaction patterns
 - **Performance Data**: App crashes, response times, error logs
-- **Location Data**: General location for time zone adjustments (if permission granted)
+- **Time Zone Information**: Automatically detected from your browser settings for displaying local times
 - **Sensor Data**: Accelerometer, gyroscope, and magnetometer readings from wearable device
 
 ### Communication Data
@@ -68,7 +68,7 @@ We process your personal data based on:
 ## Data Storage and Security
 
 ### Storage Locations
-- **Local Storage**: Basic app preferences and cached data stored on your device
+- **Local Storage**: Basic preferences and cached data stored in your browser's local storage
 - **Cloud Storage**: Encrypted personal and health data stored on secure Firebase servers
 - **Backup Systems**: Encrypted backups maintained for data recovery purposes
 
@@ -146,12 +146,12 @@ If data is transferred outside the Philippines, we ensure adequate protection th
 ## Cookies and Tracking Technologies
 
 ### Types of Technologies Used
-- **Essential Cookies**: Required for basic app functionality
-- **Analytics Cookies**: To understand app usage and performance
-- **Preference Cookies**: To remember your settings and preferences
+- **Essential Cookies**: Required for basic web app functionality, such as maintaining your login session
+- **Analytics Cookies**: To understand web app usage and performance, helping us improve the service
+- **Preference Cookies**: To remember your settings and preferences within the web app
 
 ### Managing Cookies
-You can control cookie preferences through your device settings. Note that disabling essential cookies may affect app functionality.
+You can control cookie preferences through your browser settings. Note that disabling essential cookies may affect the functionality of the web app.
 
 ## Children's Privacy
 Our Service is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13. If we become aware of such collection, we will take steps to delete the information immediately.
@@ -164,7 +164,7 @@ In the event of a data breach that may affect your personal information, we will
 
 ## Changes to This Privacy Policy
 We may update this Privacy Policy periodically to reflect changes in our practices or legal requirements. We will:
-- Post the updated policy on our website and in the app
+- Post the updated policy on our website
 - Notify users of material changes via email or app notification
 - Provide at least 30 days' notice before significant changes take effect
 - Maintain previous versions for reference

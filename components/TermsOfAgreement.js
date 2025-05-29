@@ -1,15 +1,15 @@
 export default `# Terms of Service Agreement
 
 ## Introduction and Acceptance
-These Terms of Service ("Terms") constitute a legally binding agreement between you ("User," "you," or "your") and AlignMate, a Philippine corporation ("AlignMate," "we," "our," or "us"), governing your use of the AlignMate posture monitoring wearable device and companion mobile application (collectively, the "Service").
+These Terms of Service ("Terms") constitute a legally binding agreement between you ("User," "you," or "your") and AlignMate, a Philippine corporation ("AlignMate," "we," "our," or "us"), governing your use of the AlignMate posture monitoring wearable device and web application (collectively, the "Service").
 
-By downloading, installing, or using the Service, you acknowledge that you have read, understood, and agree to be bound by these Terms and our Privacy Policy. If you do not agree to these Terms, you must not use the Service.
+By accessing or using the Service, you acknowledge that you have read, understood, and agree to be bound by these Terms and our Privacy Policy. If you do not agree to these Terms, you must not use the Service.
 
 ## Definitions
 
 ### Service Components
 - **Wearable Device**: The AlignMate posture monitoring hardware device
-- **Mobile Application**: The companion app for iOS and Android platforms
+- **Web Application**: The companion software accessible via a web browser
 - **Service**: The combined hardware, software, and related services provided by AlignMate
 - **Account**: Your registered user profile and associated data
 
@@ -110,7 +110,7 @@ You retain ownership of:
 - Personal profile information and preferences
 
 ### Limited License Grant
-We grant you a limited, non-exclusive, non-transferable, revocable license to use the Service for its intended purpose. This license does not permit:
+We grant you a limited, non-exclusive, non-transferable, revocable license to use the Service pixel for its intended purpose. This license does not permit:
 - Commercial use without written permission
 - Redistribution or resale of the Service
 - Creating derivative works based on our technology
@@ -147,8 +147,8 @@ We strive to provide:
 
 ### Service Limitations
 We cannot guarantee:
-- Uninterrupted Service availability
-- Compatibility with all devices and operating systems
+- Uninterrupted Service availability due to server maintenance or internet connectivity issues
+- Compatibility with all web browsers and versions
 - Absolute accuracy of posture measurements
 - Prevention of all technical issues or bugs
 
@@ -190,7 +190,7 @@ We provide a limited warranty for the wearable device:
 - Warranty does not cover normal wear and tear
 
 ### Software Disclaimer
-The mobile application is provided "AS IS" without warranties of any kind, including:
+The web application is provided "AS IS" without warranties of any kind, including:
 - Warranties of merchantability or fitness for purpose
 - Warranties of accuracy or reliability
 - Warranties of uninterrupted or error-free operation
@@ -277,7 +277,7 @@ We may modify these Terms at any time to:
 We will provide notice of material changes:
 - At least 30 days before effective date
 - Through email notification to registered users
-- Via prominent notice in the mobile application
+- Via prominent notice in the web application
 - By posting updated Terms on our website
 
 ### Continued Use
