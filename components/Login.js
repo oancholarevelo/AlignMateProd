@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -18,6 +18,7 @@ import {
   ScrollView,
   SafeAreaView,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
 
@@ -27,48 +28,99 @@ const Login = () => {
   const [resetEmail, setResetEmail] = useState("");
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [cooldownTime, setCooldownTime] = useState(0);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
+  const [resetLinkExpiry, setResetLinkExpiry] = useState(null);
+  const [emailValidation, setEmailValidation] = useState({ isValid: true, message: '' });
+  
   const navigate = useNavigate();
   const googleProvider = new GoogleAuthProvider();
 
-  const handleForgotPassword = async () => {
-    if (!resetEmail) {
-      Alert.alert("Error", "Please enter your email address");
-      return;
+  // Cooldown timer effect
+  useEffect(() => {
+    let timer;
+    if (cooldownTime > 0) {
+      timer = setTimeout(() => {
+        setCooldownTime(cooldownTime - 1);
+      }, 1000);
     }
+    return () => clearTimeout(timer);
+  }, [cooldownTime]);
 
-    if (!resetEmail.includes("@")) {
-      Alert.alert("Error", "Please enter a valid email address");
+  // Enhanced email validation
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const isValid = emailRegex.test(email);
+    
+    if (!email) {
+      setEmailValidation({ isValid: false, message: 'Email is required' });
+    } else if (!isValid) {
+      setEmailValidation({ isValid: false, message: 'Please enter a valid email address' });
+    } else {
+      setEmailValidation({ isValid: true, message: '' });
+    }
+    
+    return isValid;
+  };
+
+  const handleForgotPassword = async () => {
+    if (!validateEmail(resetEmail)) {
       return;
     }
 
     setIsLoading(true);
     
     try {
-      await sendPasswordResetEmail(auth, resetEmail);
+      await sendPasswordResetEmail(auth, resetEmail, {
+        url: `${window.location.origin}/login?emailVerified=true`,
+        handleCodeInApp: false,
+      });
+      
+      setResetEmailSent(true);
+      setCooldownTime(60);
+      setResetLinkExpiry(Date.now() + (60 * 60 * 1000)); // 1 hour from now
+      
       Alert.alert(
-        "Reset Email Sent",
-        "A password reset link has been sent to your email address. Please check your inbox and follow the instructions to reset your password.",
+        "🔐 Reset Email Sent!",
+        `A secure password reset link has been sent to ${resetEmail}.\n\n` +
+        "• Check your inbox and spam folder\n" +
+        "• The link expires in 1 hour\n" +
+        "• Click the link to set a new password\n\n" +
+        "Still having trouble? Contact our support team.",
         [
           {
-            text: "OK",
-            onPress: () => {
-              setShowForgotPassword(false);
-              setResetEmail("");
-            },
+            text: "Got it!",
+            style: "default",
           },
         ]
       );
     } catch (error) {
       let errorMessage = "Failed to send reset email. Please try again.";
-      if (error.code === "auth/user-not-found") {
-        errorMessage = "No account found with this email address.";
-      } else if (error.code === "auth/invalid-email") {
-        errorMessage = "Invalid email address.";
-      } else if (error.code === "auth/too-many-requests") {
-        errorMessage = "Too many reset attempts. Please try again later.";
+      let errorTitle = "❌ Error";
+      
+      switch (error.code) {
+        case "auth/user-not-found":
+          errorMessage = "No AlignMate account found with this email address. Please check your email or create a new account.";
+          errorTitle = "🔍 Account Not Found";
+          break;
+        case "auth/invalid-email":
+          errorMessage = "Please enter a valid email address.";
+          errorTitle = "📧 Invalid Email";
+          break;
+        case "auth/too-many-requests":
+          errorMessage = "Too many password reset attempts. Please wait a few minutes before trying again.";
+          errorTitle = "⏰ Rate Limited";
+          break;
+        case "auth/network-request-failed":
+          errorMessage = "Network error. Please check your internet connection and try again.";
+          errorTitle = "🌐 Connection Error";
+          break;
+        default:
+          console.error("Password reset error:", error);
+          break;
       }
-      Alert.alert("Error", errorMessage);
-      console.error("Password reset error:", error);
+      
+      Alert.alert(errorTitle, errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -171,41 +223,148 @@ const Login = () => {
       });
   };
 
+  const resetForgotPasswordForm = () => {
+    setShowForgotPassword(false);
+    setResetEmail("");
+    setResetEmailSent(false);
+    setCooldownTime(0);
+  };
+
   const renderForgotPasswordForm = () => (
     <View style={styles.forgotPasswordContainer}>
-      <Text style={styles.forgotPasswordTitle}>Reset Password</Text>
-      <Text style={styles.forgotPasswordText}>
-        Enter your email address and we'll send you a link to reset your password.
-      </Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your email"
-        placeholderTextColor="#666666"
-        value={resetEmail}
-        onChangeText={setResetEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-
-      <TouchableOpacity
-        style={[styles.button, isLoading && styles.disabledButton]}
-        onPress={handleForgotPassword}
-        disabled={isLoading}
-      >
-        <Text style={styles.buttonText}>
-          {isLoading ? "Sending..." : "Send Reset Link"}
+      {/* Header with Icon */}
+      <View style={styles.forgotPasswordHeader}>
+        <Svg width={60} height={60} viewBox="0 0 24 24" style={styles.forgotPasswordIcon}>
+          <Path
+            d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1H5C3.9 1 3 1.9 3 3V21C3 22.1 3.9 23 5 23H19C20.1 23 21 22.1 21 21V9M19 9H14V4H5V21H19V9ZM7 11H17V13H7V11ZM7 15H14V17H7V15Z"
+            fill="#5CA377"
+          />
+        </Svg>
+        <Text style={styles.forgotPasswordTitle}>Reset Password</Text>
+        <Text style={styles.forgotPasswordSubtitle}>
+          Don't worry! We'll help you get back into your account.
         </Text>
-      </TouchableOpacity>
+      </View>
 
+      <View style={styles.forgotPasswordCard}>
+        <Text style={styles.forgotPasswordText}>
+          Enter your email address and we'll send you a secure link to reset your password.
+        </Text>
+
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={[
+              styles.forgotPasswordInput,
+              !emailValidation.isValid && styles.inputError
+            ]}
+            placeholder="Enter your email address"
+            placeholderTextColor="#666666"
+            value={resetEmail}
+            onChangeText={(text) => {
+              setResetEmail(text);
+              if (text) validateEmail(text);
+            }}
+            onBlur={() => validateEmail(resetEmail)}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            editable={!isLoading}
+          />
+          {!emailValidation.isValid && (
+            <Text style={styles.errorText}>{emailValidation.message}</Text>
+          )}
+        </View>
+
+        {/* Enhanced Status Messages */}
+        {resetEmailSent && (
+          <View style={styles.successMessageContainer}>
+            <Text style={styles.successMessageText}>
+              🔐 Reset link sent successfully!
+            </Text>
+            <Text style={styles.successMessageSubtext}>
+              Check your email inbox and spam folder
+            </Text>
+            {resetLinkExpiry && (
+              <Text style={styles.expiryText}>
+                Link expires in {Math.ceil((resetLinkExpiry - Date.now()) / (1000 * 60))} minutes
+              </Text>
+            )}
+          </View>
+        )}
+
+        {/* Send Button with Cooldown */}
+        <TouchableOpacity
+          style={[
+            styles.forgotPasswordButton,
+            (isLoading || cooldownTime > 0) && styles.disabledButton
+          ]}
+          onPress={handleForgotPassword}
+          disabled={isLoading || cooldownTime > 0}
+        >
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color="#FFFFFF" />
+              <Text style={styles.forgotPasswordButtonText}>Sending...</Text>
+            </View>
+          ) : cooldownTime > 0 ? (
+            <View style={styles.cooldownContainer}>
+              <Text style={styles.forgotPasswordButtonText}>
+                Sent! Wait {cooldownTime}s
+              </Text>
+            </View>
+          ) : (
+            <Text style={styles.forgotPasswordButtonText}>
+              {resetEmailSent ? "Send Again" : "Send Reset Link"}
+            </Text>
+          )}
+        </TouchableOpacity>
+
+        {/* Cooldown Progress Bar */}
+        {cooldownTime > 0 && (
+          <View style={styles.progressBarContainer}>
+            <View 
+              style={[
+                styles.progressBar, 
+                { width: `${((60 - cooldownTime) / 60) * 100}%` }
+              ]} 
+            />
+          </View>
+        )}
+      </View>
+
+      {/* Enhanced Instructions */}
+      <View style={styles.instructionsCard}>
+        <Text style={styles.instructionsTitle}>🔐 Password Reset Guide</Text>
+        <View style={styles.instructionsList}>
+          <Text style={styles.instructionItem}>
+            • 📧 Check your email inbox for the reset link
+          </Text>
+          <Text style={styles.instructionItem}>
+            • 🗂️ Look in spam/junk folder if not in inbox
+          </Text>
+          <Text style={styles.instructionItem}>
+            • ⏰ Use the link within 1 hour (it expires for security)
+          </Text>
+          <Text style={styles.instructionItem}>
+            • 🔒 Create a strong, unique password
+          </Text>
+          <Text style={styles.instructionItem}>
+            • 🔑 Return here to login with your new password
+          </Text>
+        </View>
+        
+        <View style={styles.supportContainer}>
+          <Text style={styles.supportText}>
+            💡 Still having trouble? Contact our support team for assistance.
+          </Text>
+        </View>
+      </View>
+
+      {/* Back Button */}
       <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => {
-          setShowForgotPassword(false);
-          setResetEmail("");
-        }}
+        style={styles.backToLoginButton}
+        onPress={resetForgotPasswordForm}
       >
-        <Text style={styles.backButtonText}>Back to Login</Text>
+        <Text style={styles.backToLoginText}>← Back to Login</Text>
       </TouchableOpacity>
     </View>
   );
@@ -384,33 +543,190 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textDecorationLine: "underline",
   },
-  // Forgot Password Form Styles
+  
+  // Enhanced Forgot Password Form Styles
   forgotPasswordContainer: {
     width: "100%",
-    maxWidth: 400,
+    maxWidth: 420,
     alignItems: "center",
   },
-  forgotPasswordTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#1B1212",
+  forgotPasswordHeader: {
+    alignItems: "center",
+    marginBottom: 32,
+  },
+  forgotPasswordIcon: {
     marginBottom: 16,
   },
-  forgotPasswordText: {
+  forgotPasswordTitle: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#1B1212",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  forgotPasswordSubtitle: {
     fontSize: 16,
     color: "#666666",
     textAlign: "center",
-    marginBottom: 32,
     lineHeight: 22,
   },
-  backButton: {
-    marginTop: 16,
+  forgotPasswordCard: {
+    width: "100%",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 24,
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: "rgba(27, 18, 18, 0.1)",
+    shadowColor: "rgba(0, 0, 0, 0.1)",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
   },
-  backButtonText: {
-    fontSize: 14,
+  forgotPasswordText: {
+    fontSize: 16,
     color: "#1B1212",
+    textAlign: "center",
+    marginBottom: 24,
+    lineHeight: 22,
+    fontWeight: "500",
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  forgotPasswordInput: {
+    width: "100%",
+    borderWidth: 2,
+    borderColor: "#1B1212",
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
     fontWeight: "600",
-    textDecorationLine: "underline",
+    color: "#1B1212",
+    backgroundColor: "#FAF9F6",
+  },
+  successMessageContainer: {
+    backgroundColor: "rgba(92, 163, 119, 0.1)",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    borderLeftWidth: 4,
+    borderLeftColor: "#5CA377",
+  },
+  successMessageText: {
+    fontSize: 16,
+    color: "#5CA377",
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: 4,
+  },
+  successMessageSubtext: {
+    fontSize: 14,
+    color: "#666666",
+    textAlign: "center",
+    fontStyle: "italic",
+  },
+  forgotPasswordButton: {
+    width: "100%",
+    backgroundColor: "#5CA377",
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#1B1212",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  forgotPasswordButtonText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  loadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  cooldownContainer: {
+    alignItems: "center",
+  },
+  progressBarContainer: {
+    width: "100%",
+    height: 4,
+    backgroundColor: "rgba(27, 18, 18, 0.1)",
+    borderRadius: 2,
+    overflow: "hidden",
+  },
+  progressBar: {
+    height: "100%",
+    backgroundColor: "#5CA377",
+    borderRadius: 2,
+  },
+  instructionsCard: {
+    width: "100%",
+    backgroundColor: "rgba(59, 130, 246, 0.05)",
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.1)",
+  },
+  instructionsTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1B1212",
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  instructionsList: {
+    gap: 8,
+  },
+  instructionItem: {
+    fontSize: 14,
+    color: "#666666",
+    lineHeight: 20,
+    fontWeight: "500",
+  },
+  backToLoginButton: {
+    padding: 12,
+  },
+  backToLoginText: {
+    fontSize: 16,
+    color: "#5CA377",
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  inputError: {
+    borderColor: "#e74c3c",
+    backgroundColor: "rgba(231, 76, 60, 0.05)",
+  },
+  errorText: {
+    color: "#e74c3c",
+    fontSize: 12,
+    marginTop: 4,
+    fontWeight: "500",
+  },
+  expiryText: {
+    fontSize: 12,
+    color: "#f39c12",
+    textAlign: "center",
+    marginTop: 4,
+    fontWeight: "600",
+  },
+  supportContainer: {
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: "rgba(92, 163, 119, 0.05)",
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: "#5CA377",
+  },
+  supportText: {
+    fontSize: 13,
+    color: "#5CA377",
+    textAlign: "center",
+    fontWeight: "500",
+    fontStyle: "italic",
   },
 });
 
