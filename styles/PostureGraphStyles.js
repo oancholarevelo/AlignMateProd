@@ -29,10 +29,10 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 16,
-    paddingBottom: 100, // Extra padding for footer
+    paddingBottom: 90, // Extra padding for footer
   },
   footerPadding: {
-    height: 90, // Ensures content isn't hidden behind footer
+    height: 20, // Ensures content isn't hidden behind footer
   },
   card: {
     backgroundColor: THEME.cardBackground,
@@ -311,16 +311,16 @@ const styles = StyleSheet.create({
   // Stats containers
   statsContainer: {
     flexDirection: "row",
-    justifyContent: "center", // Changed from space-between to center
-    alignItems: "center", // Added center alignment
+    justifyContent: "space-between", // Changed back to space-between for equal distribution
+    alignItems: "stretch", // Changed to stretch so both boxes have same height
     marginBottom: 24,
-    paddingHorizontal: 16, // Added padding for better spacing
+    paddingHorizontal: 16,
+    gap: 16, // Add gap between the boxes
   },
   statsBox: {
-    flex: 1,
+    flex: 1, // This ensures both boxes take equal width
     padding: 20,
     borderRadius: 16,
-    marginHorizontal: 8,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: THEME.shadow,
@@ -328,9 +328,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 6,
     elevation: 3,
-    minHeight: 110,
-    maxWidth: 180,
-    // Add these properties to ensure content centering
+    minHeight: 110, // Ensures minimum height consistency
+    // Remove maxWidth to allow full flex expansion
     display: "flex",
     flexDirection: "column",
   },
@@ -1207,6 +1206,38 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: "transparent",
     marginHorizontal: 2,
+  },
+  feedbackCallout: {
+    backgroundColor: "#F8FFF9",
+    borderWidth: 1,
+    borderColor: THEME.primary,
+    borderStyle: "dashed",
+  },
+  feedbackHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  feedbackIcon: {
+    width: 32,
+    height: 32,
+    marginRight: 12,
+  },
+  feedbackTextContainer: {
+    flex: 1,
+  },
+  feedbackTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: THEME.text,
+    marginBottom: 4,
+  },
+  feedbackSubtitle: {
+    fontSize: 14,
+    color: THEME.textLight,
+  },
+  feedbackButton: {
+    marginTop: 8,
   },
 });
 

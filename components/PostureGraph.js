@@ -21,6 +21,7 @@ import PostureNotification from "./PostureNotification";
 import Achievements from "./Achievements";
 import PostureDetail from "./PostureDetail";
 import LogViewer from "./LogViewer";
+import ResearchForm from "./ResearchForm";
 import { styles, THEME } from "../styles/PostureGraphStyles";
 
 // Constants based on IMU sensor and ML model
@@ -62,6 +63,8 @@ const ICONS = {
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%235CA377' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z'/%3E%3C/svg%3E",
   defaultSetup:
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234299E1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E",
+  feedback:
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%235CA377' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'/%3E%3C/svg%3E",
 };
 
 // Card component for consistent styling
@@ -151,6 +154,7 @@ const PostureGraph = () => {
   const [showQuickLogs, setShowQuickLogs] = useState(false);
   const [recentImportantLogs, setRecentImportantLogs] = useState([]);
   const [showLogAlert, setShowLogAlert] = useState(false);
+  const [showResearchForm, setShowResearchForm] = useState(false);
   const [featureImportance, setFeatureImportance] = useState({
     pitch_mean: 45,
     pitch_variance: 5,
@@ -176,6 +180,16 @@ const PostureGraph = () => {
   const [profilePicture, setProfilePicture] = useState(null);
   const [isUploadingPicture, setIsUploadingPicture] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+
+  const [achievementsData, setAchievementsData] = useState({
+    points: 0,
+    treeCount: 0,
+    history: [],
+    streaks: {
+      current: 0,
+      longest: 0,
+    },
+  });
 
   // Animate component on mount
   useEffect(() => {
@@ -331,6 +345,191 @@ const PostureGraph = () => {
 
     loadProfilePicture();
   }, [userUID]);
+
+  const initializeAchievements = useCallback(async () => {
+    if (!userUID) return;
+
+    try {
+      const achievementsRef = ref(database, `users/${userUID}/achievements`);
+      const snapshot = await get(achievementsRef);
+      
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        setAchievementsData({
+          points: data.points || 0,
+          treeCount: Math.floor((data.points || 0) / 50),
+          history: data.history || [],
+          streaks: data.streaks || { current: 0, longest: 0 },
+        });
+      } else {
+        // Initialize achievements data if it doesn't exist
+        const initialData = {
+          points: 0,
+          history: [],
+          streaks: {
+            current: 0,
+            longest: 0,
+          },
+        };
+        await set(achievementsRef, initialData);
+        setAchievementsData({
+          ...initialData,
+          treeCount: 0,
+        });
+        console.log("Achievements initialized for new user");
+      }
+    } catch (error) {
+      console.error("Error initializing achievements:", error);
+    }
+  }, [userUID]);
+
+  const awardGoodPosturePoint = useCallback(async () => {
+    if (!userUID) {
+      console.error("Cannot award point: userUID is missing");
+      return;
+    }
+
+    console.log("🎉 Awarding good posture point!");
+
+    try {
+      // Get current achievements data
+      const achievementsRef = ref(database, `users/${userUID}/achievements`);
+      const snapshot = await get(achievementsRef);
+      const currentData = snapshot.val() || {
+        points: 0,
+        history: [],
+        streaks: { current: 0, longest: 0 },
+      };
+
+      // Update points
+      const newPoints = (currentData.points || 0) + 1;
+      console.log(`Updating points from ${currentData.points} to ${newPoints}`);
+
+      // Update streak and history
+      const now = new Date();
+      const today = now.toISOString().split("T")[0];
+
+      const history = Array.isArray(currentData.history) ? [...currentData.history] : [];
+      const newEntry = {
+        date: today,
+        time: now.toISOString(),
+        points: 1,
+        type: "good_posture_minute",
+      };
+      history.push(newEntry);
+
+      const streaks = currentData.streaks || { current: 0, longest: 0 };
+      streaks.current += 1;
+      if (streaks.current > streaks.longest) {
+        streaks.longest = streaks.current;
+      }
+
+      // Save updated data
+      const updatedData = {
+        points: newPoints,
+        history: history,
+        streaks: streaks,
+      };
+
+      await set(achievementsRef, updatedData);
+
+      // Update local state
+      setAchievementsData({
+        points: newPoints,
+        treeCount: Math.floor(newPoints / 50),
+        history: history,
+        streaks: streaks,
+      });
+
+      console.log("✅ Point successfully awarded for good posture!");
+    } catch (error) {
+      console.error("Error awarding point:", error);
+    }
+  }, [userUID]);
+
+  const trackPostureForAchievements = useCallback(() => {
+    if (!userUID) return () => {};
+
+    console.log("Starting posture tracking for achievements");
+
+    let goodPostureReadingsCount = 0;
+    let lastProcessedTimestamp = null;
+
+    const postureRef = ref(database, `users/${userUID}/postureData`);
+    
+    const postureListener = onValue(postureRef, (snapshot) => {
+      const postureData = snapshot.val();
+
+      if (!postureData) return;
+
+      // Get all entries and sort by timestamp
+      const entries = Object.entries(postureData);
+      if (entries.length === 0) return;
+
+      entries.sort((a, b) => parseInt(b[0]) - parseInt(a[0]));
+      const [timestamp, latestData] = entries[0];
+
+      // Skip if already processed
+      if (timestamp === lastProcessedTimestamp) return;
+      lastProcessedTimestamp = timestamp;
+
+      // Check if data is fresh (within 3 minutes)
+      const now = Date.now();
+      const dataTime = parseInt(timestamp) * 1000;
+      if (now - dataTime > 180000) return; // Skip stale data
+
+      // Check posture prediction
+      const hasValidPrediction = latestData && typeof latestData.finalPrediction === "string";
+      const isGoodPosture = hasValidPrediction && latestData.finalPrediction === "Good";
+      const isBadPosture = hasValidPrediction && latestData.finalPrediction === "Bad";
+
+      console.log("Posture tracking:", {
+        prediction: hasValidPrediction ? latestData.finalPrediction : "undefined",
+        goodCount: goodPostureReadingsCount,
+      });
+
+      if (isGoodPosture) {
+        goodPostureReadingsCount++;
+        console.log(`Good posture reading! Count: ${goodPostureReadingsCount}/30`);
+
+        // Award point after 30 good readings (approximately 1 minute)
+        if (goodPostureReadingsCount >= 30) {
+          awardGoodPosturePoint();
+          goodPostureReadingsCount = 0; // Reset counter
+        }
+      } else if (isBadPosture) {
+        // Reset counter on bad posture
+        console.log(`Bad posture detected. Resetting count from ${goodPostureReadingsCount} to 0`);
+        goodPostureReadingsCount = 0;
+      }
+      // Warning posture maintains the count without incrementing
+    });
+
+    return () => {
+      console.log("Cleaning up posture tracking for achievements");
+      postureListener();
+    };
+  }, [userUID, awardGoodPosturePoint]);
+
+  // Initialize achievements when component mounts
+  useEffect(() => {
+    if (userUID) {
+      initializeAchievements();
+    }
+  }, [userUID, initializeAchievements]);
+
+  // Start achievements tracking when user is set up
+  useEffect(() => {
+    if (!userUID || isCheckingUserStatus || isNewUser) return;
+
+    console.log("Starting achievements tracking in PostureGraph");
+    const cleanupAchievementsTracking = trackPostureForAchievements();
+
+    return () => {
+      console.log("Cleaning up achievements tracking in PostureGraph");
+      cleanupAchievementsTracking();
+    };
+  }, [userUID, isCheckingUserStatus, isNewUser, trackPostureForAchievements]);
 
   // NEW: Handle profile picture upload
   const handleProfilePictureUpload = useCallback(
@@ -2519,6 +2718,23 @@ const PostureGraph = () => {
         />
       </Card>
 
+      {/* Research Section */}
+      <Card style={styles.settingsCard}>
+        <Text style={styles.settingsCardTitle}>Research & Support</Text>
+        <Text style={styles.settingsDescription}>
+          Help us improve AlignMate by sharing your experience, suggestions, or
+          reporting issues.
+        </Text>
+
+        <Button
+          title="Answer Research Questions"
+          type="primary"
+          icon={ICONS.feedback}
+          onPress={() => setShowResearchForm(true)}
+          style={styles.settingsButton}
+        />
+      </Card>
+
       {/* Logout */}
       <View style={styles.logoutContainer}>
         <Logout />
@@ -2534,7 +2750,11 @@ const PostureGraph = () => {
 
   // Achievements Tab content
   const renderAchievements = () => (
-    <Achievements onBack={() => handleTabChange("dashboard")} />
+    <Achievements 
+      onBack={() => handleTabChange("dashboard")} 
+      achievementsData={achievementsData}
+      userUID={userUID}
+    />
   );
 
   // Posture Detail content
@@ -2647,6 +2867,14 @@ const PostureGraph = () => {
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* Research Form Modal */}
+      <ResearchForm
+        isVisible={showResearchForm}
+        onClose={() => setShowResearchForm(false)}
+        userUID={userUID}
+        userName={userName}
+      />
     </Animated.View>
   );
 };

@@ -27,52 +27,64 @@ import DocumentRenderer from "./DocumentRenderer";
 const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [showTermsOfAgreement, setShowTermsOfAgreement] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState([]);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // Add loading state
   const navigate = useNavigate();
   const googleProvider = new GoogleAuthProvider();
 
   // Password validation function
   const validatePassword = (password) => {
     const errors = [];
-    
+
     // Check minimum length
     if (password.length < 8) {
       errors.push("At least 8 characters");
     }
-    
+
     // Check for uppercase letter
     if (!/[A-Z]/.test(password)) {
       errors.push("One uppercase letter");
     }
-    
+
     // Check for lowercase letter
     if (!/[a-z]/.test(password)) {
       errors.push("One lowercase letter");
     }
-    
+
     // Check for number
     if (!/\d/.test(password)) {
       errors.push("One number");
     }
-    
+
     // Check for special character
     if (!/[@$!%*?&]/.test(password)) {
       errors.push("One special character (@$!%*?&)");
     }
-    
+
     // Check for common weak passwords
     const commonPasswords = [
-      'password', '123456', '12345678', 'qwerty', 'abc123', 
-      'password123', '123456789', 'welcome', 'admin', 'letmein'
+      "password",
+      "123456",
+      "12345678",
+      "qwerty",
+      "abc123",
+      "password123",
+      "123456789",
+      "welcome",
+      "admin",
+      "letmein",
     ];
     if (commonPasswords.includes(password.toLowerCase())) {
       errors.push("Password is too common");
     }
-    
+
     return errors;
   };
 
@@ -87,6 +99,10 @@ const Register = () => {
     setPassword(text);
     const errors = validatePassword(text);
     setPasswordErrors(errors);
+  };
+
+  const passwordsMatch = () => {
+    return password === confirmPassword;
   };
 
   const handleRegister = () => {
@@ -105,7 +121,15 @@ const Register = () => {
     // Validate password security
     const passwordValidationErrors = validatePassword(password);
     if (passwordValidationErrors.length > 0) {
-      alert(`Password must have:\n• ${passwordValidationErrors.join('\n• ')}`);
+      alert(`Password must have:\n• ${passwordValidationErrors.join("\n• ")}`);
+      return;
+    }
+
+    // Validate passwords match
+    if (!passwordsMatch()) {
+      alert(
+        "Passwords do not match. Please check your password and try again."
+      );
       return;
     }
 
@@ -116,6 +140,8 @@ const Register = () => {
       );
       return;
     }
+
+    setIsLoading(true); // Start loading
 
     createUserWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
@@ -153,30 +179,37 @@ const Register = () => {
               "Registration completed, but there was an issue saving your name. Please update it after login."
             );
             navigate("/login");
+          })
+          .finally(() => {
+            setIsLoading(false); // Stop loading
           });
       })
       .catch((error) => {
         // Handle specific Firebase Auth errors
         let errorMessage = "Registration failed. Please try again.";
-        
+
         switch (error.code) {
-          case 'auth/email-already-in-use':
-            errorMessage = "This email is already registered. Please use a different email or try logging in.";
+          case "auth/email-already-in-use":
+            errorMessage =
+              "This email is already registered. Please use a different email or try logging in.";
             break;
-          case 'auth/weak-password':
-            errorMessage = "Password is too weak. Please choose a stronger password.";
+          case "auth/weak-password":
+            errorMessage =
+              "Password is too weak. Please choose a stronger password.";
             break;
-          case 'auth/invalid-email':
+          case "auth/invalid-email":
             errorMessage = "Please enter a valid email address.";
             break;
-          case 'auth/operation-not-allowed':
-            errorMessage = "Email registration is not enabled. Please contact support.";
+          case "auth/operation-not-allowed":
+            errorMessage =
+              "Email registration is not enabled. Please contact support.";
             break;
           default:
             console.error("Registration error:", error);
         }
-        
+
         alert(errorMessage);
+        setIsLoading(false); // Stop loading on error
       });
   };
 
@@ -188,6 +221,8 @@ const Register = () => {
       );
       return;
     }
+
+    setIsLoading(true); // Start loading for Google sign-in
 
     signInWithPopup(auth, googleProvider)
       .then((result) => {
@@ -230,9 +265,15 @@ const Register = () => {
 
             set(ref(database, "currentUserUID"), user.uid);
             navigate("/app");
+          })
+          .finally(() => {
+            setIsLoading(false); // Stop loading
           });
       })
-      .catch((error) => alert(error.message));
+      .catch((error) => {
+        alert(error.message);
+        setIsLoading(false); // Stop loading on error
+      });
   };
 
   const DocumentModal = ({ visible, onClose, title, content }) => (
@@ -262,12 +303,33 @@ const Register = () => {
     </Modal>
   );
 
+  const EyeIcon = ({ visible, onPress }) => (
+    <TouchableOpacity onPress={onPress} style={styles.eyeIcon}>
+      <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+        {visible ? (
+          <Path
+            d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"
+            fill="#1B1212"
+          />
+        ) : (
+          <>
+            <Path
+              d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"
+              fill="#1B1212"
+            />
+          </>
+        )}
+      </Svg>
+    </TouchableOpacity>
+  );
+
   const isFormValid = () => {
     return (
       name.trim() !== "" &&
       validateEmail(email) &&
       passwordErrors.length === 0 &&
       password !== "" &&
+      passwordsMatch() &&
       acceptedTerms
     );
   };
@@ -309,7 +371,10 @@ const Register = () => {
             value={name}
           />
           <TextInput
-            style={[styles.input, !validateEmail(email) && email !== "" && styles.inputError]}
+            style={[
+              styles.input,
+              !validateEmail(email) && email !== "" && styles.inputError,
+            ]}
             placeholder="Email"
             placeholderTextColor="#1B1212"
             onChangeText={setEmail}
@@ -317,19 +382,70 @@ const Register = () => {
             keyboardType="email-address"
             autoCapitalize="none"
           />
-          <TextInput
-            style={[styles.input, passwordErrors.length > 0 && password !== "" && styles.inputError]}
-            placeholder="Password"
-            placeholderTextColor="#1B1212"
-            secureTextEntry
-            onChangeText={handlePasswordChange}
-            value={password}
-          />
+
+          {/* Password Input with Eye Toggle */}
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={[
+                styles.passwordInput,
+                passwordErrors.length > 0 &&
+                  password !== "" &&
+                  styles.inputError,
+              ]}
+              placeholder="Password"
+              placeholderTextColor="#1B1212"
+              secureTextEntry={!showPassword}
+              onChangeText={handlePasswordChange}
+              value={password}
+            />
+            <EyeIcon
+              visible={showPassword}
+              onPress={() => setShowPassword(!showPassword)}
+            />
+          </View>
+
+          {/* Confirm Password Input with Eye Toggle */}
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={[
+                styles.passwordInput,
+                confirmPassword !== "" &&
+                  !passwordsMatch() &&
+                  styles.inputError,
+              ]}
+              placeholder="Confirm Password"
+              placeholderTextColor="#1B1212"
+              secureTextEntry={!showConfirmPassword}
+              onChangeText={setConfirmPassword}
+              value={confirmPassword}
+            />
+            <EyeIcon
+              visible={showConfirmPassword}
+              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+            />
+          </View>
+
+          {/* Password Match Indicator */}
+          {confirmPassword !== "" && !passwordsMatch() && (
+            <View style={styles.passwordMismatchContainer}>
+              <Text style={styles.passwordMismatchText}>
+                ✕ Passwords do not match
+              </Text>
+            </View>
+          )}
+
+          {confirmPassword !== "" && passwordsMatch() && password !== "" && (
+            <View style={styles.passwordMatchContainer}>
+              <Text style={styles.passwordMatchText}>✓ Passwords match</Text>
+            </View>
+          )}
 
           {/* Password Requirements Display */}
           {password !== "" && passwordErrors.length > 0 && (
             <View style={styles.passwordRequirements}>
-              <Text style={styles.passwordRequirementsTitle}>Password must have:</Text>
+              <Text style={styles.passwordRequirementsTitle}>
+                Password must have:
+              </Text>
               {passwordErrors.map((error, index) => (
                 <Text key={index} style={styles.passwordRequirementItem}>
                   • {error}
@@ -342,21 +458,30 @@ const Register = () => {
           {password !== "" && (
             <View style={styles.passwordStrengthContainer}>
               <View style={styles.passwordStrengthBar}>
-                <View 
+                <View
                   style={[
                     styles.passwordStrengthFill,
                     {
-                      width: `${Math.max(20, (5 - passwordErrors.length) * 20)}%`,
-                      backgroundColor: 
-                        passwordErrors.length === 0 ? '#5CA377' :
-                        passwordErrors.length <= 2 ? '#FFA500' : '#FF6B6B'
-                    }
+                      width: `${Math.max(
+                        20,
+                        (5 - passwordErrors.length) * 20
+                      )}%`,
+                      backgroundColor:
+                        passwordErrors.length === 0
+                          ? "#5CA377"
+                          : passwordErrors.length <= 2
+                          ? "#FFA500"
+                          : "#FF6B6B",
+                    },
                   ]}
                 />
               </View>
               <Text style={styles.passwordStrengthText}>
-                {passwordErrors.length === 0 ? 'Strong' :
-                 passwordErrors.length <= 2 ? 'Medium' : 'Weak'}
+                {passwordErrors.length === 0
+                  ? "Strong"
+                  : passwordErrors.length <= 2
+                  ? "Medium"
+                  : "Weak"}
               </Text>
             </View>
           )}
@@ -395,22 +520,29 @@ const Register = () => {
           </View>
 
           <TouchableOpacity
-            style={[styles.button, !isFormValid() && styles.buttonDisabled]}
+            style={[
+              styles.button,
+              (!isFormValid() || isLoading) && styles.buttonDisabled,
+            ]}
             onPress={handleRegister}
-            disabled={!isFormValid()}
+            disabled={!isFormValid() || isLoading}
           >
-            <Text style={styles.buttonText}>Register</Text>
+            <Text style={styles.buttonText}>
+              {isLoading ? "Creating Account..." : "Register"}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[
               styles.googleButton,
-              !acceptedTerms && styles.buttonDisabled,
+              (!acceptedTerms || isLoading) && styles.buttonDisabled,
             ]}
             onPress={handleGoogleSignIn}
-            disabled={!acceptedTerms}
+            disabled={!acceptedTerms || isLoading}
           >
-            <Text style={styles.googleButtonText}>Sign up with Google</Text>
+            <Text style={styles.googleButtonText}>
+              {isLoading ? "Signing up..." : "Sign up with Google"}
+            </Text>
           </TouchableOpacity>
 
           <View style={{ marginTop: 16 }}>
@@ -665,6 +797,62 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#FFFFFF",
+  },
+  passwordContainer: {
+    width: "80%",
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#1B1212",
+    borderRadius: 12,
+    marginBottom: 16,
+    backgroundColor: "#FFFFFF",
+  },
+  passwordInput: {
+    flex: 1,
+    padding: 10,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1B1212",
+    borderWidth: 0,
+  },
+  eyeIcon: {
+    padding: 10,
+    paddingRight: 16,
+  },
+  passwordMismatchContainer: {
+    width: "80%",
+    backgroundColor: "#FFF5F5",
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: "#FF6B6B",
+  },
+  passwordMismatchText: {
+    fontSize: 14,
+    color: "#FF6B6B",
+    fontWeight: "600",
+  },
+  passwordMatchContainer: {
+    width: "80%",
+    backgroundColor: "#F0F9F4",
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: "#5CA377",
+  },
+  passwordMatchText: {
+    fontSize: 14,
+    color: "#5CA377",
+    fontWeight: "600",
+  },
+  buttonDisabled: {
+    backgroundColor: "#cccccc",
+    borderColor: "#999999",
+    opacity: 0.6, // Add opacity for better visual feedback
   },
 });
 
