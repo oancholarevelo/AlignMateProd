@@ -213,6 +213,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginVertical: 12,
     color: THEME.text,
+    textAlign: 'center', // Added center alignment
   },
   cardTitle: {
     fontSize: 17,
@@ -310,14 +311,16 @@ const styles = StyleSheet.create({
   // Stats containers
   statsContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center", // Changed from space-between to center
+    alignItems: "center", // Added center alignment
     marginBottom: 24,
+    paddingHorizontal: 16, // Added padding for better spacing
   },
   statsBox: {
     flex: 1,
     padding: 20,
     borderRadius: 16,
-    marginHorizontal: 6,
+    marginHorizontal: 8, // Increased from 6 to 8 for better spacing
     alignItems: "center",
     justifyContent: "center",
     shadowColor: THEME.shadow,
@@ -326,6 +329,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 3,
     minHeight: 110,
+    maxWidth: 180, // Added max width to prevent stretching
   },
   statsLabel: {
     fontSize: 15,
@@ -378,47 +382,88 @@ const styles = StyleSheet.create({
   // ML Features section
   mlFeatureContainer: {
     marginBottom: 20,
+    padding: 16,
+  },
+  mlFeatureSubtitle: {
+    fontSize: 14,
+    color: THEME.textLight,
+    textAlign: 'center',
+    marginBottom: 16,
+    fontStyle: 'italic',
+  },
+  mlFeatureLegend: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: THEME.border,
   },
   featureImportanceContainer: {
-    marginTop: 16,
+    marginTop: 20,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: THEME.border,
   },
+
   featureImportanceTitle: {
-    fontSize: 15,
-    fontWeight: "600",
+    fontSize: 16,
+    fontWeight: "700",
     color: THEME.text,
-    marginBottom: 8,
+    marginBottom: 4,
+    textAlign: 'center',
   },
+
+  featureImportanceSubtitle: {
+    fontSize: 13,
+    color: THEME.textLight,
+    textAlign: 'center',
+    marginBottom: 16,
+    fontStyle: 'italic',
+  },
+
   featureImportanceBars: {
     marginTop: 8,
   },
   featureBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 12,
   },
+
   featureBarLabel: {
-    width: 80,
-    fontSize: 13,
-    color: THEME.textLight,
+    fontSize: 14,
+    color: THEME.text,
+    fontWeight: '600',
+    marginBottom: 6,
   },
+
+  featureBarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
   featureBarOuter: {
     flex: 1,
-    height: 8,
+    height: 10,
     backgroundColor: "#E5E5E5",
-    borderRadius: 4,
-    marginHorizontal: 8,
+    borderRadius: 5,
+    marginRight: 12,
     overflow: "hidden",
   },
+
   featureBarInner: {
     height: "100%",
     backgroundColor: THEME.primary,
-    borderRadius: 4,
+    borderRadius: 5,
   },
+
   featureBarValue: {
-    width: 40,
+    width: 45,
     fontSize: 13,
     color: THEME.text,
     textAlign: "right",
+    fontWeight: '600',
   },
 
   // Tree metadata
@@ -698,6 +743,8 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     borderWidth: 1,
     borderColor: THEME.border,
+    alignSelf: 'center', // Added center alignment
+    width: '100%', // Ensure full width
   },
   noDataText: {
     fontSize: 17,
@@ -956,6 +1003,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: THEME.border,
     overflow: 'hidden',
+    alignSelf: 'center', // Added center alignment
+    width: '100%', // Ensure full width
   },
 
   chartHeader: {
@@ -991,10 +1040,17 @@ const styles = StyleSheet.create({
     gap: 12,
   },
 
+  legendRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    flex: 1,
+    marginHorizontal: 4,
   },
 
   legendColor: {
@@ -1002,6 +1058,20 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 6,
     marginRight: 6,
+  },
+
+  legendDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 8,
+  },
+
+  legendLabel: {
+    fontSize: 12,
+    color: THEME.text,
+    fontWeight: '500',
+    flex: 1,
   },
 
   legendText: {
@@ -1015,6 +1085,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
+    width: '100%', // Ensure full width
   },
 
   enhancedChart: {
@@ -1097,8 +1168,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
-    alignSelf: 'center',
+    alignSelf: 'center', // Ensure hint is centered
     marginHorizontal: 20,
+    maxWidth: 300, // Added max width for better appearance
   },
 
   // Interactive Elements - UPDATED for consistency
