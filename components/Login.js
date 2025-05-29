@@ -30,6 +30,50 @@ const Login = () => {
   const navigate = useNavigate();
   const googleProvider = new GoogleAuthProvider();
 
+  const handleForgotPassword = async () => {
+    if (!resetEmail) {
+      Alert.alert("Error", "Please enter your email address");
+      return;
+    }
+
+    if (!resetEmail.includes("@")) {
+      Alert.alert("Error", "Please enter a valid email address");
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      await sendPasswordResetEmail(auth, resetEmail);
+      Alert.alert(
+        "Reset Email Sent",
+        "A password reset link has been sent to your email address. Please check your inbox and follow the instructions to reset your password.",
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              setShowForgotPassword(false);
+              setResetEmail("");
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      let errorMessage = "Failed to send reset email. Please try again.";
+      if (error.code === "auth/user-not-found") {
+        errorMessage = "No account found with this email address.";
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "Invalid email address.";
+      } else if (error.code === "auth/too-many-requests") {
+        errorMessage = "Too many reset attempts. Please try again later.";
+      }
+      Alert.alert("Error", errorMessage);
+      console.error("Password reset error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleLogin = () => {
     if (!email || !password) {
       Alert.alert("Error", "Please fill in all fields");
@@ -77,6 +121,8 @@ const Login = () => {
           errorMessage = "Incorrect password. Please try again.";
         } else if (error.code === "auth/invalid-email") {
           errorMessage = "Invalid email address.";
+        } else if (error.code === "auth/too-many-requests") {
+          errorMessage = "Too many failed attempts. Please try again later.";
         }
         Alert.alert("Login Error", errorMessage);
       })
@@ -125,55 +171,11 @@ const Login = () => {
       });
   };
 
-  const handleForgotPassword = () => {
-    if (!resetEmail) {
-      Alert.alert("Error", "Please enter your email address");
-      return;
-    }
-
-    if (!resetEmail.includes("@")) {
-      Alert.alert("Error", "Please enter a valid email address");
-      return;
-    }
-
-    setIsLoading(true);
-    sendPasswordResetEmail(auth, resetEmail)
-      .then(() => {
-        Alert.alert(
-          "Password Reset Email Sent",
-          `A password reset link has been sent to ${resetEmail}. Please check your email and follow the instructions to reset your password.`,
-          [
-            {
-              text: "OK",
-              onPress: () => {
-                setShowForgotPassword(false);
-                setResetEmail("");
-              },
-            },
-          ]
-        );
-      })
-      .catch((error) => {
-        let errorMessage =
-          "Failed to send password reset email. Please try again.";
-        if (error.code === "auth/user-not-found") {
-          errorMessage = "No account found with this email address.";
-        } else if (error.code === "auth/invalid-email") {
-          errorMessage = "Invalid email address.";
-        }
-        Alert.alert("Error", errorMessage);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  };
-
   const renderForgotPasswordForm = () => (
     <View style={styles.forgotPasswordContainer}>
       <Text style={styles.forgotPasswordTitle}>Reset Password</Text>
       <Text style={styles.forgotPasswordText}>
-        Enter your email address and we'll send you a link to reset your
-        password.
+        Enter your email address and we'll send you a link to reset your password.
       </Text>
 
       <TextInput
@@ -192,7 +194,7 @@ const Login = () => {
         disabled={isLoading}
       >
         <Text style={styles.buttonText}>
-          {isLoading ? "Sending..." : "Send Reset Email"}
+          {isLoading ? "Sending..." : "Send Reset Link"}
         </Text>
       </TouchableOpacity>
 

@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginVertical: 12,
     color: THEME.text,
-    textAlign: 'center', // Added center alignment
+    textAlign: "center", // Added center alignment
   },
   cardTitle: {
     fontSize: 17,
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     borderRadius: 16,
-    marginHorizontal: 8, // Increased from 6 to 8 for better spacing
+    marginHorizontal: 8,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: THEME.shadow,
@@ -329,7 +329,10 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 3,
     minHeight: 110,
-    maxWidth: 180, // Added max width to prevent stretching
+    maxWidth: 180,
+    // Add these properties to ensure content centering
+    display: "flex",
+    flexDirection: "column",
   },
   statsLabel: {
     fontSize: 15,
@@ -337,11 +340,15 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     marginBottom: 10,
     textTransform: "uppercase",
+    textAlign: "center", // Add explicit text alignment
+    width: "100%", // Ensure full width for proper centering
   },
   statsPercentage: {
     fontSize: 28,
     fontWeight: "800",
     color: "#FFFFFF",
+    textAlign: "center", // Add explicit text alignment
+    width: "100%", // Ensure full width for proper centering
   },
 
   // ML Status section
@@ -387,12 +394,12 @@ const styles = StyleSheet.create({
   mlFeatureSubtitle: {
     fontSize: 14,
     color: THEME.textLight,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 16,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
   mlFeatureLegend: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: "#F8F9FA",
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -401,7 +408,7 @@ const styles = StyleSheet.create({
   },
   featureImportanceContainer: {
     marginTop: 20,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: "#F8F9FA",
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
@@ -413,15 +420,15 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: THEME.text,
     marginBottom: 4,
-    textAlign: 'center',
+    textAlign: "center",
   },
 
   featureImportanceSubtitle: {
     fontSize: 13,
     color: THEME.textLight,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 16,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
 
   featureImportanceBars: {
@@ -434,13 +441,13 @@ const styles = StyleSheet.create({
   featureBarLabel: {
     fontSize: 14,
     color: THEME.text,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 6,
   },
 
   featureBarContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
 
   featureBarOuter: {
@@ -463,7 +470,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: THEME.text,
     textAlign: "right",
-    fontWeight: '600',
+    fontWeight: "600",
   },
 
   // Tree metadata
@@ -743,19 +750,24 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     borderWidth: 1,
     borderColor: THEME.border,
-    alignSelf: 'center', // Added center alignment
-    width: '100%', // Ensure full width
+    alignSelf: "center", // Center the container itself
+    width: "100%", // Full width
+    textAlign: "center", // Added for web compatibility
   },
   noDataText: {
     fontSize: 17,
     fontWeight: "600",
     color: THEME.text,
     marginBottom: 8,
+    textAlign: "center", // Explicit text centering
+    width: "100%", // Full width for proper centering
   },
   noDataSubtext: {
     fontSize: 14,
     color: THEME.textLight,
-    textAlign: "center",
+    textAlign: "center", // Already has this, but ensuring it's there
+    width: "100%", // Full width for proper centering
+    lineHeight: 20, // Added for better readability
   },
 
   // Name editing styles
@@ -1002,53 +1014,53 @@ const styles = StyleSheet.create({
     elevation: 6,
     borderWidth: 1,
     borderColor: THEME.border,
-    overflow: 'hidden',
-    alignSelf: 'center', // Added center alignment
-    width: '100%', // Ensure full width
+    overflow: "hidden",
+    alignSelf: "center", // Added center alignment
+    width: "100%", // Ensure full width
   },
 
   chartHeader: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: "#F8F9FA",
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: THEME.border,
-    alignItems: 'center',
+    alignItems: "center",
   },
 
   chartTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
     color: THEME.text,
     marginBottom: 4,
-    textAlign: 'center',
+    textAlign: "center",
   },
 
   chartSubtitle: {
     fontSize: 14,
     color: THEME.textLight,
-    fontStyle: 'italic',
-    textAlign: 'center',
+    fontStyle: "italic",
+    textAlign: "center",
   },
 
   chartLegend: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 12,
     gap: 12,
   },
 
   legendRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 8,
   },
 
   legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
     marginHorizontal: 4,
   },
@@ -1070,32 +1082,32 @@ const styles = StyleSheet.create({
   legendLabel: {
     fontSize: 12,
     color: THEME.text,
-    fontWeight: '500',
+    fontWeight: "500",
     flex: 1,
   },
 
   legendText: {
     fontSize: 12,
     color: THEME.textLight,
-    fontWeight: '500',
+    fontWeight: "500",
   },
 
   chartContainer: {
     padding: 20,
-    position: 'relative',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%', // Ensure full width
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%", // Ensure full width
   },
 
   enhancedChart: {
     borderRadius: 12,
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     marginVertical: 8,
   },
 
   chartFooter: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: "#F8F9FA",
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderTopWidth: 1,
@@ -1103,56 +1115,56 @@ const styles = StyleSheet.create({
   },
 
   chartStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
   },
 
   chartStatItem: {
-    alignItems: 'center',
+    alignItems: "center",
     flex: 1,
   },
 
   chartStatLabel: {
     fontSize: 12,
     color: THEME.textLight,
-    fontWeight: '500',
+    fontWeight: "500",
     marginBottom: 4,
-    textAlign: 'center',
+    textAlign: "center",
   },
 
   chartStatValue: {
     fontSize: 16,
     color: THEME.text,
-    fontWeight: '700',
-    textAlign: 'center',
+    fontWeight: "700",
+    textAlign: "center",
   },
 
   // History Chart Specific Styles - UPDATED for consistency
   historyInsights: {
     marginTop: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
 
   insightsTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
     color: THEME.text,
     marginBottom: 12,
-    textAlign: 'center',
+    textAlign: "center",
   },
 
   insightsList: {
     gap: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
 
   insightText: {
     fontSize: 13,
     color: THEME.textLight,
     lineHeight: 18,
-    fontWeight: '500',
-    textAlign: 'center',
+    fontWeight: "500",
+    textAlign: "center",
     paddingHorizontal: 12,
   },
 
@@ -1160,29 +1172,29 @@ const styles = StyleSheet.create({
   chartHint: {
     fontSize: 14,
     color: THEME.primary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 16,
-    fontStyle: 'italic',
-    fontWeight: '500',
-    backgroundColor: 'rgba(92, 163, 119, 0.1)',
+    fontStyle: "italic",
+    fontWeight: "500",
+    backgroundColor: "rgba(92, 163, 119, 0.1)",
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
-    alignSelf: 'center', // Ensure hint is centered
+    alignSelf: "center", // Ensure hint is centered
     marginHorizontal: 20,
     maxWidth: 300, // Added max width for better appearance
   },
 
   // Interactive Elements - UPDATED for consistency
   barClickOverlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 20,
     left: 20,
     right: 20,
     bottom: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    alignItems: 'stretch',
+    flexDirection: "row",
+    justifyContent: "space-evenly",
+    alignItems: "stretch",
     paddingHorizontal: 20,
     paddingBottom: 40,
     paddingTop: 20,
@@ -1191,9 +1203,9 @@ const styles = StyleSheet.create({
 
   barClickArea: {
     flex: 1,
-    height: '100%',
+    height: "100%",
     borderRadius: 8,
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     marginHorizontal: 2,
   },
 });
