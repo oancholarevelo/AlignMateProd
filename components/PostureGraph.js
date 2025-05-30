@@ -299,36 +299,51 @@ const PostureGraph = () => {
     setEditedName("");
   }, []);
 
-  const handleSaveName = useCallback(async () => {
-    if (!userUID || !editedName.trim()) {
+  const sanitizeInput = (input) => {
+  if (typeof input !== 'string') return '';
+  return input
+    .replace(/[<>]/g, '') // Remove potential XSS characters
+    .trim()
+    .substring(0, 100); // Limit length
+};
+
+// Update your name saving function
+const handleSaveName = useCallback(async () => {
+  if (!userUID || !editedName.trim()) {
+    alert("Please enter a valid name");
+    return;
+  }
+
+  setIsSavingName(true);
+
+  try {
+    // SECURITY: Sanitize input before saving
+    const sanitizedName = sanitizeInput(editedName.trim());
+    
+    if (sanitizedName.length < 1) {
       alert("Please enter a valid name");
       return;
     }
 
-    setIsSavingName(true);
+    // Save to Firebase
+    await set(ref(database, `users/${userUID}/name`), sanitizedName);
 
-    try {
-      const trimmedName = editedName.trim();
+    // Update local state and storage
+    setUserName(sanitizedName);
+    localStorage.setItem("userName", sanitizedName);
 
-      // Save to Firebase
-      await set(ref(database, `users/${userUID}/name`), trimmedName);
+    // Close editing mode
+    setIsEditingName(false);
+    setEditedName("");
 
-      // Update local state and storage
-      setUserName(trimmedName);
-      localStorage.setItem("userName", trimmedName);
-
-      // Close editing mode
-      setIsEditingName(false);
-      setEditedName("");
-
-      console.log("Name updated successfully:", trimmedName);
-    } catch (error) {
-      console.error("Error updating name:", error);
-      alert("Failed to update name. Please try again.");
-    } finally {
-      setIsSavingName(false);
-    }
-  }, [userUID, editedName]);
+    console.log("Name updated successfully:", sanitizedName);
+  } catch (error) {
+    console.error("Error updating name:", error);
+    alert("Failed to update name. Please try again.");
+  } finally {
+    setIsSavingName(false);
+  }
+}, [userUID, editedName]);
 
   useEffect(() => {
     const loadProfilePicture = async () => {
