@@ -20,6 +20,7 @@ import Logout from "./Logout";
 import PostureNotification from "./PostureNotification";
 import Achievements from "./Achievements";
 import PostureDetail from "./PostureDetail";
+import HistoryDetail from "./HistoryDetail";
 import LogViewer from "./LogViewer";
 import ResearchForm from "./ResearchForm";
 import ContactUs from "./ContactUs";
@@ -119,13 +120,28 @@ const formatHourAmPm = (hour) => {
 };
 
 // Format date for display
-const formatDate = (dateString) => {
+const formatChartDate = (dateString, isToday = false) => {
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
+    const today = new Date();
+
+    // Check if it's today
+    const actuallyToday = date.toDateString() === today.toDateString();
+
+    if (actuallyToday) {
+      return "Today";
+    }
+
+    // Check if it's yesterday
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (date.toDateString() === yesterday.toDateString()) {
+      return "Yest";
+    }
+
+    // Use short day names for other days
+    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    return dayNames[date.getDay()];
   }
   return dateString;
 };
@@ -136,6 +152,7 @@ const PostureGraph = () => {
   const [mlData, setMlData] = useState([]);
   const [aggregatedData, setAggregatedData] = useState([]);
   const [historyData, setHistoryData] = useState([]);
+  const [selectedHistoryData, setSelectedHistoryData] = useState(null);
   const [goodPosturePercentage, setGoodPosturePercentage] = useState(0);
   const [badPosturePercentage, setBadPosturePercentage] = useState(0);
   const [latestPrediction, setLatestPrediction] = useState("Unknown");
@@ -1044,6 +1061,44 @@ const PostureGraph = () => {
     return baseConfig;
   };
 
+  const getHistoryChartConfig = () => ({
+    backgroundColor: THEME.cardBackground,
+    backgroundGradientFrom: THEME.cardBackground,
+    backgroundGradientFromOpacity: 1,
+    backgroundGradientTo: THEME.cardBackground,
+    backgroundGradientToOpacity: 1,
+    color: (opacity = 1) => `rgba(27, 18, 18, ${opacity})`,
+    labelColor: (opacity = 1) => `rgba(27, 18, 18, ${opacity})`,
+    strokeWidth: 2,
+    barPercentage: 0.8,
+    useShadowColorFromDataset: false,
+    decimalPlaces: 0,
+    style: {
+      borderRadius: 12,
+    },
+    propsForBackgroundLines: {
+      strokeDasharray: "",
+      stroke: THEME.border,
+      strokeWidth: 1,
+      strokeOpacity: 0.2,
+    },
+    propsForLabels: {
+      fontSize: 0, // Hide default labels completely
+      fontWeight: "500",
+      fill: "transparent", // Make them invisible
+    },
+    propsForVerticalLabels: {
+      fontSize: 0, // Hide vertical labels
+      fill: "transparent",
+    },
+    propsForHorizontalLabels: {
+      fontSize: 0, // Hide horizontal labels
+      fill: "transparent",
+    },
+    formatXLabel: () => "", // Return empty string for all labels
+    formatYLabel: (value) => value + "%",
+  });
+
   // Enhanced color function for posture bars
   const getPostureBarColor = (value, opacity = 1, animated = false) => {
     let baseColor;
@@ -1745,6 +1800,278 @@ const PostureGraph = () => {
 
     setActiveTab("postureDetail");
   };
+
+  const handleHistoryBarClick = useCallback(
+    (index) => {
+      const today = new Date();
+      const sevenDaysAgo = new Date(today);
+      sevenDaysAgo.setDate(today.getDate() - 6);
+
+      const clickedDate = new Date(sevenDaysAgo);
+      clickedDate.setDate(sevenDaysAgo.getDate() + index);
+      const dateString = clickedDate.toISOString().split("T")[0];
+      const isToday = dateString === today.toISOString().split("T")[0];
+
+      // Find existing data for this date
+      let dayData = historyData.find((item) => item.date === dateString);
+
+      // If it's today and no historical data exists, calculate from current data
+      if (!dayData && isToday && data.length > 0) {
+        const todaysData = data.filter(
+          (entry) =>
+            entry &&
+            entry.hour &&
+            entry.hour.toISOString().split("T")[0] === dateString
+        );
+
+        if (todaysData.length > 0) {
+          let goodCount = 0;
+          let warningCount = 0;
+          let badCount = 0;
+
+          const todaysMlData = mlData.filter(
+            (entry) =>
+              entry &&
+              entry.hour &&
+              entry.hour.toISOString().split("T")[0] === dateString
+          );
+
+          if (todaysMlData.length > 0) {
+            // Use ML predictions
+            todaysMlData.forEach((entry) => {
+              if (entry.prediction === "Good") goodCount++;
+              else if (entry.prediction === "Warning") warningCount++;
+              else if (entry.prediction === "Bad") badCount++;
+            });
+          } else {
+            // Fallback to threshold-based calculation
+            todaysData.forEach((entry) => {
+              if (entry.pitch <= PITCH_GOOD_THRESHOLD) goodCount++;
+              else if (entry.pitch <= PITCH_WARNING_THRESHOLD) warningCount++;
+              else badCount++;
+            });
+          }
+
+          const total = goodCount + warningCount + badCount;
+          if (total > 0) {
+            dayData = {
+              date: dateString,
+              good: (goodCount / total) * 100,
+              warning: (warningCount / total) * 100,
+              bad: (badCount / total) * 100,
+              dataCount: total,
+              isToday: true,
+            };
+          }
+        }
+      }
+
+      // If we have data for this day, show detailed view
+      if (dayData) {
+        // Add additional ML-based insights
+        const enhancedData = {
+          ...dayData,
+          date: dateString,
+          formattedDate: formatHistoryDate(dateString),
+          isToday: isToday,
+          // Calculate ML decision tree insights
+          mlInsights: calculateMLInsights(dateString, isToday),
+          // Calculate improvement trends
+          trendAnalysis: calculateTrendAnalysis(dateString, index),
+        };
+
+        setSelectedHistoryData(enhancedData);
+        setActiveTab("historyDetail");
+      }
+    },
+    [historyData, data, mlData]
+  );
+
+  // Add helper function to format history dates
+  const formatHistoryDate = (dateString) => {
+    const date = new Date(dateString);
+    const today = new Date();
+
+    if (date.toDateString() === today.toDateString()) {
+      return "Today";
+    }
+
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (date.toDateString() === yesterday.toDateString()) {
+      return "Yesterday";
+    }
+
+    const options = { weekday: "long", month: "short", day: "numeric" };
+    return date.toLocaleDateString("en-US", options);
+  };
+
+  // Add function to calculate ML-based insights for the selected day
+  const calculateMLInsights = useCallback(
+    (dateString, isToday) => {
+      let insights = {
+        dominantFeature: "none",
+        featureDistribution: {},
+        confidencePattern: "unknown",
+        averageConfidence: 0,
+        decisionTreePath: [],
+        hourlyBreakdown: {},
+        postureTransitions: 0,
+        stabilityScore: 0,
+        totalReadings: 0,
+      };
+
+      // Get ML data for this specific day
+      const dayMlData = mlData.filter(
+        (entry) =>
+          entry &&
+          entry.hour &&
+          entry.hour.toISOString().split("T")[0] === dateString
+      );
+
+      if (dayMlData.length === 0) return insights;
+
+      // Analyze dominant features
+      const featureCount = {};
+      let totalConfidence = 0;
+      let confidenceReadings = 0;
+      const hourlyData = {};
+      let transitions = 0;
+      let lastPrediction = null;
+
+      dayMlData.forEach((entry, index) => {
+        // Count primary features
+        if (entry.primaryFeature && entry.primaryFeature !== "none") {
+          featureCount[entry.primaryFeature] =
+            (featureCount[entry.primaryFeature] || 0) + 1;
+        }
+
+        // Calculate confidence
+        if (entry.confidence && entry.confidence > 0) {
+          totalConfidence += entry.confidence;
+          confidenceReadings++;
+        }
+
+        // Track hourly breakdown
+        const hour = entry.hour.getHours();
+        if (!hourlyData[hour]) {
+          hourlyData[hour] = { good: 0, warning: 0, bad: 0, total: 0 };
+        }
+        hourlyData[hour][entry.prediction.toLowerCase()]++;
+        hourlyData[hour].total++;
+
+        // Count posture transitions
+        if (lastPrediction && lastPrediction !== entry.prediction) {
+          transitions++;
+        }
+        lastPrediction = entry.prediction;
+      });
+
+      // Determine dominant feature
+      const dominantFeature = Object.keys(featureCount).reduce(
+        (a, b) => (featureCount[a] > featureCount[b] ? a : b),
+        "none"
+      );
+
+      // Calculate average confidence
+      const avgConfidence =
+        confidenceReadings > 0 ? totalConfidence / confidenceReadings : 0;
+
+      // Determine confidence pattern
+      let confidencePattern = "stable";
+      if (avgConfidence > 0.8) confidencePattern = "high";
+      else if (avgConfidence < 0.6) confidencePattern = "low";
+
+      // Calculate stability score (fewer transitions = more stable)
+      const stabilityScore = Math.max(
+        0,
+        100 - (transitions / dayMlData.length) * 100
+      );
+
+      return {
+        dominantFeature,
+        featureDistribution: featureCount,
+        confidencePattern,
+        averageConfidence: avgConfidence,
+        hourlyBreakdown: hourlyData,
+        postureTransitions: transitions,
+        stabilityScore: Math.round(stabilityScore),
+        totalReadings: dayMlData.length,
+      };
+    },
+    [mlData]
+  );
+
+  // Add function to calculate trend analysis
+  const calculateTrendAnalysis = useCallback(
+    (dateString, dayIndex) => {
+      const analysis = {
+        trend: "stable",
+        improvement: 0,
+        comparison: "no_data",
+        recommendation: "",
+      };
+
+      // Find current day data
+      const currentDay = historyData.find((item) => item.date === dateString);
+      if (!currentDay) return analysis;
+
+      // Compare with previous day if available
+      const previousDay = historyData.find((item) => {
+        const prevDate = new Date(dateString);
+        prevDate.setDate(prevDate.getDate() - 1);
+        return item.date === prevDate.toISOString().split("T")[0];
+      });
+
+      if (previousDay) {
+        analysis.improvement = currentDay.good - previousDay.good;
+        analysis.comparison = "previous_day";
+
+        if (analysis.improvement > 5) {
+          analysis.trend = "improving";
+          analysis.recommendation = "Great progress! Keep up the good work.";
+        } else if (analysis.improvement < -5) {
+          analysis.trend = "declining";
+          analysis.recommendation =
+            "Focus on maintaining good posture throughout the day.";
+        } else {
+          analysis.trend = "stable";
+          analysis.recommendation =
+            "Consistent performance. Try to improve gradually.";
+        }
+      }
+
+      // Compare with weekly average
+      const weeklyAverage =
+        historyData.reduce((sum, day) => sum + day.good, 0) /
+        historyData.length;
+      const weeklyComparison = currentDay.good - weeklyAverage;
+
+      if (weeklyComparison > 0) {
+        analysis.weeklyComparison = `${weeklyComparison.toFixed(
+          1
+        )}% above weekly average`;
+      } else {
+        analysis.weeklyComparison = `${Math.abs(weeklyComparison).toFixed(
+          1
+        )}% below weekly average`;
+      }
+
+      return analysis;
+    },
+    [historyData]
+  );
+
+  // Add the HistoryDetail render function
+  const renderHistoryDetail = () => (
+    <HistoryDetail
+      selectedHistoryData={selectedHistoryData}
+      onBack={() => {
+        setSelectedHistoryData(null);
+        setActiveTab("dashboard");
+      }}
+    />
+  );
 
   const handleRetrainModel = () => {
     if (!userUID) return;
@@ -2472,56 +2799,76 @@ const PostureGraph = () => {
               <Text style={styles.chartSubtitle}>
                 Track your posture improvement over time
               </Text>
+
+              {/* Clickable Hint */}
+              <Text style={styles.chartHint}>
+                📊 Tap any day's bar to see detailed ML insights and trends
+              </Text>
+
+              {/* Enhanced Legend */}
+              <View style={styles.historyLegendContainer}>
+                <View style={styles.historyLegendItem}>
+                  <View
+                    style={[
+                      styles.historyLegendDot,
+                      { backgroundColor: THEME.primary },
+                    ]}
+                  />
+                  <Text style={styles.historyLegendText}>Excellent</Text>
+                </View>
+                <View style={styles.historyLegendItem}>
+                  <View
+                    style={[
+                      styles.historyLegendDot,
+                      { backgroundColor: THEME.warning },
+                    ]}
+                  />
+                  <Text style={styles.historyLegendText}>Needs Work</Text>
+                </View>
+                <View style={styles.historyLegendItem}>
+                  <View
+                    style={[
+                      styles.historyLegendDot,
+                      { backgroundColor: THEME.danger },
+                    ]}
+                  />
+                  <Text style={styles.historyLegendText}>Poor</Text>
+                </View>
+              </View>
             </View>
 
-            {/* Enhanced Stacked Bar Chart */}
-            <View style={styles.chartContainer}>
+            {/* Enhanced Chart Container */}
+            <View style={styles.historyChartContainer}>
               <StackedBarChart
                 data={{
                   labels: (() => {
-                    // Create a proper 7-day dataset including today
-                    const chartData = [];
+                    // Always show all 7 days to ensure proper left alignment
+                    const today = new Date();
+                    const sevenDaysAgo = new Date(today);
+                    sevenDaysAgo.setDate(today.getDate() - 6);
 
-                    // Generate the last 7 days including today
+                    const labels = [];
                     for (let i = 0; i < 7; i++) {
-                      const currentDate = new Date(sevenDaysAgo);
-                      currentDate.setDate(sevenDaysAgo.getDate() + i);
-                      const dateString = currentDate
-                        .toISOString()
-                        .split("T")[0];
-
-                      // Find existing data for this date
-                      const existingData = historyData.find(
-                        (item) => item.date === dateString
-                      );
-
-                      if (existingData) {
-                        chartData.push(existingData);
-                      } else {
-                        // Create placeholder data for missing dates
-                        chartData.push({
-                          date: dateString,
-                          good: 0,
-                          warning: 0,
-                          bad: 0,
-                        });
-                      }
+                      labels.push(""); // Empty labels - we'll use custom ones below
                     }
-
-                    return chartData.map((item) => formatDate(item.date));
+                    return labels;
                   })(),
                   legend: ["Excellent", "Needs Work", "Poor"],
                   data: (() => {
-                    // Generate data array to match the labels
                     const chartData = [];
+                    const today = new Date();
+                    const sevenDaysAgo = new Date(today);
+                    sevenDaysAgo.setDate(today.getDate() - 6);
 
-                    // Generate the last 7 days including today
+                    // Always generate all 7 days to maintain left alignment
                     for (let i = 0; i < 7; i++) {
                       const currentDate = new Date(sevenDaysAgo);
                       currentDate.setDate(sevenDaysAgo.getDate() + i);
                       const dateString = currentDate
                         .toISOString()
                         .split("T")[0];
+                      const isToday =
+                        dateString === today.toISOString().split("T")[0];
 
                       // Find existing data for this date
                       const existingData = historyData.find(
@@ -2529,13 +2876,66 @@ const PostureGraph = () => {
                       );
 
                       if (existingData) {
+                        // Use actual data
                         chartData.push([
                           Math.round(existingData.good),
                           Math.round(existingData.warning || 0),
                           Math.round(existingData.bad),
                         ]);
+                      } else if (isToday && data.length > 0) {
+                        // For today, calculate from current data if available
+                        const todaysData = data.filter(
+                          (entry) => entry && entry.hour && isToday
+                        );
+
+                        if (todaysData.length > 0) {
+                          // Calculate today's percentages from current data
+                          let goodCount = 0;
+                          let warningCount = 0;
+                          let badCount = 0;
+
+                          const todaysMlData = mlData.filter(
+                            (entry) =>
+                              entry &&
+                              entry.hour &&
+                              entry.hour.toISOString().split("T")[0] ===
+                                dateString
+                          );
+
+                          if (todaysMlData.length > 0) {
+                            // Use ML predictions
+                            todaysMlData.forEach((entry) => {
+                              if (entry.prediction === "Good") goodCount++;
+                              else if (entry.prediction === "Warning")
+                                warningCount++;
+                              else if (entry.prediction === "Bad") badCount++;
+                            });
+                          } else {
+                            // Fallback to threshold-based calculation
+                            todaysData.forEach((entry) => {
+                              if (entry.pitch <= PITCH_GOOD_THRESHOLD)
+                                goodCount++;
+                              else if (entry.pitch <= PITCH_WARNING_THRESHOLD)
+                                warningCount++;
+                              else badCount++;
+                            });
+                          }
+
+                          const total = goodCount + warningCount + badCount;
+                          if (total > 0) {
+                            chartData.push([
+                              Math.round((goodCount / total) * 100),
+                              Math.round((warningCount / total) * 100),
+                              Math.round((badCount / total) * 100),
+                            ]);
+                          } else {
+                            chartData.push([0, 0, 0]);
+                          }
+                        } else {
+                          chartData.push([0, 0, 0]);
+                        }
                       } else {
-                        // For missing days, show minimal placeholder
+                        // No data for this day - use placeholder that won't be visible
                         chartData.push([0, 0, 0]);
                       }
                     }
@@ -2549,38 +2949,76 @@ const PostureGraph = () => {
                   ],
                 }}
                 width={CHART_WIDTH}
-                height={240}
+                height={220}
                 chartConfig={{
-                  backgroundColor: THEME.cardBackground,
-                  backgroundGradientFrom: THEME.cardBackground,
-                  backgroundGradientFromOpacity: 1,
-                  backgroundGradientTo: THEME.cardBackground,
-                  backgroundGradientToOpacity: 1,
-                  color: (opacity = 1) => `rgba(27, 18, 18, ${opacity})`,
-                  labelColor: (opacity = 1) => `rgba(27, 18, 18, ${opacity})`,
-                  strokeWidth: 2,
-                  barPercentage: 0.7,
-                  useShadowColorFromDataset: false,
-                  decimalPlaces: 0,
-                  style: {
-                    borderRadius: 12,
-                  },
-                  propsForBackgroundLines: {
-                    strokeDasharray: "",
-                    stroke: THEME.border,
-                    strokeWidth: 1,
-                    strokeOpacity: 0.3,
-                  },
-                  propsForLabels: {
-                    fontSize: 12,
-                    fontWeight: "500",
-                    fill: THEME.textLight,
-                  },
+                  ...getHistoryChartConfig(),
+                  // Force minimum bar width and proper spacing
+                  barPercentage: 0.7, // Slightly thinner bars
+                  categoryPercentage: 1.0, // Full category width
                 }}
-                style={styles.enhancedChart}
-                horizontalLabelRotation={0}
-                verticalLabelRotation={0}
+                style={styles.historyChart}
+                hideLegend={true}
+                withHorizontalLabels={false}
+                withVerticalLabels={true}
+                fromZero={true}
               />
+
+              {/* Interactive overlay for history bar clicks - THIS IS THE KEY ADDITION */}
+              <View style={styles.historyBarClickOverlay}>
+                {Array.from({ length: 7 }, (_, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.historyBarClickArea}
+                    onPress={() => handleHistoryBarClick(index)}
+                    activeOpacity={0.7}
+                  />
+                ))}
+              </View>
+
+              {/* Custom Date Labels - Enhanced to show data availability */}
+              <View style={styles.customDateLabels}>
+                {(() => {
+                  const labels = [];
+                  const today = new Date();
+                  const sevenDaysAgo = new Date(today);
+                  sevenDaysAgo.setDate(today.getDate() - 6);
+
+                  for (let i = 0; i < 7; i++) {
+                    const currentDate = new Date(sevenDaysAgo);
+                    currentDate.setDate(sevenDaysAgo.getDate() + i);
+                    const dateString = currentDate.toISOString().split("T")[0];
+                    const isToday =
+                      dateString === today.toISOString().split("T")[0];
+
+                    // Check if this day has data
+                    const hasHistoryData = historyData.some(
+                      (item) => item.date === dateString
+                    );
+                    const hasTodayData = isToday && data.length > 0;
+                    const hasData = hasHistoryData || hasTodayData;
+
+                    labels.push(
+                      <TouchableOpacity
+                        key={i}
+                        onPress={() => handleHistoryBarClick(i)}
+                        activeOpacity={0.7}
+                      >
+                        <Text
+                          style={[
+                            styles.dateLabel,
+                            isToday && styles.todayDateLabel,
+                            !hasData && styles.noDataDateLabel,
+                            hasData && styles.clickableDateLabel, // Add clickable styling
+                          ]}
+                        >
+                          {formatChartDate(dateString, isToday)}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  }
+                  return labels;
+                })()}
+              </View>
             </View>
 
             {/* History Chart Footer with Insights */}
@@ -2643,13 +3081,11 @@ const PostureGraph = () => {
                   {historyData.length > 0 && (
                     <Text style={styles.insightText}>
                       🎯 Best day:{" "}
-                      {historyData
-                        .reduce((best, day) =>
+                      {formatChartDate(
+                        historyData.reduce((best, day) =>
                           day.good > best.good ? day : best
-                        )
-                        .date.split("-")
-                        .slice(1)
-                        .join("/")}{" "}
+                        ).date
+                      )}{" "}
                       (
                       {historyData
                         .reduce((best, day) =>
@@ -2927,6 +3363,7 @@ const PostureGraph = () => {
       {activeTab === "settings" && renderSettings()}
       {activeTab === "achievements" && renderAchievements()}
       {activeTab === "postureDetail" && renderPostureDetail()}
+      {activeTab === "historyDetail" && renderHistoryDetail()}
 
       {/* Footer Navigation */}
       <View style={styles.footer}>

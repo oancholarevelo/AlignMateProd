@@ -290,6 +290,77 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     padding: 12,
   },
+  historyChartContainer: {
+    padding: 16,
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    backgroundColor: THEME.cardBackground,
+  },
+
+  historyChart: {
+    borderRadius: 12,
+    backgroundColor: "transparent",
+    marginVertical: 12,
+  },
+
+  customDateLabels: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 35, // Align with chart bars
+    marginTop: 8,
+    marginBottom: 12,
+  },
+
+  dateLabel: {
+    fontSize: 11,
+    color: THEME.textLight,
+    fontWeight: "500",
+    textAlign: "center",
+    flex: 1,
+    minWidth: 32,
+  },
+
+  todayDateLabel: {
+    color: THEME.primary,
+    fontWeight: "600",
+  },
+
+  noDataDateLabel: {
+    color: "rgba(102, 102, 102, 0.4)", // Much lighter gray for days without data
+    fontWeight: "400",
+  },
+
+  // Enhanced Legend Styles
+  historyLegendContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 16,
+    paddingHorizontal: 16,
+    gap: 20,
+  },
+
+  historyLegendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
+  },
+
+  historyLegendDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 6,
+  },
+
+  historyLegendText: {
+    fontSize: 13,
+    color: THEME.text,
+    fontWeight: "500",
+  },
   chart: {
     marginVertical: 8,
     borderRadius: 8,
@@ -1246,6 +1317,23 @@ const styles = StyleSheet.create({
   },
   feedbackButton: {
     marginTop: 8,
+  },
+  historyBarClickOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    flexDirection: "row",
+    paddingHorizontal: 16,
+  },
+  historyBarClickArea: {
+    flex: 1,
+    height: "100%",
+  },
+  clickableDateLabel: {
+    textDecorationLine: "underline",
+    textDecorationColor: THEME.primary,
   },
 });
 
