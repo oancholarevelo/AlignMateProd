@@ -2411,158 +2411,271 @@ const PostureGraph = () => {
         </Card>
       )}
 
-      {/* Enhanced Posture History */}
       <SectionHeader title="7-Day Posture Trends" />
 
-      {historyData.length > 0 ? (
-        <Animated.View
-          style={[
-            styles.enhancedChartCard,
-            {
-              opacity: chartAnimation,
-              transform: [
-                {
-                  scale: chartAnimation.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.95, 1],
-                  }),
-                },
-              ],
-            },
-          ]}
-        >
-          {/* History Chart Header */}
-          <View style={styles.chartHeader}>
-            <Text style={styles.chartTitle}>Weekly Progress Overview</Text>
-            <Text style={styles.chartSubtitle}>
-              Track your posture improvement over time
-            </Text>
-          </View>
+      {(() => {
+        // FIXED: More comprehensive check for displaying the chart
+        const hasHistoricalData = historyData.length > 0;
+        const hasTodaysData = data.length > 0;
 
-          {/* Enhanced Stacked Bar Chart */}
-          <View style={styles.chartContainer}>
-            <StackedBarChart
-              data={{
-                labels: historyData
-                  .slice(-7)
-                  .map((item) => formatDate(item.date)),
-                legend: ["Excellent", "Needs Work", "Poor"],
-                data: historyData
-                  .slice(-7)
-                  .map((item) => [
-                    Math.round(item.good),
-                    Math.round(item.warning || 0),
-                    Math.round(item.bad),
-                  ]),
-                barColors: [
-                  THEME.primary, // Good - Green
-                  THEME.warning, // Warning - Amber
-                  THEME.danger, // Bad - Red
+        // Create the 7-day dataset to check if we have any meaningful data
+        const today = new Date();
+        const sevenDaysAgo = new Date(today);
+        sevenDaysAgo.setDate(today.getDate() - 6);
+
+        let hasAnyDataInLast7Days = false;
+
+        // Check if we have data for any of the last 7 days
+        for (let i = 0; i < 7; i++) {
+          const currentDate = new Date(sevenDaysAgo);
+          currentDate.setDate(sevenDaysAgo.getDate() + i);
+          const dateString = currentDate.toISOString().split("T")[0];
+
+          // Check if this date has data in historyData
+          const hasDataForThisDate = historyData.some(
+            (item) => item.date === dateString
+          );
+
+          // Check if this date is today and has current data
+          const isToday = dateString === today.toISOString().split("T")[0];
+          const todayHasData = isToday && hasTodaysData;
+
+          if (hasDataForThisDate || todayHasData) {
+            hasAnyDataInLast7Days = true;
+            break;
+          }
+        }
+
+        // Show chart if we have any data in the last 7 days OR historical data
+        const shouldShowChart = hasAnyDataInLast7Days || hasHistoricalData;
+
+        return shouldShowChart ? (
+          <Animated.View
+            style={[
+              styles.enhancedChartCard,
+              {
+                opacity: chartAnimation,
+                transform: [
+                  {
+                    scale: chartAnimation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.95, 1],
+                    }),
+                  },
                 ],
-              }}
-              width={CHART_WIDTH}
-              height={240}
-              chartConfig={{
-                backgroundColor: THEME.cardBackground, // Explicit white background
-                backgroundGradientFrom: THEME.cardBackground, // White
-                backgroundGradientFromOpacity: 1,
-                backgroundGradientTo: THEME.cardBackground, // Same white to prevent gradient
-                backgroundGradientToOpacity: 1,
-                color: (opacity = 1) => `rgba(27, 18, 18, ${opacity})`,
-                labelColor: (opacity = 1) => `rgba(27, 18, 18, ${opacity})`,
-                strokeWidth: 2,
-                barPercentage: 0.7,
-                useShadowColorFromDataset: false,
-                decimalPlaces: 0,
-                style: {
-                  borderRadius: 12,
-                },
-                propsForBackgroundLines: {
-                  strokeDasharray: "",
-                  stroke: THEME.border,
-                  strokeWidth: 1,
-                  strokeOpacity: 0.3,
-                },
-                propsForLabels: {
-                  fontSize: 12,
-                  fontWeight: "500",
-                  fill: THEME.textLight,
-                },
-              }}
-              style={styles.enhancedChart}
-              horizontalLabelRotation={0}
-              verticalLabelRotation={0}
-            />
-          </View>
+              },
+            ]}
+          >
+            {/* History Chart Header */}
+            <View style={styles.chartHeader}>
+              <Text style={styles.chartTitle}>Weekly Progress Overview</Text>
+              <Text style={styles.chartSubtitle}>
+                Track your posture improvement over time
+              </Text>
+            </View>
 
-          {/* History Chart Footer with Insights */}
-          <View style={styles.chartFooter}>
-            <View style={styles.historyInsights}>
-              <Text style={styles.insightsTitle}>📈 Weekly Insights</Text>
-              <View style={styles.insightsList}>
-                {(() => {
-                  const latest = historyData[historyData.length - 1];
-                  const previous = historyData[historyData.length - 2];
+            {/* Enhanced Stacked Bar Chart */}
+            <View style={styles.chartContainer}>
+              <StackedBarChart
+                data={{
+                  labels: (() => {
+                    // Create a proper 7-day dataset including today
+                    const chartData = [];
 
-                  if (latest && previous) {
-                    const improvement = latest.good - previous.good;
+                    // Generate the last 7 days including today
+                    for (let i = 0; i < 7; i++) {
+                      const currentDate = new Date(sevenDaysAgo);
+                      currentDate.setDate(sevenDaysAgo.getDate() + i);
+                      const dateString = currentDate
+                        .toISOString()
+                        .split("T")[0];
+
+                      // Find existing data for this date
+                      const existingData = historyData.find(
+                        (item) => item.date === dateString
+                      );
+
+                      if (existingData) {
+                        chartData.push(existingData);
+                      } else {
+                        // Create placeholder data for missing dates
+                        chartData.push({
+                          date: dateString,
+                          good: 0,
+                          warning: 0,
+                          bad: 0,
+                        });
+                      }
+                    }
+
+                    return chartData.map((item) => formatDate(item.date));
+                  })(),
+                  legend: ["Excellent", "Needs Work", "Poor"],
+                  data: (() => {
+                    // Generate data array to match the labels
+                    const chartData = [];
+
+                    // Generate the last 7 days including today
+                    for (let i = 0; i < 7; i++) {
+                      const currentDate = new Date(sevenDaysAgo);
+                      currentDate.setDate(sevenDaysAgo.getDate() + i);
+                      const dateString = currentDate
+                        .toISOString()
+                        .split("T")[0];
+
+                      // Find existing data for this date
+                      const existingData = historyData.find(
+                        (item) => item.date === dateString
+                      );
+
+                      if (existingData) {
+                        chartData.push([
+                          Math.round(existingData.good),
+                          Math.round(existingData.warning || 0),
+                          Math.round(existingData.bad),
+                        ]);
+                      } else {
+                        // For missing days, show minimal placeholder
+                        chartData.push([0, 0, 0]);
+                      }
+                    }
+
+                    return chartData;
+                  })(),
+                  barColors: [
+                    THEME.primary, // Good - Green
+                    THEME.warning, // Warning - Amber
+                    THEME.danger, // Bad - Red
+                  ],
+                }}
+                width={CHART_WIDTH}
+                height={240}
+                chartConfig={{
+                  backgroundColor: THEME.cardBackground,
+                  backgroundGradientFrom: THEME.cardBackground,
+                  backgroundGradientFromOpacity: 1,
+                  backgroundGradientTo: THEME.cardBackground,
+                  backgroundGradientToOpacity: 1,
+                  color: (opacity = 1) => `rgba(27, 18, 18, ${opacity})`,
+                  labelColor: (opacity = 1) => `rgba(27, 18, 18, ${opacity})`,
+                  strokeWidth: 2,
+                  barPercentage: 0.7,
+                  useShadowColorFromDataset: false,
+                  decimalPlaces: 0,
+                  style: {
+                    borderRadius: 12,
+                  },
+                  propsForBackgroundLines: {
+                    strokeDasharray: "",
+                    stroke: THEME.border,
+                    strokeWidth: 1,
+                    strokeOpacity: 0.3,
+                  },
+                  propsForLabels: {
+                    fontSize: 12,
+                    fontWeight: "500",
+                    fill: THEME.textLight,
+                  },
+                }}
+                style={styles.enhancedChart}
+                horizontalLabelRotation={0}
+                verticalLabelRotation={0}
+              />
+            </View>
+
+            {/* History Chart Footer with Insights */}
+            <View style={styles.chartFooter}>
+              <View style={styles.historyInsights}>
+                <Text style={styles.insightsTitle}>📈 Weekly Insights</Text>
+                <View style={styles.insightsList}>
+                  {(() => {
+                    if (historyData.length === 0) {
+                      return (
+                        <Text style={styles.insightText}>
+                          🆕 Start your posture tracking journey! Data will
+                          appear as you use your sensor.
+                        </Text>
+                      );
+                    }
+
+                    const latest = historyData[historyData.length - 1];
+                    const previous = historyData[historyData.length - 2];
+
+                    if (latest && previous) {
+                      const improvement = latest.good - previous.good;
+                      return (
+                        <Text
+                          style={[
+                            styles.insightText,
+                            {
+                              color:
+                                improvement > 0 ? THEME.primary : THEME.danger,
+                            },
+                          ]}
+                        >
+                          {improvement > 0
+                            ? `🎉 ${improvement.toFixed(
+                                1
+                              )}% improvement from yesterday!`
+                            : `⚠️ ${Math.abs(improvement).toFixed(
+                                1
+                              )}% decline from yesterday`}
+                        </Text>
+                      );
+                    }
+
+                    if (historyData.length === 1) {
+                      return (
+                        <Text style={styles.insightText}>
+                          🎯 Great start! Keep tracking to see your progress
+                          trends.
+                        </Text>
+                      );
+                    }
+
                     return (
-                      <Text
-                        style={[
-                          styles.insightText,
-                          {
-                            color:
-                              improvement > 0 ? THEME.primary : THEME.danger,
-                          },
-                        ]}
-                      >
-                        {improvement > 0
-                          ? `🎉 ${improvement.toFixed(
-                              1
-                            )}% improvement from yesterday!`
-                          : `⚠️ ${Math.abs(improvement).toFixed(
-                              1
-                            )}% decline from yesterday`}
+                      <Text style={styles.insightText}>
+                        Keep tracking to see your progress trends!
                       </Text>
                     );
-                  }
+                  })()}
 
-                  return (
+                  {historyData.length > 0 && (
                     <Text style={styles.insightText}>
-                      Keep tracking to see your progress trends!
+                      🎯 Best day:{" "}
+                      {historyData
+                        .reduce((best, day) =>
+                          day.good > best.good ? day : best
+                        )
+                        .date.split("-")
+                        .slice(1)
+                        .join("/")}{" "}
+                      (
+                      {historyData
+                        .reduce((best, day) =>
+                          day.good > best.good ? day : best
+                        )
+                        .good.toFixed(0)}
+                      % good posture)
                     </Text>
-                  );
-                })()}
-
-                <Text style={styles.insightText}>
-                  🎯 Best day:{" "}
-                  {historyData
-                    .reduce((best, day) => (day.good > best.good ? day : best))
-                    .date.split("-")
-                    .slice(1)
-                    .join("/")}{" "}
-                  (
-                  {historyData
-                    .reduce((best, day) => (day.good > best.good ? day : best))
-                    .good.toFixed(0)}
-                  % good posture)
-                </Text>
+                  )}
+                </View>
               </View>
             </View>
+          </Animated.View>
+        ) : (
+          // Only show this when there's truly no data at all
+          <View style={styles.noDataContainer}>
+            <Text style={styles.noDataText}>Building your posture history</Text>
+            <Text style={styles.noDataSubtext}>
+              📊 Your weekly trends will appear here as you use AlignMate
+            </Text>
+            <Text style={styles.noDataSubtext}>
+              💡 Use your sensor throughout the day to start tracking progress
+            </Text>
           </View>
-        </Animated.View>
-      ) : (
-        // Show message when no history data is available
-        <View style={styles.noDataContainer}>
-          <Text style={styles.noDataText}>Building your posture history</Text>
-          <Text style={styles.noDataSubtext}>
-            📊 Your weekly trends will appear here as you use AlignMate
-          </Text>
-          <Text style={styles.noDataSubtext}>
-            💡 Use your sensor throughout the day to start tracking progress
-          </Text>
-        </View>
-      )}
+        );
+      })()}
 
       {/* Quick Logs */}
       {showQuickLogs && (
