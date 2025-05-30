@@ -39,11 +39,6 @@ const Register = () => {
   const navigate = useNavigate();
   const googleProvider = new GoogleAuthProvider();
 
-  const nameInputRef = useRef(null);
-  const emailInputRef = useRef(null);
-  const passwordInputRef = useRef(null);
-  const confirmPasswordInputRef = useRef(null);
-
   // Password validation function
   const validatePassword = (password) => {
     const errors = [];
@@ -374,9 +369,6 @@ const Register = () => {
             placeholderTextColor="#1B1212"
             onChangeText={setName}
             value={name}
-            returnKeyType="next"
-            onSubmitEditing={() => emailInputRef.current?.focus()}
-            ref={nameInputRef}
           />
           <TextInput
             style={[
@@ -389,9 +381,6 @@ const Register = () => {
             value={email}
             keyboardType="email-address"
             autoCapitalize="none"
-            returnKeyType="next"
-            onSubmitEditing={() => passwordInputRef.current?.focus()}
-            ref={emailInputRef}
           />
 
           {/* Password Input with Eye Toggle */}
@@ -408,9 +397,6 @@ const Register = () => {
               secureTextEntry={!showPassword}
               onChangeText={handlePasswordChange}
               value={password}
-              returnKeyType="next"
-              onSubmitEditing={() => confirmPasswordInputRef.current?.focus()}
-              ref={passwordInputRef}
             />
             <EyeIcon
               visible={showPassword}
@@ -432,13 +418,6 @@ const Register = () => {
               secureTextEntry={!showConfirmPassword}
               onChangeText={setConfirmPassword}
               value={confirmPassword}
-              returnKeyType="go"
-              onSubmitEditing={() => {
-                if (isFormValid() && !isLoading) {
-                  handleRegister();
-                }
-              }}
-              ref={confirmPasswordInputRef}
             />
             <EyeIcon
               visible={showConfirmPassword}
