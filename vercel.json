@@ -1,6 +1,6 @@
 {
   "buildCommand": "npx expo export --platform web",
-  "outputDirectory": "dist",
+  "outputDirectory": "dist", 
   "devCommand": "npx expo start --web",
   "installCommand": "npm install",
   "rewrites": [
@@ -19,7 +19,7 @@
           "value": "DENY"
         },
         {
-          "key": "X-XSS-Protection",
+          "key": "X-XSS-Protection", 
           "value": "1; mode=block"
         },
         {
@@ -39,16 +39,8 @@
           "value": "max-age=31536000; includeSubDomains; preload"
         },
         {
-          "key": "Cross-Origin-Opener-Policy",
-          "value": "same-origin"
-        },
-        {
-          "key": "Cross-Origin-Resource-Policy",
-          "value": "same-origin"
-        },
-        {
-          "key": "Cross-Origin-Embedder-Policy",
-          "value": "require-corp"
+          "key": "X-Permitted-Cross-Domain-Policies",
+          "value": "none"
         }
       ]
     }
