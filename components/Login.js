@@ -36,6 +36,10 @@ const Login = () => {
   const navigate = useNavigate();
   const googleProvider = new GoogleAuthProvider();
 
+  const emailInputRef = useRef(null);
+  const passwordInputRef = useRef(null);
+  const resetEmailInputRef = useRef(null);
+
   // Cooldown timer effect
   useEffect(() => {
     let timer;
@@ -268,6 +272,9 @@ const Login = () => {
             keyboardType="email-address"
             autoCapitalize="none"
             editable={!isLoading}
+            returnKeyType="send"
+            onSubmitEditing={handleForgotPassword}
+            ref={resetEmailInputRef}
           />
           {!emailValidation.isValid && (
             <Text style={styles.errorText}>{emailValidation.message}</Text>
@@ -404,6 +411,12 @@ const Login = () => {
         onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
+        returnKeyType="next"
+        onSubmitEditing={() => {
+          // Focus next input (password field)
+          passwordInputRef.current?.focus();
+        }}
+        ref={emailInputRef}
       />
       <TextInput
         style={styles.input}
@@ -412,6 +425,9 @@ const Login = () => {
         secureTextEntry
         value={password}
         onChangeText={setPassword}
+        returnKeyType="go"
+        onSubmitEditing={handleLogin}
+        ref={passwordInputRef}
       />
 
       <TouchableOpacity
