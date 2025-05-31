@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import {
   View,
   Text,
@@ -152,6 +158,8 @@ const PostureGraph = () => {
   const [mlData, setMlData] = useState([]);
   const [aggregatedData, setAggregatedData] = useState([]);
   const [historyData, setHistoryData] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [isViewingToday, setIsViewingToday] = useState(true);
   const [selectedHistoryData, setSelectedHistoryData] = useState(null);
   const [goodPosturePercentage, setGoodPosturePercentage] = useState(0);
   const [badPosturePercentage, setBadPosturePercentage] = useState(0);
@@ -165,6 +173,7 @@ const PostureGraph = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [showNotification, setShowNotification] = useState(false);
   const [notificationTimeout, setNotificationTimeout] = useState(null);
+  const notificationTimeoutRef = useRef(null);
   const [selectedPostureData, setSelectedPostureData] = useState(null);
   const [sensorConnected, setSensorConnected] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
@@ -300,50 +309,50 @@ const PostureGraph = () => {
   }, []);
 
   const sanitizeInput = (input) => {
-  if (typeof input !== 'string') return '';
-  return input
-    .replace(/[<>]/g, '') // Remove potential XSS characters
-    .trim()
-    .substring(0, 100); // Limit length
-};
+    if (typeof input !== "string") return "";
+    return input
+      .replace(/[<>]/g, "") // Remove potential XSS characters
+      .trim()
+      .substring(0, 100); // Limit length
+  };
 
-// Update your name saving function
-const handleSaveName = useCallback(async () => {
-  if (!userUID || !editedName.trim()) {
-    alert("Please enter a valid name");
-    return;
-  }
-
-  setIsSavingName(true);
-
-  try {
-    // SECURITY: Sanitize input before saving
-    const sanitizedName = sanitizeInput(editedName.trim());
-    
-    if (sanitizedName.length < 1) {
+  // Update your name saving function
+  const handleSaveName = useCallback(async () => {
+    if (!userUID || !editedName.trim()) {
       alert("Please enter a valid name");
       return;
     }
 
-    // Save to Firebase
-    await set(ref(database, `users/${userUID}/name`), sanitizedName);
+    setIsSavingName(true);
 
-    // Update local state and storage
-    setUserName(sanitizedName);
-    localStorage.setItem("userName", sanitizedName);
+    try {
+      // SECURITY: Sanitize input before saving
+      const sanitizedName = sanitizeInput(editedName.trim());
 
-    // Close editing mode
-    setIsEditingName(false);
-    setEditedName("");
+      if (sanitizedName.length < 1) {
+        alert("Please enter a valid name");
+        return;
+      }
 
-    console.log("Name updated successfully:", sanitizedName);
-  } catch (error) {
-    console.error("Error updating name:", error);
-    alert("Failed to update name. Please try again.");
-  } finally {
-    setIsSavingName(false);
-  }
-}, [userUID, editedName]);
+      // Save to Firebase
+      await set(ref(database, `users/${userUID}/name`), sanitizedName);
+
+      // Update local state and storage
+      setUserName(sanitizedName);
+      localStorage.setItem("userName", sanitizedName);
+
+      // Close editing mode
+      setIsEditingName(false);
+      setEditedName("");
+
+      console.log("Name updated successfully:", sanitizedName);
+    } catch (error) {
+      console.error("Error updating name:", error);
+      alert("Failed to update name. Please try again.");
+    } finally {
+      setIsSavingName(false);
+    }
+  }, [userUID, editedName]);
 
   useEffect(() => {
     const loadProfilePicture = async () => {
@@ -917,32 +926,75 @@ const handleSaveName = useCallback(async () => {
 
   // Handle notification display
   const showBadPostureNotification = useCallback(() => {
-    if (notificationTimeout) {
-      clearTimeout(notificationTimeout);
+    // Clear any existing timeout first
+    if (notificationTimeoutRef.current) {
+      clearTimeout(notificationTimeoutRef.current);
+      notificationTimeoutRef.current = null;
     }
 
     setShowNotification(true);
 
-    const timeout = setTimeout(() => {
+    // Set new timeout with ref tracking
+    notificationTimeoutRef.current = setTimeout(() => {
       setShowNotification(false);
+      notificationTimeoutRef.current = null;
     }, NOTIFICATION_DURATION);
-
-    setNotificationTimeout(timeout);
-  }, [notificationTimeout]);
+  }, []);
 
   const hideBadPostureNotification = useCallback(() => {
-    setShowNotification(false);
-    if (notificationTimeout) {
-      clearTimeout(notificationTimeout);
+    // Clear timeout immediately
+    if (notificationTimeoutRef.current) {
+      clearTimeout(notificationTimeoutRef.current);
+      notificationTimeoutRef.current = null;
     }
-  }, [notificationTimeout]);
+    setShowNotification(false);
+  }, []);
 
   const dismissNotification = useCallback(() => {
-    setShowNotification(false);
-    if (notificationTimeout) {
-      clearTimeout(notificationTimeout);
+    // Clear timeout immediately
+    if (notificationTimeoutRef.current) {
+      clearTimeout(notificationTimeoutRef.current);
+      notificationTimeoutRef.current = null;
     }
-  }, [notificationTimeout]);
+    setShowNotification(false);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (notificationTimeoutRef.current) {
+        clearTimeout(notificationTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const notificationDebounceRef = useRef(null);
+
+  const handlePosturePrediction = useCallback(
+    (latestPredictionValue, latestConfidence) => {
+      // Clear any pending debounced notification
+      if (notificationDebounceRef.current) {
+        clearTimeout(notificationDebounceRef.current);
+      }
+
+      // Debounce notification changes by 100ms to prevent rapid updates
+      notificationDebounceRef.current = setTimeout(() => {
+        if (latestPredictionValue === "Bad") {
+          console.log("Triggering notification for Bad posture");
+          showBadPostureNotification();
+        } else if (
+          latestPredictionValue === "Warning" &&
+          latestConfidence > 0.7
+        ) {
+          console.log("Triggering notification for high-confidence Warning");
+          showBadPostureNotification();
+        } else {
+          console.log("Hiding notification for Good posture");
+          hideBadPostureNotification();
+        }
+      }, 100);
+    },
+    [showBadPostureNotification, hideBadPostureNotification]
+  );
 
   const isToday = (date) => {
     const today = new Date();
@@ -953,67 +1005,153 @@ const handleSaveName = useCallback(async () => {
     );
   };
 
-  // Aggregate data into time blocks for the chart
-  const aggregateDataIntoTimeBlocks = useCallback((hourlyData) => {
-    if (!hourlyData || hourlyData.length === 0) {
-      setAggregatedData([]);
-      return;
-    }
-
-    // FIXED: Filter data to only include today's readings
-    const todaysData = hourlyData.filter(
-      (dataPoint) => dataPoint && dataPoint.hour && isToday(dataPoint.hour)
+  const isDateToday = (date) => {
+    const today = new Date();
+    return (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
     );
+  };
 
-    if (todaysData.length === 0) {
-      setAggregatedData([]);
-      return;
+  // NEW: Navigation functions
+  const goToPreviousDay = useCallback(() => {
+    const previousDay = new Date(selectedDate);
+    previousDay.setDate(selectedDate.getDate() - 1);
+    setSelectedDate(previousDay);
+    setIsViewingToday(isDateToday(previousDay));
+  }, [selectedDate]);
+
+  const goToNextDay = useCallback(() => {
+    const nextDay = new Date(selectedDate);
+    nextDay.setDate(selectedDate.getDate() + 1);
+    const today = new Date();
+
+    // Don't allow going beyond today
+    if (nextDay <= today) {
+      setSelectedDate(nextDay);
+      setIsViewingToday(isDateToday(nextDay));
     }
+  }, [selectedDate]);
 
-    // Define 4 simple time blocks with ultra-short labels
-    const timeBlocks = [
-      { start: 6, end: 11, label: "AM" }, // Morning
-      { start: 11, end: 15, label: "Noon" }, // Midday
-      { start: 15, end: 19, label: "PM" }, // Afternoon
-      { start: 19, end: 24, label: "Eve" }, // Evening
-    ];
+  const goToToday = useCallback(() => {
+    const today = new Date();
+    setSelectedDate(today);
+    setIsViewingToday(true);
+  }, []);
 
-    // Create buckets for each time block
-    const hourBuckets = timeBlocks.map(() => []);
+  // Aggregate data into time blocks for the chart
+  const aggregateDataIntoTimeBlocks = useCallback(
+    (hourlyData, targetDate = new Date()) => {
+      if (!hourlyData || hourlyData.length === 0) {
+        setAggregatedData([]);
+        return;
+      }
 
-    // Assign each TODAY'S data point to the appropriate bucket
-    todaysData.forEach((dataPoint) => {
-      const hour = dataPoint.hour.getHours();
-
-      // Find which time block this hour belongs to
-      const blockIndex = timeBlocks.findIndex(
-        (block) => hour >= block.start && hour < block.end
+      // Filter data to only include the selected date's readings
+      const selectedDateData = hourlyData.filter(
+        (dataPoint) =>
+          dataPoint &&
+          dataPoint.hour &&
+          dataPoint.hour.getDate() === targetDate.getDate() &&
+          dataPoint.hour.getMonth() === targetDate.getMonth() &&
+          dataPoint.hour.getFullYear() === targetDate.getFullYear()
       );
 
-      if (blockIndex !== -1) {
-        hourBuckets[blockIndex].push(dataPoint.pitch);
+      if (selectedDateData.length === 0) {
+        setAggregatedData([]);
+        return;
       }
+
+      // Define 4 simple time blocks with ultra-short labels
+      const timeBlocks = [
+        { start: 6, end: 11, label: "AM" }, // Morning
+        { start: 11, end: 15, label: "Noon" }, // Midday
+        { start: 15, end: 19, label: "PM" }, // Afternoon
+        { start: 19, end: 24, label: "Eve" }, // Evening
+      ];
+
+      // Create buckets for each time block
+      const hourBuckets = timeBlocks.map(() => []);
+
+      // Assign each selected date's data point to the appropriate bucket
+      selectedDateData.forEach((dataPoint) => {
+        const hour = dataPoint.hour.getHours();
+
+        // Find which time block this hour belongs to
+        const blockIndex = timeBlocks.findIndex(
+          (block) => hour >= block.start && hour < block.end
+        );
+
+        if (blockIndex !== -1) {
+          hourBuckets[blockIndex].push(dataPoint.pitch);
+        }
+      });
+
+      // Create the aggregated data with the time blocks
+      const aggregated = timeBlocks.map((block, index) => {
+        const average =
+          hourBuckets[index].length > 0
+            ? hourBuckets[index].reduce((sum, pitch) => sum + pitch, 0) /
+              hourBuckets[index].length
+            : 0;
+
+        return {
+          label: block.label,
+          value: parseFloat(average.toFixed(1)),
+          rawPitches: hourBuckets[index],
+          timeRange: { start: block.start, end: block.end },
+          dataCount: hourBuckets[index].length,
+        };
+      });
+
+      setAggregatedData(aggregated);
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (data.length > 0) {
+      aggregateDataIntoTimeBlocks(data, selectedDate);
+    }
+  }, [data, selectedDate, aggregateDataIntoTimeBlocks]);
+
+  // NEW: Function to format the selected date for display
+  const formatSelectedDate = useCallback(() => {
+    if (isViewingToday) {
+      return "Today";
+    }
+
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
+    if (selectedDate.toDateString() === yesterday.toDateString()) {
+      return "Yesterday";
+    }
+
+    // FIXED: Capitalize the day and month
+    const formattedDate = selectedDate.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
     });
 
-    // Create the aggregated data with the time blocks
-    const aggregated = timeBlocks.map((block, index) => {
-      const average =
-        hourBuckets[index].length > 0
-          ? hourBuckets[index].reduce((sum, pitch) => sum + pitch, 0) /
-            hourBuckets[index].length
-          : 0;
+    // Capitalize first letter of each word (day and month)
+    return formattedDate.replace(/\b\w/g, (l) => l.toUpperCase());
+  }, [selectedDate, isViewingToday]);
 
-      return {
-        label: block.label,
-        value: parseFloat(average.toFixed(1)),
-        rawPitches: hourBuckets[index],
-        timeRange: { start: block.start, end: block.end },
-        dataCount: hourBuckets[index].length, // Add count for debugging
-      };
-    });
-
-    setAggregatedData(aggregated);
-  }, []);
+  // NEW: Function to check if there's data for the selected date
+  const hasDataForSelectedDate = useCallback(() => {
+    return data.some(
+      (entry) =>
+        entry &&
+        entry.hour &&
+        entry.hour.getDate() === selectedDate.getDate() &&
+        entry.hour.getMonth() === selectedDate.getMonth() &&
+        entry.hour.getFullYear() === selectedDate.getFullYear()
+    );
+  }, [data, selectedDate]);
 
   const getEnhancedChartConfig = (type = "bar") => {
     const baseConfig = {
@@ -1453,49 +1591,21 @@ const handleSaveName = useCallback(async () => {
           setPredictionConfidence(latestConfidence);
           setPrimaryFeature(latestPrimaryFeature);
 
-          console.log(
-            "ML Prediction received:",
-            latestPredictionValue,
-            "Confidence:",
-            latestConfidence
-          ); // Debug log
-
-          // Show notification for bad posture or high-confidence warnings
-          if (latestPredictionValue === "Bad") {
-            console.log("Triggering notification for Bad posture"); // Debug log
-            showBadPostureNotification();
-          } else if (
-            latestPredictionValue === "Warning" &&
-            latestConfidence > 0.7
-          ) {
-            console.log("Triggering notification for high-confidence Warning"); // Debug log
-            showBadPostureNotification();
-          } else {
-            console.log("Hiding notification for Good posture"); // Debug log
-            hideBadPostureNotification();
-          }
+          // Use debounced notification handler
+          handlePosturePrediction(latestPredictionValue, latestConfidence);
         } else if (processedData.length > 0) {
           // Fallback to simple threshold when no ML data is available
           const latestReading = processedData[processedData.length - 1];
-          console.log(
-            "Using threshold fallback, latest pitch:",
-            latestReading.pitch
-          ); // Debug log
 
           if (latestReading.pitch > PITCH_BAD_THRESHOLD) {
-            console.log(
-              "Triggering notification for threshold-based bad posture"
-            ); // Debug log
             setLatestPrediction("Bad");
-            showBadPostureNotification();
+            handlePosturePrediction("Bad", 0.8);
           } else if (latestReading.pitch > PITCH_WARNING_THRESHOLD) {
-            console.log("Setting Warning state for threshold-based detection"); // Debug log
             setLatestPrediction("Warning");
-            hideBadPostureNotification(); // Don't show notification for threshold warnings
+            handlePosturePrediction("Warning", 0.6);
           } else {
-            console.log("Setting Good state for threshold-based detection"); // Debug log
             setLatestPrediction("Good");
-            hideBadPostureNotification();
+            handlePosturePrediction("Good", 0.9);
           }
         }
       } else {
@@ -1552,16 +1662,20 @@ const handleSaveName = useCallback(async () => {
     return () => {
       postureDataUnsubscribe();
       historyUnsubscribe();
-      if (notificationTimeout) {
-        clearTimeout(notificationTimeout);
+
+      // Clear all notification timeouts
+      if (notificationTimeoutRef.current) {
+        clearTimeout(notificationTimeoutRef.current);
+      }
+      if (notificationDebounceRef.current) {
+        clearTimeout(notificationDebounceRef.current);
       }
     };
   }, [
     userUID,
     aggregateDataIntoTimeBlocks,
     hideBadPostureNotification,
-    notificationTimeout,
-    showBadPostureNotification,
+    handlePosturePrediction, // Add the debounced handler to dependencies
   ]);
 
   useEffect(() => {
@@ -2359,8 +2473,49 @@ const handleSaveName = useCallback(async () => {
         </Text>
       </View>
 
-      {/* Enhanced Posture Pitch Chart */}
-      <SectionHeader title="Today's Posture Analysis" />
+      {/* Enhanced Posture Pitch Chart with Navigation */}
+      <SectionHeader title="Posture Analysis" />
+
+      {/* Date Navigation Header */}
+      <Card style={styles.dateNavigationCard}>
+        <View style={styles.dateNavigationContainer}>
+          <TouchableOpacity
+            style={styles.dateNavButton}
+            onPress={goToPreviousDay}
+            disabled={false} // Allow going back indefinitely
+          >
+            <Image source={{ uri: ICONS.back }} style={styles.dateNavIcon} />
+            <Text style={styles.dateNavText}>Previous</Text>
+          </TouchableOpacity>
+
+          <View style={styles.dateDisplayContainer}>
+            <Text style={styles.dateDisplayText}>{formatSelectedDate()}</Text>
+            {!isViewingToday && (
+              <TouchableOpacity style={styles.todayButton} onPress={goToToday}>
+                <Text style={styles.todayButtonText}>Today</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <TouchableOpacity
+            style={[
+              styles.dateNavButton,
+              isViewingToday ? styles.dateNavButtonDisabled : null,
+            ]}
+            onPress={goToNextDay}
+            disabled={isViewingToday}
+          >
+            <Image
+              source={{ uri: ICONS.back }}
+              style={[
+                styles.dateNavIcon,
+                styles.dateNavIconRight,
+                isViewingToday ? styles.dateNavIconDisabled : null,
+              ]}
+            />
+          </TouchableOpacity>
+        </View>
+      </Card>
 
       {data.length === 0 ? (
         <View style={styles.noDataContainer}>
@@ -2369,12 +2524,72 @@ const handleSaveName = useCallback(async () => {
             Data will appear here once your sensor starts sending measurements
           </Text>
         </View>
-      ) : aggregatedData.length === 0 ? (
+      ) : !hasDataForSelectedDate() ? (
         <View style={styles.noDataContainer}>
-          <Text style={styles.noDataText}>No data for today yet</Text>
-          <Text style={styles.noDataSubtext}>
-            Start using your posture sensor to see today's measurements
+          <Text style={styles.noDataText}>
+            No data for {formatSelectedDate()}
           </Text>
+          <Text style={styles.noDataSubtext}>
+            {isViewingToday
+              ? "Start using your posture sensor to see today's measurements"
+              : "Use the navigation above to browse other days with data"}
+          </Text>
+
+          {/* Quick navigation to recent days with data */}
+          <View style={styles.quickNavContainer}>
+            <Text style={styles.quickNavTitle}>
+              Jump to recent days with data:
+            </Text>
+            <View style={styles.quickNavButtons}>
+              {(() => {
+                const daysWithData = [];
+                const today = new Date();
+
+                // Check last 7 days for data
+                for (let i = 0; i < 7; i++) {
+                  const checkDate = new Date(today);
+                  checkDate.setDate(today.getDate() - i);
+
+                  const hasData = data.some(
+                    (entry) =>
+                      entry &&
+                      entry.hour &&
+                      entry.hour.getDate() === checkDate.getDate() &&
+                      entry.hour.getMonth() === checkDate.getMonth() &&
+                      entry.hour.getFullYear() === checkDate.getFullYear()
+                  );
+
+                  if (hasData) {
+                    daysWithData.push(checkDate);
+                  }
+                }
+
+                return daysWithData.slice(0, 3).map((date, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.quickNavButton}
+                    onPress={() => {
+                      setSelectedDate(date);
+                      setIsViewingToday(isDateToday(date));
+                    }}
+                  >
+                    <Text style={styles.quickNavButtonText}>
+                      {isDateToday(date)
+                        ? "Today"
+                        : date.toDateString() ===
+                          new Date(Date.now() - 86400000).toDateString()
+                        ? "Yesterday"
+                        : date.toLocaleDateString("en-US", {
+                            weekday: "short",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                    </Text>
+                  </TouchableOpacity>
+                ));
+              })()}
+            </View>
+          </View>
         </View>
       ) : (
         <>
@@ -2400,7 +2615,9 @@ const handleSaveName = useCallback(async () => {
           >
             {/* Chart Header with Legend */}
             <View style={styles.chartHeader}>
-              <Text style={styles.chartTitle}>Posture Pitch Angles</Text>
+              <Text style={styles.chartTitle}>
+                Posture Pitch Angles - {formatSelectedDate()}
+              </Text>
               <View style={styles.chartLegend}>
                 <View style={styles.legendItem}>
                   <View
@@ -2493,23 +2710,25 @@ const handleSaveName = useCallback(async () => {
                 <View style={styles.chartStatItem}>
                   <Text style={styles.chartStatLabel}>Avg Angle</Text>
                   <Text style={styles.chartStatValue}>
-                    {(
-                      aggregatedData.reduce(
-                        (sum, item) => sum + item.value,
-                        0
-                      ) / aggregatedData.length
-                    ).toFixed(1)}
+                    {aggregatedData.length > 0
+                      ? (
+                          aggregatedData.reduce(
+                            (sum, item) => sum + item.value,
+                            0
+                          ) / aggregatedData.length
+                        ).toFixed(1)
+                      : "0.0"}
                     °
                   </Text>
                 </View>
                 <View style={styles.chartStatItem}>
                   <Text style={styles.chartStatLabel}>Best Period</Text>
                   <Text style={styles.chartStatValue}>
-                    {
-                      aggregatedData.reduce((min, item) =>
-                        item.value < min.value ? item : min
-                      ).label
-                    }
+                    {aggregatedData.length > 0
+                      ? aggregatedData.reduce((min, item) =>
+                          item.value < min.value ? item : min
+                        ).label
+                      : "N/A"}
                   </Text>
                 </View>
                 <View style={styles.chartStatItem}>

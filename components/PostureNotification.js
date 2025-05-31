@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -23,27 +23,52 @@ const PostureNotification = ({
 }) => {
   const [animation] = useState(new Animated.Value(0));
 
-  useEffect(() => {
-    if (isVisible) {
-      // Slide in from top
-      Animated.timing(animation, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      // Slide out to top
-      Animated.timing(animation, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [isVisible]);
+  // FIXED: Memoize notification content to prevent unnecessary re-renders
+  const notificationContent = useMemo(() => {
+    if (!["Warning", "Bad"].includes(postureState)) return null;
 
-  // Log dismissal to Firebase deviceLogs
-  const handleDismiss = () => {
-    if (userUID) {
+    const isWarning = postureState === "Warning";
+    return {
+      title: isWarning
+        ? "Warning: Forward Tilt Detected!"
+        : "Bad Posture Detected!",
+      message: isWarning
+        ? "Adjust your posture to reduce forward tilt and prevent strain."
+        : "Sit upright immediately to avoid back strain and improve alignment.",
+      backgroundColor: isWarning ? THEME.warning : THEME.danger,
+      icon: isWarning ? "⚠️" : "❗",
+    };
+  }, [postureState]);
+
+  // FIXED: Optimized animation with useCallback
+  const animateIn = useCallback(() => {
+    Animated.timing(animation, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [animation]);
+
+  const animateOut = useCallback(() => {
+    Animated.timing(animation, {
+      toValue: 0,
+      duration: 200, // Faster exit animation
+      useNativeDriver: true,
+    }).start();
+  }, [animation]);
+
+  useEffect(() => {
+    if (isVisible && notificationContent) {
+      animateIn();
+    } else {
+      animateOut();
+    }
+  }, [isVisible, notificationContent, animateIn, animateOut]);
+
+  // FIXED: Debounced dismiss handler to prevent multiple rapid calls
+  const handleDismiss = useCallback(() => {
+    if (userUID && postureState) {
+      // Fire and forget logging - don't wait for it
       const logRef = ref(
         database,
         `users/${userUID}/deviceLogs/notification_${Date.now()}`
@@ -56,29 +81,23 @@ const PostureNotification = ({
         console.error("Error logging IMU notification dismissal:", error)
       );
     }
-    onDismiss();
-  };
+    
+    // Animate out first, then call onDismiss
+    animateOut();
+    setTimeout(() => {
+      onDismiss();
+    }, 200); // Match animation duration
+  }, [userUID, postureState, onDismiss, animateOut]);
 
-  // If not visible or invalid posture state, don't render
-  if (!isVisible || !["Warning", "Bad"].includes(postureState)) return null;
-
-  // Determine notification content based on posture state
-  const isWarning = postureState === "Warning";
-  const title = isWarning
-    ? "Warning: Forward Tilt Detected!"
-    : "Bad Posture Detected!";
-  const message = isWarning
-    ? "Adjust your posture to reduce forward tilt and prevent strain."
-    : "Sit upright immediately to avoid back strain and improve alignment.";
-  const backgroundColor = isWarning ? THEME.warning : THEME.danger;
-  const icon = isWarning ? "⚠️" : "❗";
+  // Don't render if no valid content
+  if (!isVisible || !notificationContent) return null;
 
   return (
     <Animated.View
       style={[
         styles.container,
         {
-          backgroundColor,
+          backgroundColor: notificationContent.backgroundColor,
           transform: [
             {
               translateY: animation.interpolate({
@@ -93,13 +112,17 @@ const PostureNotification = ({
     >
       <View style={styles.content}>
         <View style={styles.iconContainer}>
-          <Text style={styles.icon}>{icon}</Text>
+          <Text style={styles.icon}>{notificationContent.icon}</Text>
         </View>
         <View style={styles.textContainer}>
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.message}>{message}</Text>
+          <Text style={styles.title}>{notificationContent.title}</Text>
+          <Text style={styles.message}>{notificationContent.message}</Text>
         </View>
-        <TouchableOpacity style={styles.dismissButton} onPress={handleDismiss}>
+        <TouchableOpacity 
+          style={styles.dismissButton} 
+          onPress={handleDismiss}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} // Larger touch area
+        >
           <Text style={styles.dismissText}>×</Text>
         </TouchableOpacity>
       </View>

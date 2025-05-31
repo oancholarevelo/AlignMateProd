@@ -1335,6 +1335,131 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
     textDecorationColor: THEME.primary,
   },
+  dateNavigationCard: {
+  marginBottom: 16,
+  paddingVertical: 12,
+},
+
+dateNavigationContainer: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+},
+
+dateNavButton: {
+  flexDirection: "row",
+  alignItems: "center",
+  paddingHorizontal: 12,
+  paddingVertical: 8,
+  borderRadius: 8,
+  backgroundColor: THEME.secondary,
+  minWidth: 80,
+  justifyContent: "center",
+},
+
+dateNavButtonEnabled: {
+  backgroundColor: THEME.primary,
+},
+
+dateNavButtonDisabled: {
+  backgroundColor: THEME.lightGray,
+  opacity: 0.5,
+},
+
+dateNavIcon: {
+  width: 16,
+  height: 16,
+  marginRight: 4,
+},
+
+dateNavIconRight: {
+  transform: [{ scaleX: -1 }], // Flip horizontally for right arrow
+  marginLeft: 4,
+  marginRight: 0,
+},
+
+dateNavIconDisabled: {
+  opacity: 0.5,
+},
+
+dateNavText: {
+  fontSize: 14,
+  fontWeight: "600",
+  color: "#FFFFFF",
+},
+
+dateNavTextDisabled: {
+  color: "#999999",
+},
+
+dateDisplayContainer: {
+  alignItems: "center",
+  flex: 1,
+  paddingHorizontal: 16,
+},
+
+dateDisplayText: {
+  fontSize: 18,
+  fontWeight: "bold",
+  color: THEME.text, // Changed from THEME.textPrimary to THEME.text
+  textAlign: "center",
+  flexWrap: "nowrap", // Prevent text wrapping
+  numberOfLines: 1, // Force single line
+  whiteSpace: "nowrap", // Prevent wrapping on web
+},
+
+
+todayButton: {
+  marginTop: 4,
+  paddingHorizontal: 8,
+  paddingVertical: 4,
+  backgroundColor: THEME.primary,
+  borderRadius: 4,
+},
+
+todayButtonText: {
+  fontSize: 12,
+  color: "#FFFFFF",
+  fontWeight: "600",
+},
+
+// Quick navigation styles
+quickNavContainer: {
+  marginTop: 20,
+  paddingTop: 16,
+  borderTopWidth: 1,
+  borderTopColor: THEME.border,
+},
+
+quickNavTitle: {
+  fontSize: 14,
+  fontWeight: "600",
+  color: THEME.textSecondary,
+  marginBottom: 12,
+  textAlign: "center",
+},
+
+quickNavButtons: {
+  flexDirection: "row",
+  justifyContent: "center",
+  flexWrap: "wrap",
+  gap: 8,
+},
+
+quickNavButton: {
+  paddingHorizontal: 12,
+  paddingVertical: 8,
+  backgroundColor: THEME.primary,
+  borderRadius: 6,
+  marginHorizontal: 4,
+  marginVertical: 2,
+},
+
+quickNavButtonText: {
+  fontSize: 13,
+  fontWeight: "600",
+  color: "#FFFFFF",
+},
 });
 
 export { styles, THEME };
