@@ -172,7 +172,6 @@ const PostureGraph = () => {
   const [isCalibrated, setIsCalibrated] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [showNotification, setShowNotification] = useState(false);
-  const [notificationTimeout, setNotificationTimeout] = useState(null);
   const notificationTimeoutRef = useRef(null);
   const [selectedPostureData, setSelectedPostureData] = useState(null);
   const [sensorConnected, setSensorConnected] = useState(false);
@@ -227,6 +226,14 @@ const PostureGraph = () => {
       useNativeDriver: true,
     }).start();
   }, [fadeAnim]);
+
+  // Add this helper function near the top of your component
+  const isDataFresh = useCallback((timestamp, maxAgeMs = 120000) => {
+    const now = Date.now();
+    const dataTime = parseInt(timestamp) * 1000;
+    const age = now - dataTime;
+    return age <= maxAgeMs;
+  }, []);
 
   // NEW: Check if user is new and needs setup
   const checkUserSetupStatus = useCallback(async () => {
@@ -518,10 +525,17 @@ const PostureGraph = () => {
       if (timestamp === lastProcessedTimestamp) return;
       lastProcessedTimestamp = timestamp;
 
-      // Check if data is fresh (within 3 minutes)
+      // 🔧 FIX: More strict freshness check for achievements (within 3 minutes)
       const now = Date.now();
       const dataTime = parseInt(timestamp) * 1000;
-      if (now - dataTime > 180000) return; // Skip stale data
+      const dataAge = now - dataTime;
+      if (dataAge > 180000) {
+        // 3 minutes
+        console.log(
+          `Skipping stale data for achievements. Age: ${dataAge / 1000}s`
+        );
+        return;
+      }
 
       // Check posture prediction
       const hasValidPrediction =
@@ -970,7 +984,13 @@ const PostureGraph = () => {
   const notificationDebounceRef = useRef(null);
 
   const handlePosturePrediction = useCallback(
-    (latestPredictionValue, latestConfidence) => {
+    (latestPredictionValue, latestConfidence, dataTimestamp = null) => {
+      // 🔧 FIX: Double-check data freshness if timestamp provided
+      if (dataTimestamp && !isDataFresh(dataTimestamp)) {
+        console.log("Notification blocked: data too old");
+        return;
+      }
+
       // Clear any pending debounced notification
       if (notificationDebounceRef.current) {
         clearTimeout(notificationDebounceRef.current);
@@ -993,7 +1013,7 @@ const PostureGraph = () => {
         }
       }, 100);
     },
-    [showBadPostureNotification, hideBadPostureNotification]
+    [showBadPostureNotification, hideBadPostureNotification, isDataFresh]
   );
 
   const isToday = (date) => {
@@ -1509,6 +1529,7 @@ const PostureGraph = () => {
       });
 
     // Subscribe to posture data
+    // Subscribe to posture data
     const sensorRef = ref(database, `users/${userUID}/postureData`);
     const postureDataUnsubscribe = onValue(sensorRef, (snapshot) => {
       const firebaseData = snapshot.val();
@@ -1585,27 +1606,65 @@ const PostureGraph = () => {
         // Update aggregated chart data
         aggregateDataIntoTimeBlocks(processedData);
 
-        // IMPROVED: Better notification logic
+        // 🔧 FIX: Better notification logic with freshness check
         if (latestPredictionValue) {
           setLatestPrediction(latestPredictionValue);
           setPredictionConfidence(latestConfidence);
           setPrimaryFeature(latestPrimaryFeature);
 
-          // Use debounced notification handler
-          handlePosturePrediction(latestPredictionValue, latestConfidence);
+          // 🔧 FIX: Only trigger notifications for fresh data (within last 2 minutes)
+          const latestDataTimestamp = Math.max(
+            ...Object.keys(firebaseData).map((k) => parseInt(k))
+          );
+          const latestDataTime = latestDataTimestamp * 1000; // Convert to milliseconds
+          const now = Date.now();
+          const dataAge = now - latestDataTime;
+          const isFreshData = dataAge <= 120000; // 2 minutes = 120,000 ms
+
+          console.log("Data freshness check:", {
+            latestDataTime: new Date(latestDataTime),
+            now: new Date(now),
+            dataAge: dataAge / 1000 + " seconds",
+            isFreshData,
+            prediction: latestPredictionValue,
+          });
+
+          // Only show notifications for fresh data
+          if (isFreshData) {
+            handlePosturePrediction(
+              latestPredictionValue,
+              latestConfidence,
+              latestDataTimestamp
+            );
+          } else {
+            console.log("Skipping notification for stale data");
+            // Still hide any existing notifications since data is old
+            hideBadPostureNotification();
+          }
         } else if (processedData.length > 0) {
           // Fallback to simple threshold when no ML data is available
           const latestReading = processedData[processedData.length - 1];
 
-          if (latestReading.pitch > PITCH_BAD_THRESHOLD) {
-            setLatestPrediction("Bad");
-            handlePosturePrediction("Bad", 0.8);
-          } else if (latestReading.pitch > PITCH_WARNING_THRESHOLD) {
-            setLatestPrediction("Warning");
-            handlePosturePrediction("Warning", 0.6);
+          // 🔧 FIX: Also check freshness for threshold-based predictions
+          const latestTimestamp = latestReading.timestamp / 1000; // Convert back to seconds
+          const now = Date.now();
+          const dataAge = now - latestReading.timestamp;
+          const isFreshData = dataAge <= 120000; // 2 minutes
+
+          if (isFreshData) {
+            if (latestReading.pitch > PITCH_BAD_THRESHOLD) {
+              setLatestPrediction("Bad");
+              handlePosturePrediction("Bad", 0.8, latestTimestamp);
+            } else if (latestReading.pitch > PITCH_WARNING_THRESHOLD) {
+              setLatestPrediction("Warning");
+              handlePosturePrediction("Warning", 0.6, latestTimestamp);
+            } else {
+              setLatestPrediction("Good");
+              handlePosturePrediction("Good", 0.9, latestTimestamp);
+            }
           } else {
-            setLatestPrediction("Good");
-            handlePosturePrediction("Good", 0.9);
+            console.log("Skipping threshold-based notification for stale data");
+            hideBadPostureNotification();
           }
         }
       } else {
@@ -1698,12 +1757,17 @@ const PostureGraph = () => {
   useEffect(() => {
     if (data.length === 0) return;
 
-    // FIXED: Filter data to only include today's readings
-    const todaysData = data.filter(
-      (entry) => entry && entry.hour && isToday(entry.hour)
+    // 🔧 CHANGED: Filter data to include the selected date's readings instead of just today
+    const selectedDateData = data.filter(
+      (entry) =>
+        entry &&
+        entry.hour &&
+        entry.hour.getDate() === selectedDate.getDate() &&
+        entry.hour.getMonth() === selectedDate.getMonth() &&
+        entry.hour.getFullYear() === selectedDate.getFullYear()
     );
 
-    if (todaysData.length === 0) {
+    if (selectedDateData.length === 0) {
       setGoodPosturePercentage("0.0");
       setBadPosturePercentage("0.0");
       return;
@@ -1713,14 +1777,19 @@ const PostureGraph = () => {
     let badCount = 0;
     let warningCount = 0;
 
-    // Use today's ML data if available
-    const todaysMlData = mlData.filter(
-      (entry) => entry && entry.hour && isToday(entry.hour)
+    // 🔧 CHANGED: Use selected date's ML data if available
+    const selectedDateMlData = mlData.filter(
+      (entry) =>
+        entry &&
+        entry.hour &&
+        entry.hour.getDate() === selectedDate.getDate() &&
+        entry.hour.getMonth() === selectedDate.getMonth() &&
+        entry.hour.getFullYear() === selectedDate.getFullYear()
     );
 
-    if (todaysMlData.length > 0) {
+    if (selectedDateMlData.length > 0) {
       // Use ML predictions if available
-      todaysMlData.forEach((entry) => {
+      selectedDateMlData.forEach((entry) => {
         if (entry.prediction === "Good") {
           goodCount++;
         } else if (entry.prediction === "Warning") {
@@ -1730,8 +1799,8 @@ const PostureGraph = () => {
         }
       });
     } else {
-      // Fall back to simple threshold using today's data
-      todaysData.forEach((entry) => {
+      // Fall back to simple threshold using selected date's data
+      selectedDateData.forEach((entry) => {
         if (entry.pitch <= PITCH_GOOD_THRESHOLD) {
           goodCount++;
         } else if (entry.pitch <= PITCH_WARNING_THRESHOLD) {
@@ -1753,7 +1822,7 @@ const PostureGraph = () => {
     setBadPosturePercentage(
       (((badCount + warningCount) / total) * 100).toFixed(1)
     );
-  }, [data, mlData]); // Keep the same dependencies
+  }, [data, mlData, selectedDate]);
 
   useEffect(() => {
     if (!userUID) return;
@@ -2746,8 +2815,14 @@ const PostureGraph = () => {
         </>
       )}
 
-      {/* Today's Summary */}
-      <SectionHeader title="Today's Summary" />
+      {/* Today's Summary - UPDATED to reflect selected date */}
+      <SectionHeader
+        title={
+          isViewingToday
+            ? "Today's Summary"
+            : `${formatSelectedDate()}'s Summary`
+        }
+      />
 
       <View style={styles.statsContainer}>
         <Card style={[styles.statsBox, { backgroundColor: THEME.primary }]}>
@@ -2755,10 +2830,91 @@ const PostureGraph = () => {
           <Text style={styles.statsPercentage}>{goodPosturePercentage}%</Text>
         </Card>
         <Card style={[styles.statsBox, { backgroundColor: THEME.danger }]}>
-          <Text style={styles.statsLabel}>Bad Posture</Text>
+          <Text style={styles.statsLabel}>Poor Posture</Text>
           <Text style={styles.statsPercentage}>{badPosturePercentage}%</Text>
         </Card>
       </View>
+
+      {/* 🔧 ADDED: Additional summary info for selected date */}
+      {!isViewingToday && (
+        <Card style={styles.dateContextCard}>
+          <View style={styles.dateContextHeader}>
+            <Text style={styles.dateContextTitle}>
+              📊 {formatSelectedDate()} Overview
+            </Text>
+          </View>
+          <View style={styles.dateContextStats}>
+            {(() => {
+              const selectedDateData = data.filter(
+                (entry) =>
+                  entry &&
+                  entry.hour &&
+                  entry.hour.getDate() === selectedDate.getDate() &&
+                  entry.hour.getMonth() === selectedDate.getMonth() &&
+                  entry.hour.getFullYear() === selectedDate.getFullYear()
+              );
+
+              if (selectedDateData.length === 0) {
+                return (
+                  <Text style={styles.dateContextNoData}>
+                    No posture data recorded for this date
+                  </Text>
+                );
+              }
+
+              const selectedDateMlData = mlData.filter(
+                (entry) =>
+                  entry &&
+                  entry.hour &&
+                  entry.hour.getDate() === selectedDate.getDate() &&
+                  entry.hour.getMonth() === selectedDate.getMonth() &&
+                  entry.hour.getFullYear() === selectedDate.getFullYear()
+              );
+
+              const dataCount =
+                selectedDateMlData.length > 0
+                  ? selectedDateMlData.length
+                  : selectedDateData.length;
+              const avgAngle =
+                selectedDateData.reduce((sum, entry) => sum + entry.pitch, 0) /
+                selectedDateData.length;
+
+              return (
+                <View style={styles.dateContextDetails}>
+                  <View style={styles.dateContextStat}>
+                    <Text style={styles.dateContextLabel}>Total Readings:</Text>
+                    <Text style={styles.dateContextValue}>{dataCount}</Text>
+                  </View>
+                  <View style={styles.dateContextStat}>
+                    <Text style={styles.dateContextLabel}>Average Angle:</Text>
+                    <Text style={styles.dateContextValue}>
+                      {avgAngle.toFixed(1)}°
+                    </Text>
+                  </View>
+                  <View style={styles.dateContextStat}>
+                    <Text style={styles.dateContextLabel}>Data Quality:</Text>
+                    <Text
+                      style={[
+                        styles.dateContextValue,
+                        {
+                          color:
+                            selectedDateMlData.length > 0
+                              ? THEME.primary
+                              : THEME.warning,
+                        },
+                      ]}
+                    >
+                      {selectedDateMlData.length > 0
+                        ? "ML Enhanced"
+                        : "Basic Threshold"}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })()}
+          </View>
+        </Card>
+      )}
 
       {/* ML Status */}
       {mlData.length > 0 && (

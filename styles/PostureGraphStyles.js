@@ -1460,6 +1460,64 @@ quickNavButtonText: {
   fontWeight: "600",
   color: "#FFFFFF",
 },
+// Add these styles to PostureGraphStyles.js
+statsSubtext: {
+  fontSize: 12,
+  color: THEME.textSecondary,
+  marginTop: 4,
+  textAlign: 'center',
+  fontWeight: '400',
+},
+
+dateContextCard: {
+  marginTop: 8,
+  marginBottom: 8,
+},
+
+dateContextHeader: {
+  marginBottom: 12,
+},
+
+dateContextTitle: {
+  fontSize: 16,
+  fontWeight: '600',
+  color: THEME.text,
+  textAlign: 'center',
+},
+
+dateContextStats: {
+  paddingTop: 8,
+},
+
+dateContextNoData: {
+  fontSize: 14,
+  color: THEME.textSecondary,
+  textAlign: 'center',
+  fontStyle: 'italic',
+},
+
+dateContextDetails: {
+  gap: 8,
+},
+
+dateContextStat: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  paddingVertical: 4,
+},
+
+dateContextLabel: {
+  fontSize: 14,
+  color: THEME.text,
+  fontWeight: '500',
+},
+
+dateContextValue: {
+  fontSize: 14,
+  color: THEME.primary,
+  fontWeight: '600',
+},
 });
 
 export { styles, THEME };
