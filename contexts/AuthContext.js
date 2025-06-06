@@ -16,7 +16,6 @@ export function AuthProvider({ children }) {
         // User is logged out or session expired
         try {
           await set(ref(database, "currentUserUID"), null); // Clear the UID in the database
-          console.log("currentUserUID cleared from database on logout/session end.");
         } catch (error) {
           console.error("Error clearing currentUserUID from database:", error);
         }

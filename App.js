@@ -14,8 +14,6 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
 
 function App() {
-  console.log("App component rendered");
-
   return (
     <AuthProvider>
       <Router>
