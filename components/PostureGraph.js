@@ -190,6 +190,7 @@ const PostureGraph = () => {
     ewma: 10,
   });
   const [treeMetadata, setTreeMetadata] = useState(null);
+  const [showTreeModal, setShowTreeModal] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0)); // Animation for transitions
 
   // NEW: First-time user setup modal state
@@ -217,6 +218,193 @@ const PostureGraph = () => {
       longest: 0,
     },
   });
+
+  // Add this state variable with your other useState declarations
+  const [setupType, setSetupType] = useState("unknown"); // Add this line
+
+  // Add this useEffect to get the actual setup type from Firebase
+  useEffect(() => {
+    if (!userUID) return;
+
+    const setupTypeRef = ref(database, `users/${userUID}/setupType`);
+    const unsubscribe = onValue(setupTypeRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setSetupType(snapshot.val());
+        console.log("Setup type detected:", snapshot.val());
+      } else {
+        // Fallback: check other indicators
+        const checkSetupType = async () => {
+          try {
+            // Check if useDefaultModel flag exists
+            const defaultModelRef = ref(
+              database,
+              `users/${userUID}/useDefaultModel`
+            );
+            const defaultModelSnapshot = await get(defaultModelRef);
+
+            if (
+              defaultModelSnapshot.exists() &&
+              defaultModelSnapshot.val() === true
+            ) {
+              setSetupType("default");
+              console.log(
+                "Setup type detected via useDefaultModel flag: default"
+              );
+              return;
+            }
+
+            // Check calibration timestamp vs setup timestamp
+            const calibratedRef = ref(database, `users/${userUID}/calibrated`);
+            const setupTimestampRef = ref(
+              database,
+              `users/${userUID}/setupTimestamp`
+            );
+
+            const [calibratedSnapshot, timestampSnapshot] = await Promise.all([
+              get(calibratedRef),
+              get(setupTimestampRef),
+            ]);
+
+            if (
+              calibratedSnapshot.exists() &&
+              calibratedSnapshot.val() === true
+            ) {
+              if (timestampSnapshot.exists()) {
+                // If setup was recent and user is calibrated, likely went through calibration
+                const setupTime = timestampSnapshot.val() * 1000;
+                const now = Date.now();
+                const timeDiff = now - setupTime;
+
+                // If setup was more than 5 minutes ago and user is calibrated, probably calibrated
+                if (timeDiff > 300000) {
+                  // 5 minutes
+                  setSetupType("calibration");
+                  console.log(
+                    "Setup type inferred as calibration (calibrated + time delay)"
+                  );
+                } else {
+                  setSetupType("default");
+                  console.log("Setup type inferred as default (recent setup)");
+                }
+              } else {
+                setSetupType("calibration");
+                console.log(
+                  "Setup type inferred as calibration (user is calibrated)"
+                );
+              }
+            } else {
+              setSetupType("default");
+              console.log("Setup type inferred as default (not calibrated)");
+            }
+          } catch (error) {
+            console.error("Error determining setup type:", error);
+            setSetupType("default"); // Safe default
+          }
+        };
+
+        checkSetupType();
+      }
+    });
+
+    return () => unsubscribe();
+  }, [userUID]);
+
+  // Add these state variables with your other useState declarations
+  const [customThresholds, setCustomThresholds] = useState({
+    good: PITCH_GOOD_THRESHOLD,
+    warning: PITCH_WARNING_THRESHOLD,
+    bad: PITCH_BAD_THRESHOLD,
+  });
+
+  // Add this useEffect to fetch custom thresholds from Firebase
+  useEffect(() => {
+    if (!userUID) return;
+
+    const fetchCustomThresholds = async () => {
+      try {
+        const goodRef = ref(database, `users/${userUID}/PITCH_GOOD_THRESHOLD`);
+        const warningRef = ref(
+          database,
+          `users/${userUID}/PITCH_WARNING_THRESHOLD`
+        );
+        const badRef = ref(database, `users/${userUID}/PITCH_BAD_THRESHOLD`);
+
+        const [goodSnapshot, warningSnapshot, badSnapshot] = await Promise.all([
+          get(goodRef),
+          get(warningRef),
+          get(badRef),
+        ]);
+
+        const customGood = goodSnapshot.exists()
+          ? goodSnapshot.val()
+          : PITCH_GOOD_THRESHOLD;
+        const customWarning = warningSnapshot.exists()
+          ? warningSnapshot.val()
+          : PITCH_WARNING_THRESHOLD;
+        const customBad = badSnapshot.exists()
+          ? badSnapshot.val()
+          : PITCH_BAD_THRESHOLD;
+
+        setCustomThresholds({
+          good: customGood,
+          warning: customWarning,
+          bad: customBad,
+        });
+
+        console.log("Custom thresholds loaded:", {
+          good: customGood,
+          warning: customWarning,
+          bad: customBad,
+        });
+      } catch (error) {
+        console.error("Error fetching custom thresholds:", error);
+        // Keep default values on error
+      }
+    };
+
+    fetchCustomThresholds();
+
+    // Also listen for real-time updates to thresholds
+    const goodRef = ref(database, `users/${userUID}/PITCH_GOOD_THRESHOLD`);
+    const warningRef = ref(
+      database,
+      `users/${userUID}/PITCH_WARNING_THRESHOLD`
+    );
+    const badRef = ref(database, `users/${userUID}/PITCH_BAD_THRESHOLD`);
+
+    const unsubscribeGood = onValue(goodRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setCustomThresholds((prev) => ({
+          ...prev,
+          good: snapshot.val(),
+        }));
+      }
+    });
+
+    const unsubscribeWarning = onValue(warningRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setCustomThresholds((prev) => ({
+          ...prev,
+          warning: snapshot.val(),
+        }));
+      }
+    });
+
+    const unsubscribeBad = onValue(badRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setCustomThresholds((prev) => ({
+          ...prev,
+          bad: snapshot.val(),
+        }));
+      }
+    });
+
+    return () => {
+      unsubscribeGood();
+      unsubscribeWarning();
+      unsubscribeBad();
+    };
+  }, [userUID]);
 
   // Animate component on mount
   useEffect(() => {
@@ -1175,10 +1363,10 @@ const PostureGraph = () => {
 
   const getEnhancedChartConfig = (type = "bar") => {
     const baseConfig = {
-      backgroundColor: THEME.cardBackground, // Use white background
-      backgroundGradientFrom: THEME.cardBackground, // White
+      backgroundColor: THEME.cardBackground,
+      backgroundGradientFrom: THEME.cardBackground,
       backgroundGradientFromOpacity: 1,
-      backgroundGradientTo: THEME.cardBackground, // Same white to prevent gradient
+      backgroundGradientTo: THEME.cardBackground,
       backgroundGradientToOpacity: 1,
       fillShadowGradientFromOpacity: 0.8,
       fillShadowGradientTo: THEME.primary,
@@ -1186,7 +1374,8 @@ const PostureGraph = () => {
       color: (opacity = 1) => `rgba(92, 163, 119, ${opacity})`,
       labelColor: (opacity = 1) => `rgba(27, 18, 18, ${opacity})`,
       strokeWidth: 3,
-      barPercentage: 0.7,
+      barPercentage: 0.6, // UPDATED: Better bar width
+      categoryPercentage: 0.9, // UPDATED: Better category spacing
       useShadowColorFromDataset: false,
       decimalPlaces: 1,
       propsForLabels: {
@@ -1211,6 +1400,11 @@ const PostureGraph = () => {
         strokeWidth: 1,
         strokeOpacity: 0.3,
       },
+      // ADDED: Better spacing configuration
+      paddingLeft: 10,
+      paddingRight: 10,
+      paddingTop: 10,
+      paddingBottom: 10,
     };
 
     if (type === "line") {
@@ -2743,6 +2937,8 @@ const PostureGraph = () => {
                 height={240}
                 chartConfig={{
                   ...getEnhancedChartConfig("bar"),
+                  barPercentage: 0.6, // Reduced from 0.7 for better spacing
+                  categoryPercentage: 0.8, // Added for better distribution
                   color: (opacity = 1, index) => {
                     if (!aggregatedData[index])
                       return `rgba(92, 163, 119, ${opacity})`;
@@ -2760,12 +2956,19 @@ const PostureGraph = () => {
                 withCustomBarColorFromData={true}
               />
 
-              {/* Interactive overlay for bar clicks */}
+              {/* Interactive overlay for bar clicks - FIXED: Better alignment */}
               <View style={styles.barClickOverlay}>
                 {aggregatedData.map((item, index) => (
                   <TouchableOpacity
                     key={index}
-                    style={styles.barClickArea}
+                    style={[
+                      styles.barClickArea,
+                      {
+                        marginLeft: index === 0 ? 8 : 4,
+                        marginRight:
+                          index === aggregatedData.length - 1 ? 8 : 4,
+                      },
+                    ]}
                     onPress={() => handleBarClick(index)}
                     activeOpacity={0.7}
                   />
@@ -2946,12 +3149,28 @@ const PostureGraph = () => {
             </View>
           )}
 
-          <Button
-            title={showMlFeatures ? "Hide ML Features" : "Show ML Features"}
-            type="secondary"
-            onPress={() => setShowMlFeatures(!showMlFeatures)}
-            style={styles.mlToggleButton}
-          />
+          {/* Compact ML Actions */}
+          <View style={styles.mlActionsContainer}>
+            <TouchableOpacity
+              style={styles.mlActionButton}
+              onPress={() => setShowMlFeatures(!showMlFeatures)}
+            >
+              <Text style={styles.mlActionButtonText}>
+                {showMlFeatures ? "Hide" : "Show"} ML Features
+              </Text>
+            </TouchableOpacity>
+
+            {treeMetadata && (
+              <TouchableOpacity
+                style={[styles.mlActionButton, styles.mlActionButtonSecondary]}
+                onPress={() => setShowTreeModal(true)}
+              >
+                <Text style={styles.mlActionButtonTextSecondary}>
+                  🧠 AI Brain Info
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </Card>
       )}
 
@@ -3093,59 +3312,20 @@ const PostureGraph = () => {
         </Card>
       )}
 
-      {/* Decision Tree Details */}
-      {treeMetadata && (
-        <Card style={styles.treeMetadataContainer}>
-          <Text style={styles.cardTitle}>Decision Tree Details</Text>
-          <View style={styles.treeMetadataGrid}>
-            <View style={styles.treeMetadataItem}>
-              <Text style={styles.treeMetadataLabel}>Tree Depth:</Text>
-              <Text style={styles.treeMetadataValue}>
-                {treeMetadata.actualDepth}/{treeMetadata.maxDepth}
-              </Text>
-            </View>
-            <View style={styles.treeMetadataItem}>
-              <Text style={styles.treeMetadataLabel}>Total Nodes:</Text>
-              <Text style={styles.treeMetadataValue}>
-                {treeMetadata.totalNodes}
-              </Text>
-            </View>
-            <View style={styles.treeMetadataItem}>
-              <Text style={styles.treeMetadataLabel}>Leaf Nodes:</Text>
-              <Text style={styles.treeMetadataValue}>
-                {treeMetadata.leafNodes}
-              </Text>
-            </View>
-            <View style={styles.treeMetadataItem}>
-              <Text style={styles.treeMetadataLabel}>Training Date:</Text>
-              <Text style={styles.treeMetadataValue}>
-                {new Date(
-                  treeMetadata.trainingTimestamp * 1000
-                ).toLocaleDateString()}
-              </Text>
-            </View>
-          </View>
-        </Card>
-      )}
-
       <SectionHeader title="7-Day Posture Trends" />
 
       {(() => {
-        // FIXED: More comprehensive check for displaying the chart
-        const hasHistoricalData = historyData.length > 0;
-        const hasTodaysData = data.length > 0;
+        // FIXED: Use different variable name to avoid collision with state
+        const currentSelectedDate = new Date(selectedDate);
+        const startDate = new Date(currentSelectedDate);
+        startDate.setDate(currentSelectedDate.getDate() - 6); // 6 days before selected date
 
-        // Create the 7-day dataset to check if we have any meaningful data
-        const today = new Date();
-        const sevenDaysAgo = new Date(today);
-        sevenDaysAgo.setDate(today.getDate() - 6);
+        // Check if we have any data in this 7-day window
+        let hasAnyDataInWindow = false;
 
-        let hasAnyDataInLast7Days = false;
-
-        // Check if we have data for any of the last 7 days
         for (let i = 0; i < 7; i++) {
-          const currentDate = new Date(sevenDaysAgo);
-          currentDate.setDate(sevenDaysAgo.getDate() + i);
+          const currentDate = new Date(startDate);
+          currentDate.setDate(startDate.getDate() + i);
           const dateString = currentDate.toISOString().split("T")[0];
 
           // Check if this date has data in historyData
@@ -3153,20 +3333,23 @@ const PostureGraph = () => {
             (item) => item.date === dateString
           );
 
-          // Check if this date is today and has current data
-          const isToday = dateString === today.toISOString().split("T")[0];
-          const todayHasData = isToday && hasTodaysData;
+          // Check if this date has current data (for any date, not just today)
+          const hasCurrentData = data.some(
+            (entry) =>
+              entry &&
+              entry.hour &&
+              entry.hour.getDate() === currentDate.getDate() &&
+              entry.hour.getMonth() === currentDate.getMonth() &&
+              entry.hour.getFullYear() === currentDate.getFullYear()
+          );
 
-          if (hasDataForThisDate || todayHasData) {
-            hasAnyDataInLast7Days = true;
+          if (hasDataForThisDate || hasCurrentData) {
+            hasAnyDataInWindow = true;
             break;
           }
         }
 
-        // Show chart if we have any data in the last 7 days OR historical data
-        const shouldShowChart = hasAnyDataInLast7Days || hasHistoricalData;
-
-        return shouldShowChart ? (
+        return hasAnyDataInWindow ? (
           <Animated.View
             style={[
               styles.enhancedChartCard,
@@ -3185,13 +3368,15 @@ const PostureGraph = () => {
           >
             {/* History Chart Header */}
             <View style={styles.chartHeader}>
-              <Text style={styles.chartTitle}>Weekly Progress Overview</Text>
+              <Text style={styles.chartTitle}>
+                7-Day Window: {formatSelectedDate()}
+              </Text>
               <Text style={styles.chartSubtitle}>
-                Track your posture improvement over time
+                Posture trends for the 7 days ending on {formatSelectedDate()}
               </Text>
 
-              {/* Clickable Hint */}
-              <Text style={styles.chartHint}>
+              {/* Clickable Hint - FIXED: Added proper spacing */}
+              <Text style={[styles.chartHint, styles.chartHintWithTopMargin]}>
                 📊 Tap any day's bar to see detailed ML insights and trends
               </Text>
 
@@ -3232,11 +3417,7 @@ const PostureGraph = () => {
               <StackedBarChart
                 data={{
                   labels: (() => {
-                    // Always show all 7 days to ensure proper left alignment
-                    const today = new Date();
-                    const sevenDaysAgo = new Date(today);
-                    sevenDaysAgo.setDate(today.getDate() - 6);
-
+                    // Show 7 days ending on the selected date
                     const labels = [];
                     for (let i = 0; i < 7; i++) {
                       labels.push(""); // Empty labels - we'll use custom ones below
@@ -3246,19 +3427,17 @@ const PostureGraph = () => {
                   legend: ["Excellent", "Needs Work", "Poor"],
                   data: (() => {
                     const chartData = [];
-                    const today = new Date();
-                    const sevenDaysAgo = new Date(today);
-                    sevenDaysAgo.setDate(today.getDate() - 6);
+                    const endDate = new Date(currentSelectedDate);
+                    const startDate = new Date(endDate);
+                    startDate.setDate(endDate.getDate() - 6);
 
-                    // Always generate all 7 days to maintain left alignment
+                    // Generate data for 7 days ending on selected date
                     for (let i = 0; i < 7; i++) {
-                      const currentDate = new Date(sevenDaysAgo);
-                      currentDate.setDate(sevenDaysAgo.getDate() + i);
+                      const currentDate = new Date(startDate);
+                      currentDate.setDate(startDate.getDate() + i);
                       const dateString = currentDate
                         .toISOString()
                         .split("T")[0];
-                      const isToday =
-                        dateString === today.toISOString().split("T")[0];
 
                       // Find existing data for this date
                       const existingData = historyData.find(
@@ -3266,35 +3445,44 @@ const PostureGraph = () => {
                       );
 
                       if (existingData) {
-                        // Use actual data
+                        // Use actual historical data
                         chartData.push([
                           Math.round(existingData.good),
                           Math.round(existingData.warning || 0),
                           Math.round(existingData.bad),
                         ]);
-                      } else if (isToday && data.length > 0) {
-                        // For today, calculate from current data if available
-                        const todaysData = data.filter(
-                          (entry) => entry && entry.hour && isToday
+                      } else {
+                        // Check if we have current data for this date
+                        const dateData = data.filter(
+                          (entry) =>
+                            entry &&
+                            entry.hour &&
+                            entry.hour.getDate() === currentDate.getDate() &&
+                            entry.hour.getMonth() === currentDate.getMonth() &&
+                            entry.hour.getFullYear() ===
+                              currentDate.getFullYear()
                         );
 
-                        if (todaysData.length > 0) {
-                          // Calculate today's percentages from current data
+                        if (dateData.length > 0) {
+                          // Calculate percentages from current data
                           let goodCount = 0;
                           let warningCount = 0;
                           let badCount = 0;
 
-                          const todaysMlData = mlData.filter(
+                          const dateMlData = mlData.filter(
                             (entry) =>
                               entry &&
                               entry.hour &&
-                              entry.hour.toISOString().split("T")[0] ===
-                                dateString
+                              entry.hour.getDate() === currentDate.getDate() &&
+                              entry.hour.getMonth() ===
+                                currentDate.getMonth() &&
+                              entry.hour.getFullYear() ===
+                                currentDate.getFullYear()
                           );
 
-                          if (todaysMlData.length > 0) {
+                          if (dateMlData.length > 0) {
                             // Use ML predictions
-                            todaysMlData.forEach((entry) => {
+                            dateMlData.forEach((entry) => {
                               if (entry.prediction === "Good") goodCount++;
                               else if (entry.prediction === "Warning")
                                 warningCount++;
@@ -3302,7 +3490,7 @@ const PostureGraph = () => {
                             });
                           } else {
                             // Fallback to threshold-based calculation
-                            todaysData.forEach((entry) => {
+                            dateData.forEach((entry) => {
                               if (entry.pitch <= PITCH_GOOD_THRESHOLD)
                                 goodCount++;
                               else if (entry.pitch <= PITCH_WARNING_THRESHOLD)
@@ -3322,11 +3510,9 @@ const PostureGraph = () => {
                             chartData.push([0, 0, 0]);
                           }
                         } else {
+                          // No data for this day
                           chartData.push([0, 0, 0]);
                         }
-                      } else {
-                        // No data for this day - use placeholder that won't be visible
-                        chartData.push([0, 0, 0]);
                       }
                     }
 
@@ -3342,9 +3528,8 @@ const PostureGraph = () => {
                 height={220}
                 chartConfig={{
                   ...getHistoryChartConfig(),
-                  // Force minimum bar width and proper spacing
-                  barPercentage: 0.7, // Slightly thinner bars
-                  categoryPercentage: 1.0, // Full category width
+                  barPercentage: 0.7,
+                  categoryPercentage: 1.0,
                 }}
                 style={styles.historyChart}
                 hideLegend={true}
@@ -3353,52 +3538,163 @@ const PostureGraph = () => {
                 fromZero={true}
               />
 
-              {/* Interactive overlay for history bar clicks - THIS IS THE KEY ADDITION */}
+              {/* Interactive overlay for history bar clicks */}
               <View style={styles.historyBarClickOverlay}>
                 {Array.from({ length: 7 }, (_, index) => (
                   <TouchableOpacity
                     key={index}
                     style={styles.historyBarClickArea}
-                    onPress={() => handleHistoryBarClick(index)}
+                    onPress={() => {
+                      // FIXED: Calculate correct date based on selected date window
+                      const endDate = new Date(currentSelectedDate);
+                      const clickDate = new Date(endDate);
+                      clickDate.setDate(endDate.getDate() - 6 + index);
+
+                      // Navigate to that date
+                      setSelectedDate(clickDate);
+                      setIsViewingToday(isDateToday(clickDate));
+
+                      // Also show history detail if there's data
+                      const dateString = clickDate.toISOString().split("T")[0];
+                      const dayData = historyData.find(
+                        (item) => item.date === dateString
+                      );
+
+                      if (
+                        dayData ||
+                        (isDateToday(clickDate) && data.length > 0)
+                      ) {
+                        // Create enhanced data for history detail
+                        let enhancedData = dayData;
+
+                        if (
+                          !dayData &&
+                          isDateToday(clickDate) &&
+                          data.length > 0
+                        ) {
+                          // Calculate today's data if not in history yet
+                          const todaysData = data.filter(
+                            (entry) =>
+                              entry &&
+                              entry.hour &&
+                              entry.hour.toISOString().split("T")[0] ===
+                                dateString
+                          );
+
+                          if (todaysData.length > 0) {
+                            let goodCount = 0;
+                            let warningCount = 0;
+                            let badCount = 0;
+
+                            const todaysMlData = mlData.filter(
+                              (entry) =>
+                                entry &&
+                                entry.hour &&
+                                entry.hour.toISOString().split("T")[0] ===
+                                  dateString
+                            );
+
+                            if (todaysMlData.length > 0) {
+                              todaysMlData.forEach((entry) => {
+                                if (entry.prediction === "Good") goodCount++;
+                                else if (entry.prediction === "Warning")
+                                  warningCount++;
+                                else if (entry.prediction === "Bad") badCount++;
+                              });
+                            } else {
+                              todaysData.forEach((entry) => {
+                                if (entry.pitch <= PITCH_GOOD_THRESHOLD)
+                                  goodCount++;
+                                else if (entry.pitch <= PITCH_WARNING_THRESHOLD)
+                                  warningCount++;
+                                else badCount++;
+                              });
+                            }
+
+                            const total = goodCount + warningCount + badCount;
+                            if (total > 0) {
+                              enhancedData = {
+                                date: dateString,
+                                good: (goodCount / total) * 100,
+                                warning: (warningCount / total) * 100,
+                                bad: (badCount / total) * 100,
+                                dataCount: total,
+                                isToday: true,
+                              };
+                            }
+                          }
+                        }
+
+                        if (enhancedData) {
+                          setSelectedHistoryData({
+                            ...enhancedData,
+                            formattedDate: formatHistoryDate(dateString),
+                            isToday: isDateToday(clickDate),
+                            mlInsights: calculateMLInsights(
+                              dateString,
+                              isDateToday(clickDate)
+                            ),
+                            trendAnalysis: calculateTrendAnalysis(
+                              dateString,
+                              index
+                            ),
+                          });
+                          setActiveTab("historyDetail");
+                        }
+                      }
+                    }}
                     activeOpacity={0.7}
                   />
                 ))}
               </View>
 
-              {/* Custom Date Labels - Enhanced to show data availability */}
+              {/* Custom Date Labels - Based on selected date window */}
               <View style={styles.customDateLabels}>
                 {(() => {
                   const labels = [];
-                  const today = new Date();
-                  const sevenDaysAgo = new Date(today);
-                  sevenDaysAgo.setDate(today.getDate() - 6);
+                  const endDate = new Date(currentSelectedDate);
+                  const startDate = new Date(endDate);
+                  startDate.setDate(endDate.getDate() - 6);
 
                   for (let i = 0; i < 7; i++) {
-                    const currentDate = new Date(sevenDaysAgo);
-                    currentDate.setDate(sevenDaysAgo.getDate() + i);
+                    const currentDate = new Date(startDate);
+                    currentDate.setDate(startDate.getDate() + i);
                     const dateString = currentDate.toISOString().split("T")[0];
-                    const isToday =
-                      dateString === today.toISOString().split("T")[0];
+                    const isToday = isDateToday(currentDate);
+                    const isSelectedDate =
+                      currentDate.toDateString() ===
+                      selectedDate.toDateString();
 
                     // Check if this day has data
                     const hasHistoryData = historyData.some(
                       (item) => item.date === dateString
                     );
-                    const hasTodayData = isToday && data.length > 0;
-                    const hasData = hasHistoryData || hasTodayData;
+                    const hasCurrentData = data.some(
+                      (entry) =>
+                        entry &&
+                        entry.hour &&
+                        entry.hour.getDate() === currentDate.getDate() &&
+                        entry.hour.getMonth() === currentDate.getMonth() &&
+                        entry.hour.getFullYear() === currentDate.getFullYear()
+                    );
+                    const hasData = hasHistoryData || hasCurrentData;
 
                     labels.push(
                       <TouchableOpacity
                         key={i}
-                        onPress={() => handleHistoryBarClick(i)}
+                        onPress={() => {
+                          setSelectedDate(currentDate);
+                          setIsViewingToday(isToday);
+                        }}
                         activeOpacity={0.7}
                       >
                         <Text
                           style={[
                             styles.dateLabel,
                             isToday && styles.todayDateLabel,
+                            isSelectedDate && styles.selectedDateLabel, // Highlight selected date
                             !hasData && styles.noDataDateLabel,
-                            hasData && styles.clickableDateLabel, // Add clickable styling
+                            hasData && styles.clickableDateLabel,
                           ]}
                         >
                           {formatChartDate(dateString, isToday)}
@@ -3411,97 +3707,611 @@ const PostureGraph = () => {
               </View>
             </View>
 
-            {/* History Chart Footer with Insights */}
+            {/* History Chart Footer with Insights for the selected window */}
             <View style={styles.chartFooter}>
               <View style={styles.historyInsights}>
-                <Text style={styles.insightsTitle}>📈 Weekly Insights</Text>
+                <Text style={styles.insightsTitle}>📈 Week Insights</Text>
                 <View style={styles.insightsList}>
                   {(() => {
-                    if (historyData.length === 0) {
+                    // Calculate insights for the 7-day window ending on selected date
+                    const endDate = new Date(currentSelectedDate);
+                    const startDate = new Date(endDate);
+                    startDate.setDate(endDate.getDate() - 6);
+
+                    const windowData = [];
+                    for (let i = 0; i < 7; i++) {
+                      const currentDate = new Date(startDate);
+                      currentDate.setDate(startDate.getDate() + i);
+                      const dateString = currentDate
+                        .toISOString()
+                        .split("T")[0];
+
+                      const dayData = historyData.find(
+                        (item) => item.date === dateString
+                      );
+                      if (dayData) {
+                        windowData.push(dayData);
+                      }
+                    }
+
+                    if (windowData.length === 0) {
                       return (
                         <Text style={styles.insightText}>
-                          🆕 Start your posture tracking journey! Data will
-                          appear as you use your sensor.
+                          📊 Track more days to see weekly trends and insights
                         </Text>
                       );
                     }
 
-                    const latest = historyData[historyData.length - 1];
-                    const previous = historyData[historyData.length - 2];
-
-                    if (latest && previous) {
-                      const improvement = latest.good - previous.good;
-                      return (
-                        <Text
-                          style={[
-                            styles.insightText,
-                            {
-                              color:
-                                improvement > 0 ? THEME.primary : THEME.danger,
-                            },
-                          ]}
-                        >
-                          {improvement > 0
-                            ? `🎉 ${improvement.toFixed(
-                                1
-                              )}% improvement from yesterday!`
-                            : `⚠️ ${Math.abs(improvement).toFixed(
-                                1
-                              )}% decline from yesterday`}
-                        </Text>
-                      );
-                    }
-
-                    if (historyData.length === 1) {
+                    if (windowData.length === 1) {
                       return (
                         <Text style={styles.insightText}>
-                          🎯 Great start! Keep tracking to see your progress
+                          🎯 Good start! Track more days to see your progress
                           trends.
                         </Text>
                       );
                     }
 
+                    // Find best and worst days in the window
+                    const bestDay = windowData.reduce((best, day) =>
+                      day.good > best.good ? day : best
+                    );
+
+                    const avgGood =
+                      windowData.reduce((sum, day) => sum + day.good, 0) /
+                      windowData.length;
+
                     return (
-                      <Text style={styles.insightText}>
-                        Keep tracking to see your progress trends!
-                      </Text>
+                      <>
+                        <Text style={styles.insightText}>
+                          🎯 Best day in window: {formatChartDate(bestDay.date)}
+                          ({bestDay.good.toFixed(0)}% good posture)
+                        </Text>
+                        <Text style={styles.insightText}>
+                          📊 Week average: {avgGood.toFixed(1)}% good posture
+                        </Text>
+                        {windowData.length >= 2 && (
+                          <Text style={styles.insightText}>
+                            📈 {windowData.length} days tracked in this window
+                          </Text>
+                        )}
+                      </>
                     );
                   })()}
-
-                  {historyData.length > 0 && (
-                    <Text style={styles.insightText}>
-                      🎯 Best day:{" "}
-                      {formatChartDate(
-                        historyData.reduce((best, day) =>
-                          day.good > best.good ? day : best
-                        ).date
-                      )}{" "}
-                      (
-                      {historyData
-                        .reduce((best, day) =>
-                          day.good > best.good ? day : best
-                        )
-                        .good.toFixed(0)}
-                      % good posture)
-                    </Text>
-                  )}
                 </View>
               </View>
             </View>
           </Animated.View>
         ) : (
-          // Only show this when there's truly no data at all
           <View style={styles.noDataContainer}>
-            <Text style={styles.noDataText}>Building your posture history</Text>
+            <Text style={styles.noDataText}>No data for this 7-day window</Text>
             <Text style={styles.noDataSubtext}>
-              📊 Your weekly trends will appear here as you use AlignMate
+              📊 Navigate to dates with posture data to see trends
             </Text>
             <Text style={styles.noDataSubtext}>
-              💡 Use your sensor throughout the day to start tracking progress
+              💡 The 7-day window shows the week ending on{" "}
+              {formatSelectedDate()}
             </Text>
           </View>
         );
       })()}
+
+      {/* AI Brain Details Modal */}
+      {treeMetadata && (
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={showTreeModal}
+          onRequestClose={() => setShowTreeModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.treeModalContent}>
+              <ScrollView
+                style={styles.treeModalScroll}
+                contentContainerStyle={styles.treeModalScrollContent}
+                showsVerticalScrollIndicator={false}
+              >
+                {/* Modal Header */}
+                <View style={styles.treeModalHeader}>
+                  <Text style={styles.treeModalTitle}>🤖 Your AI Brain</Text>
+                  <TouchableOpacity
+                    style={styles.modalCloseButton}
+                    onPress={() => setShowTreeModal(false)}
+                  >
+                    <Image
+                      source={{ uri: ICONS.close }}
+                      style={styles.modalCloseIcon}
+                    />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Modal Content */}
+                <View style={styles.treeModalBody}>
+                  <Text style={styles.treeModalExplanation}>
+                    🎯 Your personal AI posture detective! Here's how your smart
+                    sensor thinks:
+                  </Text>
+
+                  {/* FIXED: Setup Type Indicator using actual setupType */}
+                  <View style={styles.setupTypeIndicator}>
+                    <Text style={styles.setupTypeTitle}>
+                      {setupType === "default"
+                        ? "🚀 Default Setup"
+                        : "🧠 Calibrated Setup"}
+                    </Text>
+                    <Text style={styles.setupTypeDescription}>
+                      {setupType === "default"
+                        ? "Using optimized general posture detection - fast and efficient!"
+                        : "Using your personalized AI model - trained specifically for your posture patterns!"}
+                    </Text>
+                  </View>
+
+                  <View style={styles.treeModalGrid}>
+                    <View style={styles.treeModalItem}>
+                      <Text style={styles.treeModalLabel}>
+                        🌲 Thinking Layers:
+                      </Text>
+                      <Text style={styles.treeModalValue}>
+                        {treeMetadata.actualDepth}
+                      </Text>
+                      <Text style={styles.treeModalHelp}>
+                        {setupType === "default"
+                          ? `Quick ${treeMetadata.actualDepth}-step decision process - gets to the answer fast!`
+                          : `Deep ${treeMetadata.actualDepth}-step analysis - considers your unique patterns!`}
+                      </Text>
+                    </View>
+
+                    <View style={styles.treeModalItem}>
+                      <Text style={styles.treeModalLabel}>
+                        🧠 Decision Points:
+                      </Text>
+                      <Text style={styles.treeModalValue}>
+                        {treeMetadata.totalNodes}
+                      </Text>
+                      <Text style={styles.treeModalHelp}>
+                        {setupType === "default"
+                          ? "Streamlined decision making with essential questions only"
+                          : `${treeMetadata.totalNodes} sophisticated questions tailored to your posture habits`}
+                      </Text>
+                    </View>
+
+                    <View style={styles.treeModalItem}>
+                      <Text style={styles.treeModalLabel}>
+                        🎯 Final Answers:
+                      </Text>
+                      <Text style={styles.treeModalValue}>
+                        {treeMetadata.leafNodes}
+                      </Text>
+                      <Text style={styles.treeModalHelp}>
+                        {setupType === "default"
+                          ? "Standard posture categories - Good, Warning, Bad"
+                          : `${treeMetadata.leafNodes} personalized posture classifications based on your calibration`}
+                      </Text>
+                    </View>
+
+                    <View style={styles.treeModalItem}>
+                      <Text style={styles.treeModalLabel}>📅 Trained:</Text>
+                      <Text style={styles.treeModalValue}>
+                        {new Date(
+                          treeMetadata.trainingTimestamp * 1000
+                        ).toLocaleDateString()}
+                      </Text>
+                      <Text style={styles.treeModalHelp}>
+                        {setupType === "default"
+                          ? "When your AI was set up with default settings"
+                          : "When your AI learned your personal posture patterns"}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Enhanced AI Decision Process with Setup-Specific Content */}
+                  <View style={styles.aiDecisionProcess}>
+                    <Text style={styles.aiDecisionTitle}>
+                      🔍 How Your AI Makes Decisions:
+                    </Text>
+                    <Text style={styles.aiDecisionSubtitle}>
+                      {setupType === "default"
+                        ? "Your default AI uses this streamlined decision process:"
+                        : "Your calibrated AI uses this personalized decision process:"}
+                    </Text>
+
+                    {/* Setup-specific decision explanations */}
+                    {setupType === "default" ? (
+                      // DEFAULT SETUP QUESTIONS
+                      <View style={styles.decisionQuestions}>
+                        <View style={styles.questionStep}>
+                          <View style={styles.questionNumber}>
+                            <Text style={styles.questionNumberText}>1</Text>
+                          </View>
+                          <View style={styles.questionContent}>
+                            <Text style={styles.questionText}>
+                              "Is your forward lean ≤ 8 degrees?"
+                            </Text>
+                            <Text style={styles.questionExplanation}>
+                              🚀 Quick check: If YES → Good posture! If NO →
+                              Check severity...
+                              {"\n"}💡 Default threshold: 8° is the standard
+                              upright posture limit
+                            </Text>
+                          </View>
+                        </View>
+
+                        <View style={styles.questionStep}>
+                          <View style={styles.questionNumber}>
+                            <Text style={styles.questionNumberText}>2</Text>
+                          </View>
+                          <View style={styles.questionContent}>
+                            <Text style={styles.questionText}>
+                              "Is your forward lean ≤ 15 degrees?"
+                            </Text>
+                            <Text style={styles.questionExplanation}>
+                              ⚡ Final decision: Warning vs Bad posture
+                              {"\n"}🎯 8-15° = Warning, {">"}15° = Bad posture
+                            </Text>
+                          </View>
+                        </View>
+
+                        {/* Default threshold summary */}
+                        <View style={styles.thresholdSummary}>
+                          <Text style={styles.thresholdTitle}>
+                            📏 Default Angle Thresholds:
+                          </Text>
+                          <View style={styles.thresholdList}>
+                            <Text style={styles.thresholdItem}>
+                              🟢 Good Posture: 0° to 8° (upright to slight lean)
+                            </Text>
+                            <Text style={styles.thresholdItem}>
+                              🟡 Warning: 8° to 15° (noticeable forward slouch)
+                            </Text>
+                            <Text style={styles.thresholdItem}>
+                              🔴 Bad Posture: {">"}15° (significant slouching)
+                            </Text>
+                          </View>
+                          <Text style={styles.thresholdNote}>
+                            💡 These are general thresholds that work for most
+                            people
+                          </Text>
+                        </View>
+                      </View>
+                    ) : (
+                      // CALIBRATED SETUP QUESTIONS
+                      <View style={styles.decisionQuestions}>
+                        <View style={styles.questionStep}>
+                          <View style={styles.questionNumber}>
+                            <Text style={styles.questionNumberText}>1</Text>
+                          </View>
+                          <View style={styles.questionContent}>
+                            <Text style={styles.questionText}>
+                              "Is your pitch ≤{" "}
+                              {Math.round(customThresholds.good)}° (your good
+                              posture baseline)?"
+                            </Text>
+                            <Text style={styles.questionExplanation}>
+                              🎯 Personalized check based on YOUR calibration
+                              data
+                              {"\n"}📊 Your unique "good posture" threshold:{" "}
+                              {Math.round(customThresholds.good)}°
+                              {customThresholds.good !== PITCH_GOOD_THRESHOLD &&
+                                ` (vs default: ${PITCH_GOOD_THRESHOLD}°)`}
+                            </Text>
+                          </View>
+                        </View>
+
+                        <View style={styles.questionStep}>
+                          <View style={styles.questionNumber}>
+                            <Text style={styles.questionNumberText}>2</Text>
+                          </View>
+                          <View style={styles.questionContent}>
+                            <Text style={styles.questionText}>
+                              "Is your pitch ≤{" "}
+                              {Math.round(customThresholds.warning)}° (your
+                              warning threshold)?"
+                            </Text>
+                            <Text style={styles.questionExplanation}>
+                              ⚡ Final check: If NO → Poor posture detected
+                              {"\n"}🎯 Your warning limit:{" "}
+                              {Math.round(customThresholds.warning)}°
+                              {customThresholds.warning !==
+                                PITCH_WARNING_THRESHOLD &&
+                                ` (vs default: ${PITCH_WARNING_THRESHOLD}°)`}
+                            </Text>
+                          </View>
+                        </View>
+
+                        {treeMetadata.actualDepth > 2 && (
+                          <View style={styles.questionStep}>
+                            <View style={styles.questionNumber}>
+                              <Text style={styles.questionNumberText}>3+</Text>
+                            </View>
+                            <View style={styles.questionContent}>
+                              <Text style={styles.questionText}>
+                                "Advanced multi-factor personal analysis..."
+                              </Text>
+                              <Text style={styles.questionExplanation}>
+                                🧠 Uses {treeMetadata.actualDepth} levels of
+                                analysis specific to YOUR posture patterns
+                                {"\n"}🔬 Considers roll (side tilt), variance,
+                                movement patterns, and stability
+                              </Text>
+                            </View>
+                          </View>
+                        )}
+
+                        {/* Calibrated threshold summary with ACTUAL user's thresholds */}
+                        <View style={styles.thresholdSummary}>
+                          <Text style={styles.thresholdTitle}>
+                            🎯 Your Personal Thresholds:
+                          </Text>
+                          <View style={styles.thresholdList}>
+                            <Text style={styles.thresholdItem}>
+                              🟢 Your Good Posture: 0° to{" "}
+                              {Math.round(customThresholds.good)}° (your
+                              personal upright range)
+                            </Text>
+                            <Text style={styles.thresholdItem}>
+                              🟡 Your Warning Zone:{" "}
+                              {Math.round(customThresholds.good)}° to{" "}
+                              {Math.round(customThresholds.warning)}° (when you
+                              start slouching)
+                            </Text>
+                            <Text style={styles.thresholdItem}>
+                              🔴 Your Poor Posture: {">"}
+                              {Math.round(customThresholds.warning)}°
+                              (significant deviation from your baseline)
+                            </Text>
+                          </View>
+                          <Text style={styles.thresholdNote}>
+                            ✨ These thresholds were learned from YOUR
+                            calibration session!
+                          </Text>
+
+                          {/* Show comparison with default thresholds */}
+                          <View style={styles.thresholdComparison}>
+                            <Text style={styles.thresholdComparisonTitle}>
+                              📊 vs Default Thresholds:
+                            </Text>
+                            <Text style={styles.thresholdComparisonText}>
+                              Your Good: {Math.round(customThresholds.good)}° vs
+                              Default: {PITCH_GOOD_THRESHOLD}°
+                              {customThresholds.good !== PITCH_GOOD_THRESHOLD &&
+                                ` (${
+                                  customThresholds.good > PITCH_GOOD_THRESHOLD
+                                    ? "+"
+                                    : ""
+                                }${Math.round(
+                                  customThresholds.good - PITCH_GOOD_THRESHOLD
+                                )}°)`}
+                            </Text>
+                            <Text style={styles.thresholdComparisonText}>
+                              Your Warning:{" "}
+                              {Math.round(customThresholds.warning)}° vs
+                              Default: {PITCH_WARNING_THRESHOLD}°
+                              {customThresholds.warning !==
+                                PITCH_WARNING_THRESHOLD &&
+                                ` (${
+                                  customThresholds.warning >
+                                  PITCH_WARNING_THRESHOLD
+                                    ? "+"
+                                    : ""
+                                }${Math.round(
+                                  customThresholds.warning -
+                                    PITCH_WARNING_THRESHOLD
+                                )}°)`}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                    )}
+
+                    {/* Real-time example with setup-specific interpretation */}
+                    <View style={styles.realTimeExample}>
+                      <Text style={styles.realTimeTitle}>
+                        📊 Latest AI Decision:
+                      </Text>
+                      <Text style={styles.realTimeSubtitle}>
+                        Here's what your{" "}
+                        {setupType === "default" ? "default" : "calibrated"} AI
+                        just decided:
+                      </Text>
+
+                      <View style={styles.latestDecision}>
+                        <View style={styles.decisionItem}>
+                          <Text style={styles.decisionLabel}>
+                            {setupType === "default"
+                              ? "Quick Check:"
+                              : "Personal Analysis:"}
+                          </Text>
+                          <Text style={styles.decisionAnswer}>
+                            {setupType === "default"
+                              ? `Forward lean: ${
+                                  mlData.length > 0
+                                    ? Math.round(
+                                        mlData[mlData.length - 1]?.mean
+                                      ) || "N/A"
+                                    : "N/A"
+                                }° - ${
+                                  mlData.length > 0 &&
+                                  mlData[mlData.length - 1]?.mean <= 8
+                                    ? " ✅ Within 8° limit!"
+                                    : " ❌ Above 8° threshold"
+                                }`
+                              : `Posture angle: ${
+                                  mlData.length > 0
+                                    ? Math.round(
+                                        mlData[mlData.length - 1]?.mean
+                                      ) || "N/A"
+                                    : "N/A"
+                                }° - ${(() => {
+                                  if (mlData.length === 0)
+                                    return "❌ Analyzing...";
+                                  const currentAngle =
+                                    mlData[mlData.length - 1]?.mean || 0;
+                                  if (currentAngle <= customThresholds.good)
+                                    return `✅ Within your ${Math.round(
+                                      customThresholds.good
+                                    )}° good range!`;
+                                  if (currentAngle <= customThresholds.warning)
+                                    return `⚠️ In your warning zone (${Math.round(
+                                      customThresholds.good
+                                    )}-${Math.round(
+                                      customThresholds.warning
+                                    )}°)`;
+                                  return `❌ Above your ${Math.round(
+                                    customThresholds.warning
+                                  )}° threshold`;
+                                })()}`}
+                          </Text>
+                        </View>
+
+                        <View style={styles.decisionItem}>
+                          <Text style={styles.decisionLabel}>
+                            Final Answer:
+                          </Text>
+                          <Text
+                            style={[
+                              styles.decisionFinal,
+                              latestPrediction === "Good"
+                                ? styles.goodDecision
+                                : latestPrediction === "Warning"
+                                ? styles.warningDecision
+                                : styles.badDecision,
+                            ]}
+                          >
+                            "{latestPrediction} Posture"
+                            {predictionConfidence > 0 &&
+                              ` (${(predictionConfidence * 100).toFixed(
+                                0
+                              )}% confident)`}
+                          </Text>
+                        </View>
+
+                        <View style={styles.decisionItem}>
+                          <Text style={styles.decisionLabel}>
+                            {setupType === "default"
+                              ? "Key Threshold:"
+                              : "Key Factor:"}
+                          </Text>
+                          <Text style={styles.decisionAnswer}>
+                            {setupType === "default"
+                              ? "Standard angle thresholds (8°/15°)"
+                              : primaryFeature !== "none"
+                              ? getPrimaryFeatureDisplay(primaryFeature)
+                              : "Your personalized patterns"}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* Setup-specific Fun Facts */}
+                  <View style={styles.treeModalFunFacts}>
+                    <Text style={styles.treeModalFunTitle}>
+                      {setupType === "default"
+                        ? "⚡ Default Setup Benefits:"
+                        : "🎯 Calibration Benefits:"}
+                    </Text>
+                    <View style={styles.treeModalFunList}>
+                      {setupType === "default" ? (
+                        <>
+                          <Text style={styles.treeModalFunFact}>
+                            🚀 Lightning-fast decisions - perfect for immediate
+                            posture monitoring!
+                          </Text>
+                          <Text style={styles.treeModalFunFact}>
+                            ⚡ Uses proven 8°/15° thresholds that work for most
+                            people
+                          </Text>
+                          <Text style={styles.treeModalFunFact}>
+                            📊 Simple but effective - focuses on forward
+                            slouching detection
+                          </Text>
+                          <Text style={styles.treeModalFunFact}>
+                            🔧 Can upgrade to calibrated mode anytime in
+                            Settings!
+                          </Text>
+                        </>
+                      ) : (
+                        <>
+                          <Text style={styles.treeModalFunFact}>
+                            🎯 Your AI uses YOUR calibrated thresholds:{" "}
+                            {Math.round(customThresholds.good)}°/
+                            {Math.round(customThresholds.warning)}° vs default{" "}
+                            {PITCH_GOOD_THRESHOLD}°/{PITCH_WARNING_THRESHOLD}°!
+                          </Text>
+                          <Text style={styles.treeModalFunFact}>
+                            🧠 Uses {treeMetadata.leafNodes} different ways to
+                            classify YOUR unique posture patterns
+                          </Text>
+                          <Text style={styles.treeModalFunFact}>
+                            📈 Adapts to your specific sitting habits and body
+                            mechanics
+                          </Text>
+                          <Text style={styles.treeModalFunFact}>
+                            🔬 Considers multiple factors: pitch, roll,
+                            variance, movement patterns!
+                          </Text>
+                        </>
+                      )}
+                    </View>
+                  </View>
+
+                  {/* Enhanced Performance Insight */}
+                  <View style={styles.treeModalPerformance}>
+                    <Text style={styles.treeModalPerformanceTitle}>
+                      ⚡ Performance Analysis:
+                    </Text>
+                    <Text style={styles.treeModalPerformanceDesc}>
+                      {(() => {
+                        const efficiency = Math.round(
+                          (treeMetadata.leafNodes / treeMetadata.totalNodes) *
+                            100
+                        );
+                        const complexity = treeMetadata.actualDepth;
+
+                        if (setupType === "default") {
+                          return "🚀 Default Mode: Ultra-fast decisions with proven accuracy for general posture detection!";
+                        } else if (efficiency > 60 && complexity <= 5) {
+                          return "⚖️ Calibrated Mode: Optimally balanced for your personal posture patterns!";
+                        } else if (complexity > 5) {
+                          return "🧠 Advanced Calibrated Mode: Deep analysis customized for your unique sitting style!";
+                        } else {
+                          return "🎯 Precision Calibrated Mode: Fine-tuned specifically for your posture habits!";
+                        }
+                      })()}
+                    </Text>
+                    <Text style={styles.performanceStats}>
+                      📈 Decision efficiency:{" "}
+                      {Math.round(
+                        (treeMetadata.leafNodes / treeMetadata.totalNodes) * 100
+                      )}
+                      %{"\n"}⏱️ Average questions asked:{" "}
+                      {Math.round(treeMetadata.actualDepth * 0.75)} out of{" "}
+                      {treeMetadata.actualDepth}
+                      {"\n"}🎯 Setup type:{" "}
+                      {setupType === "default"
+                        ? "Default (General)"
+                        : "Calibrated (Personal)"}
+                      {setupType === "calibration" &&
+                        `\n🔧 Your thresholds: Good ≤${Math.round(
+                          customThresholds.good
+                        )}°, Warning ≤${Math.round(customThresholds.warning)}°`}
+                    </Text>
+                  </View>
+
+                  {/* Close Button */}
+                  <TouchableOpacity
+                    style={styles.treeModalCloseButton}
+                    onPress={() => setShowTreeModal(false)}
+                  >
+                    <Text style={styles.treeModalCloseButtonText}>
+                      Got it! 👍
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
+      )}
 
       {/* Quick Logs */}
       {showQuickLogs && (

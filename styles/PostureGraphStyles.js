@@ -222,11 +222,25 @@ const styles = StyleSheet.create({
     color: THEME.text,
   },
   chartHint: {
-    fontSize: 13,
-    color: THEME.textLight,
+    fontSize: 14,
+    color: THEME.primary,
     textAlign: "center",
-    marginBottom: 8,
+    marginBottom: 16,
     fontStyle: "italic",
+    fontWeight: "500",
+    backgroundColor: "rgba(92, 163, 119, 0.1)",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    alignSelf: "center", // Ensure hint is centered
+    marginHorizontal: 20,
+    maxWidth: 300, // Added max width for better appearance
+  },
+
+  // ADDED: Chart hint with proper top margin for 7-day trends
+  chartHintWithTopMargin: {
+    marginTop: 20, // Added proper top margin
+    marginBottom: 12, // Reduced bottom margin slightly
   },
 
   // User greeting section
@@ -545,27 +559,559 @@ const styles = StyleSheet.create({
 
   // Tree metadata
   treeMetadataContainer: {
-    marginBottom: 20,
+    backgroundColor: THEME.cardBackground,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 24,
+    shadowColor: THEME.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: THEME.border,
   },
-  treeMetadataGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
-  treeMetadataItem: {
-    width: "50%",
-    marginBottom: 12,
-  },
-  treeMetadataLabel: {
+
+  treeMetadataExplanation: {
     fontSize: 14,
     color: THEME.textLight,
-    marginBottom: 2,
+    marginBottom: 16,
+    fontStyle: "italic",
+    textAlign: "center",
+    backgroundColor: "rgba(92, 163, 119, 0.1)",
+    padding: 12,
+    borderRadius: 8,
   },
-  treeMetadataValue: {
+
+  treeMetadataGrid: {
+    gap: 16,
+  },
+
+  treeMetadataItem: {
+    backgroundColor: "rgba(92, 163, 119, 0.05)",
+    padding: 16,
+    borderRadius: 12,
+    borderLeft: `4px solid ${THEME.primary}`,
+    marginBottom: 12,
+  },
+
+  treeMetadataLabel: {
     fontSize: 16,
+    fontWeight: "bold",
+    color: THEME.text,
+    marginBottom: 4,
+  },
+
+  treeMetadataValue: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: THEME.primary,
+    marginBottom: 8,
+  },
+
+  treeMetadataHelp: {
+    fontSize: 13,
+    color: THEME.textLight,
+    lineHeight: 18,
+    fontStyle: "italic",
+    backgroundColor: "#FFFFFF",
+    padding: 10,
+    borderRadius: 6,
+    borderLeft: `3px solid ${THEME.warning}`,
+  },
+
+  // Fun Facts Section
+  treeMetadataFunFacts: {
+    marginTop: 20,
+    padding: 16,
+    backgroundColor: "rgba(255, 193, 7, 0.1)",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255, 193, 7, 0.3)",
+  },
+
+  funFactsTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: THEME.text,
+    marginBottom: 12,
+    textAlign: "center",
+  },
+
+  funFactsList: {
+    gap: 8,
+  },
+
+  funFact: {
+    fontSize: 13,
+    color: THEME.text,
+    lineHeight: 18,
+    paddingLeft: 8,
+    paddingVertical: 4,
+  },
+
+  // Performance Insight Section
+  treePerformanceInsight: {
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: "rgba(92, 163, 119, 0.1)",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(92, 163, 119, 0.3)",
+  },
+
+  performanceTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: THEME.primary,
+    marginBottom: 8,
+    textAlign: "center",
+  },
+
+  performanceDescription: {
+    fontSize: 14,
+    color: THEME.text,
+    lineHeight: 20,
+    textAlign: "center",
     fontWeight: "500",
+  },
+  mlActionsContainer: {
+    flexDirection: "row",
+    marginTop: 12,
+    gap: 12,
+  },
+
+  mlActionButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    backgroundColor: THEME.primary,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  mlActionButtonSecondary: {
+    backgroundColor: "rgba(92, 163, 119, 0.1)",
+    borderWidth: 1,
+    borderColor: THEME.primary,
+  },
+
+  mlActionButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+
+  mlActionButtonTextSecondary: {
+    color: THEME.primary,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+
+  // ADDED: Tree Modal Styles
+  treeModalContent: {
+    backgroundColor: THEME.cardBackground,
+    borderRadius: 20,
+    width: "95%",
+    maxWidth: 450,
+    maxHeight: "85%",
+    shadowColor: THEME.shadow,
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 12,
+  },
+
+  treeModalScroll: {
+    flex: 1,
+  },
+
+  treeModalScrollContent: {
+    paddingBottom: 20,
+  },
+
+  treeModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: THEME.border,
+    backgroundColor: "#F8F9FA",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+
+  treeModalTitle: {
+    fontSize: 22,
+    fontWeight: "700",
     color: THEME.text,
   },
 
+  treeModalBody: {
+    padding: 20,
+  },
+
+  treeModalExplanation: {
+    fontSize: 15,
+    color: THEME.textLight,
+    marginBottom: 20,
+    fontStyle: "italic",
+    textAlign: "center",
+    backgroundColor: "rgba(92, 163, 119, 0.1)",
+    padding: 12,
+    borderRadius: 10,
+  },
+
+  treeModalGrid: {
+    gap: 16,
+    marginBottom: 20,
+  },
+
+  treeModalItem: {
+    backgroundColor: "rgba(92, 163, 119, 0.05)",
+    padding: 16,
+    borderRadius: 12,
+    borderLeft: `3px solid ${THEME.primary}`,
+  },
+
+  treeModalLabel: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: THEME.text,
+    marginBottom: 4,
+  },
+
+  treeModalValue: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: THEME.primary,
+    marginBottom: 8,
+  },
+
+  treeModalHelp: {
+    fontSize: 13,
+    color: THEME.textLight,
+    lineHeight: 18,
+    fontStyle: "italic",
+    backgroundColor: "#FFFFFF",
+    padding: 10,
+    borderRadius: 6,
+    borderLeft: `2px solid ${THEME.warning}`,
+  },
+
+  treeModalFunFacts: {
+    backgroundColor: "rgba(255, 193, 7, 0.1)",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255, 193, 7, 0.3)",
+  },
+
+  treeModalFunTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: THEME.text,
+    marginBottom: 12,
+    textAlign: "center",
+  },
+
+  treeModalFunList: {
+    gap: 8,
+  },
+
+  treeModalFunFact: {
+    fontSize: 13,
+    color: THEME.text,
+    lineHeight: 18,
+    paddingLeft: 8,
+    paddingVertical: 4,
+  },
+
+  treeModalPerformance: {
+    backgroundColor: "rgba(92, 163, 119, 0.1)",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "rgba(92, 163, 119, 0.3)",
+  },
+
+  treeModalPerformanceTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: THEME.primary,
+    marginBottom: 8,
+    textAlign: "center",
+  },
+
+  treeModalPerformanceDesc: {
+    fontSize: 14,
+    color: THEME.text,
+    lineHeight: 18,
+    textAlign: "center",
+    fontWeight: "500",
+  },
+
+  treeModalCloseButton: {
+    backgroundColor: THEME.primary,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 10,
+  },
+
+  treeModalCloseButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  aiDecisionProcess: {
+    backgroundColor: "rgba(66, 165, 245, 0.1)",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "rgba(66, 165, 245, 0.3)",
+  },
+
+  aiDecisionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: THEME.text,
+    marginBottom: 8,
+    textAlign: "center",
+  },
+
+  aiDecisionSubtitle: {
+    fontSize: 14,
+    color: THEME.textLight,
+    marginBottom: 16,
+    textAlign: "center",
+    fontStyle: "italic",
+  },
+
+  decisionQuestions: {
+    gap: 12,
+    marginBottom: 20,
+  },
+
+  questionStep: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    backgroundColor: "#FFFFFF",
+    padding: 12,
+    borderRadius: 10,
+    borderLeft: `4px solid ${THEME.primary}`,
+  },
+
+  questionNumber: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: THEME.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+    marginTop: 2,
+  },
+
+  questionNumberText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+
+  questionContent: {
+    flex: 1,
+  },
+
+  questionText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: THEME.text,
+    marginBottom: 4,
+  },
+
+  questionExplanation: {
+    fontSize: 12,
+    color: THEME.textLight,
+    lineHeight: 16,
+  },
+
+  // Real-time example styles
+  realTimeExample: {
+    backgroundColor: "rgba(92, 163, 119, 0.1)",
+    borderRadius: 10,
+    padding: 14,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: "rgba(92, 163, 119, 0.3)",
+  },
+
+  realTimeTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: THEME.primary,
+    marginBottom: 6,
+    textAlign: "center",
+  },
+
+  realTimeSubtitle: {
+    fontSize: 13,
+    color: THEME.textLight,
+    marginBottom: 12,
+    textAlign: "center",
+    fontStyle: "italic",
+  },
+
+  latestDecision: {
+    gap: 8,
+  },
+
+  decisionItem: {
+    backgroundColor: "#FFFFFF",
+    padding: 10,
+    borderRadius: 8,
+    borderLeft: `3px solid ${THEME.primary}`,
+  },
+
+  decisionLabel: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: THEME.textLight,
+    marginBottom: 2,
+  },
+
+  decisionAnswer: {
+    fontSize: 13,
+    color: THEME.text,
+    lineHeight: 16,
+  },
+
+  decisionFinal: {
+    fontSize: 14,
+    fontWeight: "bold",
+    lineHeight: 18,
+  },
+
+  goodDecision: {
+    color: THEME.primary,
+  },
+
+  warningDecision: {
+    color: THEME.warning,
+  },
+
+  badDecision: {
+    color: THEME.danger,
+  },
+  // NEW: Threshold Comparison Styles
+  thresholdComparison: {
+    backgroundColor: "rgba(66, 165, 245, 0.1)",
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: "rgba(66, 165, 245, 0.2)",
+  },
+
+  thresholdComparisonTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: THEME.primary,
+    marginBottom: 6,
+  },
+
+  thresholdComparisonText: {
+    fontSize: 12,
+    color: THEME.text,
+    lineHeight: 16,
+    marginBottom: 3,
+  },
+
+  setupTypeIndicator: {
+    backgroundColor: "rgba(66, 165, 245, 0.1)",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: "rgba(66, 165, 245, 0.3)",
+  },
+
+  setupTypeTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: THEME.primary,
+    marginBottom: 8,
+    textAlign: "center",
+  },
+
+  setupTypeDescription: {
+    fontSize: 14,
+    color: THEME.text,
+    textAlign: "center",
+    lineHeight: 20,
+    fontStyle: "italic",
+  },
+
+  // NEW: Threshold Summary Styles
+  thresholdSummary: {
+    backgroundColor: "rgba(92, 163, 119, 0.1)",
+    borderRadius: 10,
+    padding: 14,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: "rgba(92, 163, 119, 0.3)",
+  },
+
+  thresholdTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: THEME.primary,
+    marginBottom: 10,
+    textAlign: "center",
+  },
+
+  thresholdList: {
+    gap: 6,
+    marginBottom: 10,
+  },
+
+  thresholdItem: {
+    fontSize: 13,
+    color: THEME.text,
+    lineHeight: 18,
+    paddingLeft: 4,
+  },
+
+  thresholdNote: {
+    fontSize: 12,
+    color: THEME.textLight,
+    fontStyle: "italic",
+    textAlign: "center",
+    marginTop: 6,
+    backgroundColor: "rgba(255, 255, 255, 0.7)",
+    padding: 8,
+    borderRadius: 6,
+  },
+
+  // UPDATED: Performance Stats
+  performanceStats: {
+    fontSize: 12,
+    color: THEME.textLight,
+    marginTop: 8,
+    lineHeight: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.7)",
+    padding: 8,
+    borderRadius: 6,
+  },
   // Logs
   quickLogsContainer: {
     marginBottom: 20,
@@ -1093,8 +1639,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: THEME.border,
     overflow: "hidden",
-    alignSelf: "center", // Added center alignment
-    width: "100%", // Ensure full width
+    alignSelf: "center",
+    width: "100%",
+    maxWidth: 400, // Added max width for better proportion
   },
 
   chartHeader: {
@@ -1175,13 +1722,15 @@ const styles = StyleSheet.create({
     position: "relative",
     alignItems: "center",
     justifyContent: "center",
-    width: "100%", // Ensure full width
+    width: "100%",
+    backgroundColor: THEME.cardBackground,
   },
 
   enhancedChart: {
     borderRadius: 12,
     backgroundColor: "transparent",
     marginVertical: 8,
+    alignSelf: "center", // Ensure chart is centered
   },
 
   chartFooter: {
@@ -1196,11 +1745,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
+    paddingHorizontal: 10,
   },
 
   chartStatItem: {
     alignItems: "center",
     flex: 1,
+    paddingHorizontal: 8,
   },
 
   chartStatLabel: {
@@ -1267,24 +1818,27 @@ const styles = StyleSheet.create({
   barClickOverlay: {
     position: "absolute",
     top: 20,
-    left: 20,
-    right: 20,
+    left: 0,
+    right: 0,
     bottom: 20,
     flexDirection: "row",
     justifyContent: "space-evenly",
     alignItems: "stretch",
-    paddingHorizontal: 20,
+    paddingHorizontal: 50, // Increased padding to match chart margins
     paddingBottom: 40,
     paddingTop: 20,
     zIndex: 10,
   },
 
+  // Bar Click Area - UPDATED for better distribution
   barClickArea: {
     flex: 1,
     height: "100%",
     borderRadius: 8,
     backgroundColor: "transparent",
     marginHorizontal: 2,
+    // Add visual debugging (remove in production)
+    // backgroundColor: "rgba(255, 0, 0, 0.1)", // Uncomment to see click areas
   },
   feedbackCallout: {
     backgroundColor: "#F8FFF9",
@@ -1336,188 +1890,187 @@ const styles = StyleSheet.create({
     textDecorationColor: THEME.primary,
   },
   dateNavigationCard: {
-  marginBottom: 16,
-  paddingVertical: 12,
-},
+    marginBottom: 16,
+    paddingVertical: 12,
+  },
 
-dateNavigationContainer: {
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
-},
+  dateNavigationContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
 
-dateNavButton: {
-  flexDirection: "row",
-  alignItems: "center",
-  paddingHorizontal: 12,
-  paddingVertical: 8,
-  borderRadius: 8,
-  backgroundColor: THEME.secondary,
-  minWidth: 80,
-  justifyContent: "center",
-},
+  dateNavButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: THEME.secondary,
+    minWidth: 80,
+    justifyContent: "center",
+  },
 
-dateNavButtonEnabled: {
-  backgroundColor: THEME.primary,
-},
+  dateNavButtonEnabled: {
+    backgroundColor: THEME.primary,
+  },
 
-dateNavButtonDisabled: {
-  backgroundColor: THEME.lightGray,
-  opacity: 0.5,
-},
+  dateNavButtonDisabled: {
+    backgroundColor: THEME.lightGray,
+    opacity: 0.5,
+  },
 
-dateNavIcon: {
-  width: 16,
-  height: 16,
-  marginRight: 4,
-},
+  dateNavIcon: {
+    width: 16,
+    height: 16,
+    marginRight: 4,
+  },
 
-dateNavIconRight: {
-  transform: [{ scaleX: -1 }], // Flip horizontally for right arrow
-  marginLeft: 4,
-  marginRight: 0,
-},
+  dateNavIconRight: {
+    transform: [{ scaleX: -1 }], // Flip horizontally for right arrow
+    marginLeft: 4,
+    marginRight: 0,
+  },
 
-dateNavIconDisabled: {
-  opacity: 0.5,
-},
+  dateNavIconDisabled: {
+    opacity: 0.5,
+  },
 
-dateNavText: {
-  fontSize: 14,
-  fontWeight: "600",
-  color: "#FFFFFF",
-},
+  dateNavText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
 
-dateNavTextDisabled: {
-  color: "#999999",
-},
+  dateNavTextDisabled: {
+    color: "#999999",
+  },
 
-dateDisplayContainer: {
-  alignItems: "center",
-  flex: 1,
-  paddingHorizontal: 16,
-},
+  dateDisplayContainer: {
+    alignItems: "center",
+    flex: 1,
+    paddingHorizontal: 16,
+  },
 
-dateDisplayText: {
-  fontSize: 18,
-  fontWeight: "bold",
-  color: THEME.text, // Changed from THEME.textPrimary to THEME.text
-  textAlign: "center",
-  flexWrap: "nowrap", // Prevent text wrapping
-  numberOfLines: 1, // Force single line
-  whiteSpace: "nowrap", // Prevent wrapping on web
-},
+  dateDisplayText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: THEME.text, // Changed from THEME.textPrimary to THEME.text
+    textAlign: "center",
+    flexWrap: "nowrap", // Prevent text wrapping
+    numberOfLines: 1, // Force single line
+    whiteSpace: "nowrap", // Prevent wrapping on web
+  },
 
+  todayButton: {
+    marginTop: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: THEME.primary,
+    borderRadius: 4,
+  },
 
-todayButton: {
-  marginTop: 4,
-  paddingHorizontal: 8,
-  paddingVertical: 4,
-  backgroundColor: THEME.primary,
-  borderRadius: 4,
-},
+  todayButtonText: {
+    fontSize: 12,
+    color: "#FFFFFF",
+    fontWeight: "600",
+  },
 
-todayButtonText: {
-  fontSize: 12,
-  color: "#FFFFFF",
-  fontWeight: "600",
-},
+  // Quick navigation styles
+  quickNavContainer: {
+    marginTop: 20,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: THEME.border,
+  },
 
-// Quick navigation styles
-quickNavContainer: {
-  marginTop: 20,
-  paddingTop: 16,
-  borderTopWidth: 1,
-  borderTopColor: THEME.border,
-},
+  quickNavTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: THEME.textSecondary,
+    marginBottom: 12,
+    textAlign: "center",
+  },
 
-quickNavTitle: {
-  fontSize: 14,
-  fontWeight: "600",
-  color: THEME.textSecondary,
-  marginBottom: 12,
-  textAlign: "center",
-},
+  quickNavButtons: {
+    flexDirection: "row",
+    justifyContent: "center",
+    flexWrap: "wrap",
+    gap: 8,
+  },
 
-quickNavButtons: {
-  flexDirection: "row",
-  justifyContent: "center",
-  flexWrap: "wrap",
-  gap: 8,
-},
+  quickNavButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: THEME.primary,
+    borderRadius: 6,
+    marginHorizontal: 4,
+    marginVertical: 2,
+  },
 
-quickNavButton: {
-  paddingHorizontal: 12,
-  paddingVertical: 8,
-  backgroundColor: THEME.primary,
-  borderRadius: 6,
-  marginHorizontal: 4,
-  marginVertical: 2,
-},
+  quickNavButtonText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  // Add these styles to PostureGraphStyles.js
+  statsSubtext: {
+    fontSize: 12,
+    color: THEME.textSecondary,
+    marginTop: 4,
+    textAlign: "center",
+    fontWeight: "400",
+  },
 
-quickNavButtonText: {
-  fontSize: 13,
-  fontWeight: "600",
-  color: "#FFFFFF",
-},
-// Add these styles to PostureGraphStyles.js
-statsSubtext: {
-  fontSize: 12,
-  color: THEME.textSecondary,
-  marginTop: 4,
-  textAlign: 'center',
-  fontWeight: '400',
-},
+  dateContextCard: {
+    marginTop: 8,
+    marginBottom: 8,
+  },
 
-dateContextCard: {
-  marginTop: 8,
-  marginBottom: 8,
-},
+  dateContextHeader: {
+    marginBottom: 12,
+  },
 
-dateContextHeader: {
-  marginBottom: 12,
-},
+  dateContextTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: THEME.text,
+    textAlign: "center",
+  },
 
-dateContextTitle: {
-  fontSize: 16,
-  fontWeight: '600',
-  color: THEME.text,
-  textAlign: 'center',
-},
+  dateContextStats: {
+    paddingTop: 8,
+  },
 
-dateContextStats: {
-  paddingTop: 8,
-},
+  dateContextNoData: {
+    fontSize: 14,
+    color: THEME.textSecondary,
+    textAlign: "center",
+    fontStyle: "italic",
+  },
 
-dateContextNoData: {
-  fontSize: 14,
-  color: THEME.textSecondary,
-  textAlign: 'center',
-  fontStyle: 'italic',
-},
+  dateContextDetails: {
+    gap: 8,
+  },
 
-dateContextDetails: {
-  gap: 8,
-},
+  dateContextStat: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 4,
+  },
 
-dateContextStat: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  paddingVertical: 4,
-},
+  dateContextLabel: {
+    fontSize: 14,
+    color: THEME.text,
+    fontWeight: "500",
+  },
 
-dateContextLabel: {
-  fontSize: 14,
-  color: THEME.text,
-  fontWeight: '500',
-},
-
-dateContextValue: {
-  fontSize: 14,
-  color: THEME.primary,
-  fontWeight: '600',
-},
+  dateContextValue: {
+    fontSize: 14,
+    color: THEME.primary,
+    fontWeight: "600",
+  },
 });
 
 export { styles, THEME };
