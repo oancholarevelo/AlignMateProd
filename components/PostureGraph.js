@@ -431,7 +431,6 @@ const PostureGraph = () => {
     }
 
     try {
-      console.log("Checking user setup status for:", userUID);
 
       // Check if ANY of these fields exist to determine if user has been set up
       const userRef = ref(database, `users/${userUID}`);
@@ -1601,7 +1600,6 @@ const PostureGraph = () => {
   // NEW: Check user setup status on mount
   useEffect(() => {
     if (userUID) {
-      console.log("UserUID found, checking setup status:", userUID); // Debug log
       checkUserSetupStatus();
     } else {
       console.log("No userUID found"); // Debug log
@@ -1617,7 +1615,6 @@ const PostureGraph = () => {
       return;
     }
 
-    console.log(`Fetching data for user: ${userUID}`);
     setIsLoadingUser(true);
 
     // Improved user name retrieval with multiple fallback paths
@@ -1640,13 +1637,11 @@ const PostureGraph = () => {
         // Check each path until we find a name
         for (const path of pathsToTry) {
           try {
-            console.log(`Checking path: ${path}`);
             const nameRef = ref(database, path);
             const snapshot = await get(nameRef);
 
             if (snapshot.exists() && snapshot.val()) {
               foundName = snapshot.val().toString().trim();
-              console.log(`Found name at ${path}: ${foundName}`);
               break;
             }
           } catch (pathError) {
@@ -1658,7 +1653,6 @@ const PostureGraph = () => {
         if (foundName) {
           setUserName(foundName);
           localStorage.setItem("userName", foundName);
-          console.log(`User name successfully loaded: ${foundName}`);
         } else {
           // If no name found in Firebase, check localStorage as fallback
           const localName = localStorage.getItem("userName");
@@ -2031,7 +2025,6 @@ const PostureGraph = () => {
       (snapshot) => {
         if (snapshot.exists() && snapshot.val()) {
           const newName = snapshot.val().toString().trim();
-          console.log("Name updated in real-time:", newName);
           setUserName(newName);
           localStorage.setItem("userName", newName);
         }

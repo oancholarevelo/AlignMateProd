@@ -150,7 +150,6 @@ const Login = () => {
     signInWithEmailAndPassword(auth, email, password)
       .then(async (userCredential) => { // made async
         const user = userCredential.user;
-        console.log("Login successful", user.uid);
         setLoginError("");
 
         // NOTE: localStorage is for web. For React Native, use AsyncStorage.
@@ -181,7 +180,6 @@ const Login = () => {
           }
           // Write the UID to the global currentUserUID path for hardware detection
           await set(ref(database, "currentUserUID"), user.uid);
-          console.log("currentUserUID set in database:", user.uid);
 
         } catch (dbError) {
           console.error("Error accessing or updating user data in DB:", dbError);
@@ -256,7 +254,6 @@ const Login = () => {
         }
         // Write the UID to the global currentUserUID path for hardware detection
         await set(ref(database, "currentUserUID"), user.uid);
-        console.log("currentUserUID set in database (Google Web):", user.uid);
 
         navigate("/app");
       } catch (error) {
@@ -301,7 +298,6 @@ const Login = () => {
         }
         // Write the UID to the global currentUserUID path for hardware detection
         await set(ref(database, "currentUserUID"), user.uid);
-        console.log("currentUserUID set in database (Google Native):", user.uid);
 
         navigate("/app");
       } catch (error) {
