@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
 import {
-  getAuth,
+  // getAuth, // auth is imported from firebase.js
   signInWithEmailAndPassword,
   GoogleAuthProvider,
-  signInWithPopup,
+  // signInWithPopup, // Replaced with signInWithCredential
   sendPasswordResetEmail,
+  signInWithCredential, // Added for Google Sign-In
+  signInWithPopup,
 } from "firebase/auth";
-import { useNavigate } from "react-router-dom";
-import { ref, set, get } from "firebase/database";
+import { useNavigate } from "react-router-dom"; // Note: For React Native, consider React Navigation
+import { ref, set, get, update } from "firebase/database"; // Added update
 import { auth, database } from "../firebase";
 import {
   View,
@@ -19,8 +21,10 @@ import {
   SafeAreaView,
   Alert,
   ActivityIndicator,
+  Platform, // For potential platform-specific logic if needed
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin'; // Import GoogleSignin
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -38,7 +42,17 @@ const Login = () => {
   const [loginError, setLoginError] = useState("");
 
   const navigate = useNavigate();
-  const googleProvider = new GoogleAuthProvider();
+  const googleProvider = new GoogleAuthProvider(); // No longer directly used for popup
+
+  // Configure Google Sign In
+  useEffect(() => {
+    if (Platform.OS !== 'web') {
+      GoogleSignin.configure({
+        webClientId: '32530267491-ks7jna6s3nd58pq7trl888kb7hpr3oo3.apps.googleusercontent.com',
+        offlineAccess: false,
+      });
+    }
+  }, []);
 
   // Cooldown timer effect
   useEffect(() => {
@@ -52,11 +66,11 @@ const Login = () => {
   }, [cooldownTime]);
 
   // Enhanced email validation
-  const validateEmail = (email) => {
+  const validateEmail = (emailToValidate) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const isValid = emailRegex.test(email);
+    const isValid = emailRegex.test(emailToValidate);
 
-    if (!email) {
+    if (!emailToValidate) {
       setEmailValidation({ isValid: false, message: "Email is required" });
     } else if (!isValid) {
       setEmailValidation({
@@ -66,7 +80,6 @@ const Login = () => {
     } else {
       setEmailValidation({ isValid: true, message: "" });
     }
-
     return isValid;
   };
 
@@ -74,19 +87,19 @@ const Login = () => {
     if (!validateEmail(resetEmail)) {
       return;
     }
-
     setIsLoading(true);
-
     try {
-      await sendPasswordResetEmail(auth, resetEmail, {
-        url: `${window.location.origin}/login?emailVerified=true`,
-        handleCodeInApp: false,
-      });
-
+      // Note: window.location.origin might not be suitable for React Native.
+      // Consider a deep link or a specific URL for your app.
+      const actionCodeSettings = {
+        // url: `${window.location.origin}/login?emailVerified=true`, // Example for web
+        url: 'https://test-alignmate.firebaseapp.com/__/auth/action', // Replace with your actual URL or deep link
+        handleCodeInApp: false, // Set to true if you handle the link in-app
+      };
+      await sendPasswordResetEmail(auth, resetEmail, actionCodeSettings);
       setResetEmailSent(true);
       setCooldownTime(60);
       setResetLinkExpiry(Date.now() + 60 * 60 * 1000); // 1 hour from now
-
       Alert.alert(
         "🔐 Reset Email Sent!",
         `A secure password reset link has been sent to ${resetEmail}.\n\n` +
@@ -94,21 +107,14 @@ const Login = () => {
           "• The link expires in 1 hour\n" +
           "• Click the link to set a new password\n\n" +
           "Still having trouble? Contact our support team.",
-        [
-          {
-            text: "Got it!",
-            style: "default",
-          },
-        ]
+        [{ text: "Got it!", style: "default" }]
       );
     } catch (error) {
       let errorMessage = "Failed to send reset email. Please try again.";
       let errorTitle = "❌ Error";
-
       switch (error.code) {
         case "auth/user-not-found":
-          errorMessage =
-            "No AlignMate account found with this email address. Please check your email or create a new account.";
+          errorMessage = "No AlignMate account found with this email address. Please check your email or create a new account.";
           errorTitle = "🔍 Account Not Found";
           break;
         case "auth/invalid-email":
@@ -116,20 +122,17 @@ const Login = () => {
           errorTitle = "📧 Invalid Email";
           break;
         case "auth/too-many-requests":
-          errorMessage =
-            "Too many password reset attempts. Please wait a few minutes before trying again.";
+          errorMessage = "Too many password reset attempts. Please wait a few minutes before trying again.";
           errorTitle = "⏰ Rate Limited";
           break;
         case "auth/network-request-failed":
-          errorMessage =
-            "Network error. Please check your internet connection and try again.";
+          errorMessage = "Network error. Please check your internet connection and try again.";
           errorTitle = "🌐 Connection Error";
           break;
         default:
           console.error("Password reset error:", error);
           break;
       }
-
       Alert.alert(errorTitle, errorMessage);
     } finally {
       setIsLoading(false);
@@ -141,78 +144,79 @@ const Login = () => {
       setLoginError("Please fill in all fields");
       return;
     }
-
     setIsLoading(true);
-    setLoginError(""); // Clear previous errors
+    setLoginError("");
 
     signInWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
+      .then(async (userCredential) => { // made async
         const user = userCredential.user;
         console.log("Login successful", user.uid);
-        setLoginError(""); // Clear error on success
+        setLoginError("");
 
-        // Save UID to localStorage
+        // NOTE: localStorage is for web. For React Native, use AsyncStorage.
         localStorage.setItem("userUID", user.uid);
         localStorage.setItem("userEmail", user.email);
 
-        // Get user name from database
-        get(ref(database, `users/${user.uid}`))
-          .then((snapshot) => {
-            if (snapshot.exists()) {
-              const userData = snapshot.val();
-              if (userData.name) {
-                localStorage.setItem("userName", userData.name);
-              }
+        const userRef = ref(database, `users/${user.uid}`);
+        try {
+          const snapshot = await get(userRef);
+          if (snapshot.exists()) {
+            const userData = snapshot.val();
+            if (userData.name) {
+              localStorage.setItem("userName", userData.name);
             }
-          })
-          .catch((error) => {
-            console.error("Error getting user data:", error);
-          });
-
-        // Update user info in Firebase
-        set(ref(database, `users/${user.uid}/userInfo`), {
-          email: user.email,
-          lastLogin: new Date().toISOString(),
-        });
-
-        set(ref(database, "currentUserUID"), user.uid);
-        navigate("/app");
+            // Update lastLogin
+            await update(userRef, { // Changed from set to update to avoid overwriting other data
+              lastLogin: new Date().toISOString(),
+            });
+          } else {
+            // User exists in Auth but not in DB (should ideally not happen if registered correctly)
+            await set(userRef, {
+              email: user.email,
+              name: "User", // Default name
+              registrationDate: new Date().toISOString(), // Or first login
+              lastLogin: new Date().toISOString(),
+              authProvider: "email",
+            });
+          }
+        } catch (dbError) {
+          console.error("Error accessing or updating user data in DB:", dbError);
+        }
+        
+        // This seems to be for global state, ensure it's handled correctly
+        // set(ref(database, "currentUserUID"), user.uid); 
+        navigate("/app"); // Or your desired screen
       })
       .catch((error) => {
         let errorMessage = "Login failed. Please try again.";
-
         switch (error.code) {
           case "auth/user-not-found":
             errorMessage = "No account found with this email address.";
             break;
           case "auth/wrong-password":
-          case "auth/invalid-password":
+          case "auth/invalid-password": // Deprecated, but good to keep
             errorMessage = "Incorrect password. Please try again.";
             break;
           case "auth/invalid-email":
             errorMessage = "Please enter a valid email address.";
             break;
-          case "auth/invalid-credential":
-            errorMessage =
-              "Invalid email or password. Please check your credentials.";
+          case "auth/invalid-credential": // General error for wrong email/password
+            errorMessage = "Invalid email or password. Please check your credentials.";
             break;
           case "auth/too-many-requests":
-            errorMessage =
-              "Too many failed attempts. Please wait before trying again.";
+            errorMessage = "Too many failed attempts. Please wait before trying again.";
             break;
           case "auth/user-disabled":
-            errorMessage =
-              "This account has been disabled. Please contact support.";
+            errorMessage = "This account has been disabled. Please contact support.";
             break;
           case "auth/network-request-failed":
-            errorMessage =
-              "Network error. Please check your internet connection.";
+            errorMessage = "Network error. Please check your internet connection.";
             break;
           default:
-            errorMessage = "Login failed. Please try again.";
+            console.error("Login error:", error)
+            errorMessage = `Login failed: ${error.message}`; // More specific error
             break;
         }
-
         setLoginError(errorMessage);
       })
       .finally(() => {
@@ -220,44 +224,95 @@ const Login = () => {
       });
   };
 
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = async () => {
     setIsLoading(true);
-    signInWithPopup(auth, googleProvider)
-      .then((result) => {
-        const user = result.user;
-        console.log("Google sign-in successful", user.uid);
+    setLoginError("");
 
-        // Store user info in localStorage
+    if (Platform.OS === 'web') {
+      // Web Google Sign-In
+      try {
+        const result = await signInWithPopup(auth, googleProvider);
+        const user = result.user;
+        console.log("Google sign-in successful (Web)", user.uid);
+
         localStorage.setItem("userUID", user.uid);
         localStorage.setItem("userEmail", user.email);
         localStorage.setItem("userName", user.displayName || "Google User");
 
-        // Check if user exists in database
-        get(ref(database, `users/${user.uid}`)).then((snapshot) => {
-          if (!snapshot.exists()) {
-            // Create user if they don't exist
-            set(ref(database, "users/" + user.uid), {
-              email: user.email,
-              name: user.displayName || "Google User",
-            });
-          }
-        });
-
-        // Update user info
-        set(ref(database, `users/${user.uid}/userInfo`), {
-          email: user.email,
-          lastLogin: new Date().toISOString(),
-        });
-
-        set(ref(database, "currentUserUID"), user.uid);
+        const userRef = ref(database, `users/${user.uid}`);
+        const snapshot = await get(userRef);
+        if (!snapshot.exists()) {
+          await set(userRef, {
+            email: user.email,
+            name: user.displayName || "Google User",
+            registrationDate: new Date().toISOString(),
+            lastLogin: new Date().toISOString(),
+            authProvider: "google",
+          });
+        } else {
+          await update(userRef, { lastLogin: new Date().toISOString() });
+        }
         navigate("/app");
-      })
-      .catch((error) => {
-        Alert.alert("Google Sign-In Error", error.message);
-      })
-      .finally(() => {
+      } catch (error) {
+        console.error("Google Sign In Error (Web)", error);
+        setLoginError(`Google Sign-In Failed (Web): ${error.message}`);
+      } finally {
         setIsLoading(false);
-      });
+      }
+    } else {
+      // Native Google Sign-In
+      try {
+        await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+        const { idToken, user: googleUser } = await GoogleSignin.signIn();
+        const googleCredential = GoogleAuthProvider.credential(idToken);
+        const userCredential = await signInWithCredential(auth, googleCredential);
+        const user = userCredential.user;
+
+        console.log("Google sign-in successful (Native)", user.uid);
+
+        // Use AsyncStorage for React Native instead of localStorage
+        // await AsyncStorage.setItem("userUID", user.uid);
+        // await AsyncStorage.setItem("userEmail", user.email);
+        // await AsyncStorage.setItem("userName", user.displayName || googleUser.name || "Google User");
+        // For now, using localStorage as per your existing code, but this should be AsyncStorage
+        localStorage.setItem("userUID", user.uid);
+        localStorage.setItem("userEmail", user.email);
+        localStorage.setItem("userName", user.displayName || googleUser.name || "Google User");
+
+
+        const userRef = ref(database, `users/${user.uid}`);
+        const snapshot = await get(userRef);
+        if (!snapshot.exists()) {
+          await set(userRef, {
+            email: user.email,
+            name: user.displayName || googleUser.name || "Google User",
+            registrationDate: new Date().toISOString(),
+            lastLogin: new Date().toISOString(),
+            authProvider: "google",
+          });
+        } else {
+          await update(userRef, { lastLogin: new Date().toISOString() });
+        }
+        navigate("/app");
+      } catch (error) {
+        let message = "Google Sign-In failed. Please try again.";
+        if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+          message = "Google Sign-In was cancelled.";
+        } else if (error.code === statusCodes.IN_PROGRESS) {
+          message = "Google Sign-In is already in progress.";
+        } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+          message = "Google Play services not available or outdated. Please update them.";
+          Alert.alert("Play Services Error", message);
+        } else {
+          console.error("Google Sign In Error (Native)", error);
+          message = `Google Sign-In Error: ${error.message || error.code}`;
+          Alert.alert("Google Sign-In Error", message);
+        }
+        setLoginError(message);
+      } finally {
+        setIsLoading(false);
+      }
+    }
   };
 
   const resetForgotPasswordForm = () => {
@@ -265,6 +320,7 @@ const Login = () => {
     setResetEmail("");
     setResetEmailSent(false);
     setCooldownTime(0);
+    setEmailValidation({ isValid: true, message: "" }); // Reset validation
   };
 
   const renderForgotPasswordForm = () => (
@@ -305,19 +361,19 @@ const Login = () => {
             value={resetEmail}
             onChangeText={(text) => {
               setResetEmail(text);
-              if (text) validateEmail(text);
+              if (text) validateEmail(text); // Validate as user types
+              else setEmailValidation({ isValid: true, message: "" }); // Clear error if empty
             }}
-            onBlur={() => validateEmail(resetEmail)}
+            onBlur={() => validateEmail(resetEmail)} // Validate on blur
             keyboardType="email-address"
             autoCapitalize="none"
             editable={!isLoading}
           />
-          {!emailValidation.isValid && (
+          {!emailValidation.isValid && emailValidation.message ? ( // Check if message exists
             <Text style={styles.errorText}>{emailValidation.message}</Text>
-          )}
+          ) : null}
         </View>
 
-        {/* Enhanced Status Messages */}
         {resetEmailSent && (
           <View style={styles.successMessageContainer}>
             <Text style={styles.successMessageText}>
@@ -329,21 +385,20 @@ const Login = () => {
             {resetLinkExpiry && (
               <Text style={styles.expiryText}>
                 Link expires in{" "}
-                {Math.ceil((resetLinkExpiry - Date.now()) / (1000 * 60))}{" "}
+                {Math.max(0, Math.ceil((resetLinkExpiry - Date.now()) / (1000 * 60)))}{" "}
                 minutes
               </Text>
             )}
           </View>
         )}
 
-        {/* Send Button with Cooldown */}
         <TouchableOpacity
           style={[
             styles.forgotPasswordButton,
-            (isLoading || cooldownTime > 0) && styles.disabledButton,
+            (isLoading || cooldownTime > 0 || !emailValidation.isValid || !resetEmail) && styles.disabledButton, // Disable if email invalid or empty
           ]}
           onPress={handleForgotPassword}
-          disabled={isLoading || cooldownTime > 0}
+          disabled={isLoading || cooldownTime > 0 || !emailValidation.isValid || !resetEmail}
         >
           {isLoading ? (
             <View style={styles.loadingContainer}>
@@ -363,7 +418,6 @@ const Login = () => {
           )}
         </TouchableOpacity>
 
-        {/* Cooldown Progress Bar */}
         {cooldownTime > 0 && (
           <View style={styles.progressBarContainer}>
             <View
@@ -376,7 +430,6 @@ const Login = () => {
         )}
       </View>
 
-      {/* Enhanced Instructions */}
       <View style={styles.instructionsCard}>
         <Text style={styles.instructionsTitle}>🔐 Password Reset Guide</Text>
         <View style={styles.instructionsList}>
@@ -404,7 +457,6 @@ const Login = () => {
         </View>
       </View>
 
-      {/* Back Button */}
       <TouchableOpacity
         style={styles.backToLoginButton}
         onPress={resetForgotPasswordForm}
@@ -447,7 +499,7 @@ const Login = () => {
         value={email}
         onChangeText={(text) => {
           setEmail(text);
-          setLoginError(""); // Clear error when user starts typing
+          setLoginError("");
         }}
         keyboardType="email-address"
         autoCapitalize="none"
@@ -459,12 +511,11 @@ const Login = () => {
         value={password}
         onChangeText={(text) => {
           setPassword(text);
-          setLoginError(""); // Clear error when user starts typing
+          setLoginError("");
         }}
         secureTextEntry
       />
 
-      {/* Add error message display */}
       {loginError ? (
         <View style={styles.errorContainer}>
           <Text style={styles.errorMessageText}>{loginError}</Text>
@@ -472,12 +523,12 @@ const Login = () => {
       ) : null}
 
       <TouchableOpacity
-        style={[styles.button, isLoading && styles.disabledButton]}
+        style={[styles.button, (isLoading || !email || !password) && styles.disabledButton]}
         onPress={handleLogin}
-        disabled={isLoading}
+        disabled={isLoading || !email || !password}
       >
         <Text style={styles.buttonText}>
-          {isLoading ? "Signing In..." : "Login"}
+          {isLoading && !showForgotPassword ? "Signing In..." : "Login"}
         </Text>
       </TouchableOpacity>
 
@@ -486,13 +537,17 @@ const Login = () => {
         onPress={handleGoogleSignIn}
         disabled={isLoading}
       >
-        <Text style={styles.googleButtonText}>Sign in with Google</Text>
+        <Text style={styles.googleButtonText}>
+          {isLoading && !showForgotPassword ? "Connecting..." : "Sign in with Google"}
+        </Text>
       </TouchableOpacity>
 
-      {/* Forgot Password Link */}
       <TouchableOpacity
         style={styles.forgotPasswordLink}
-        onPress={() => setShowForgotPassword(true)}
+        onPress={() => {
+          setShowForgotPassword(true);
+          setLoginError(""); // Clear login error when switching to forgot password
+        }}
       >
         <Text style={styles.forgotPasswordLinkText}>Forgot Password?</Text>
       </TouchableOpacity>
@@ -600,8 +655,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textDecorationLine: "underline",
   },
-
-  // Enhanced Forgot Password Form Styles
   forgotPasswordContainer: {
     width: "100%",
     maxWidth: 420,

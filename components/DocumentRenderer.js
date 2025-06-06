@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
   },
   documentContent: {
     backgroundColor: "#FFFFFF",
-    margin: 16,
+    margin: 0, // Changed from 16 to 0
     borderRadius: 12,
     padding: 20,
     shadowColor: "#000",

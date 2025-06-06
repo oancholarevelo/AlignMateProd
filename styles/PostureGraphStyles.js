@@ -31,6 +31,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
   padding: 16,
+  paddingBottom: 90,
 },
   footerPadding: {
     height: 20, // Ensures content isn't hidden behind footer

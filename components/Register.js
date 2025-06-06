@@ -1,13 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react"; // Added useEffect
 import {
-  getAuth,
+  // getAuth, // auth is imported from firebase.js
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
-  signInWithRedirect,
-  getRedirectResult,
+  // signInWithRedirect, // Not used in this flow
+  // getRedirectResult, // Not used in this flow
+  signInWithPopup, // For Web Google Sign-In
+  signInWithCredential, // For Native Google Sign-In
 } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
-import { ref, set, update } from "firebase/database";
+import { ref, set, update as firebaseUpdate } from "firebase/database"; // Renamed update to firebaseUpdate to avoid conflict
 import { auth, database } from "../firebase";
 import {
   View,
@@ -18,11 +20,15 @@ import {
   ScrollView,
   SafeAreaView,
   Modal,
+  Platform, // Added Platform
+  Alert, // Added Alert for native error display
+  ActivityIndicator, // Added for loading state in buttons
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import PrivacyPolicyContent from "./PrivacyPolicy";
 import TermsOfAgreementContent from "./TermsOfAgreement";
 import DocumentRenderer from "./DocumentRenderer";
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin'; // Import GoogleSignin
 
 const Register = () => {
   const [email, setEmail] = useState("");
@@ -35,63 +41,36 @@ const Register = () => {
   const [passwordErrors, setPasswordErrors] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // Add loading state
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const googleProvider = new GoogleAuthProvider();
+  const googleProvider = new GoogleAuthProvider(); // Keep for web
+
+  useEffect(() => {
+    if (Platform.OS !== 'web') {
+      GoogleSignin.configure({
+        webClientId: '32530267491-ks7jna6s3nd58pq7trl888kb7hpr3oo3.apps.googleusercontent.com', // Your Web Client ID
+        offlineAccess: false,
+      });
+    }
+  }, []);
 
   // Password validation function
-  const validatePassword = (password) => {
+  const validatePassword = (passwordToValidate) => { // Renamed parameter
     const errors = [];
-
-    // Check minimum length
-    if (password.length < 8) {
-      errors.push("At least 8 characters");
-    }
-
-    // Check for uppercase letter
-    if (!/[A-Z]/.test(password)) {
-      errors.push("One uppercase letter");
-    }
-
-    // Check for lowercase letter
-    if (!/[a-z]/.test(password)) {
-      errors.push("One lowercase letter");
-    }
-
-    // Check for number
-    if (!/\d/.test(password)) {
-      errors.push("One number");
-    }
-
-    // Check for special character
-    if (!/[@$!%*?&]/.test(password)) {
-      errors.push("One special character (@$!%*?&)");
-    }
-
-    // Check for common weak passwords
-    const commonPasswords = [
-      "password",
-      "123456",
-      "12345678",
-      "qwerty",
-      "abc123",
-      "password123",
-      "123456789",
-      "welcome",
-      "admin",
-      "letmein",
-    ];
-    if (commonPasswords.includes(password.toLowerCase())) {
-      errors.push("Password is too common");
-    }
-
+    if (passwordToValidate.length < 8) errors.push("At least 8 characters");
+    if (!/[A-Z]/.test(passwordToValidate)) errors.push("One uppercase letter");
+    if (!/[a-z]/.test(passwordToValidate)) errors.push("One lowercase letter");
+    if (!/\d/.test(passwordToValidate)) errors.push("One number");
+    if (!/[@$!%*?&]/.test(passwordToValidate)) errors.push("One special character (@$!%*?&)");
+    const commonPasswords = ["password", "123456", "12345678", "qwerty", "abc123", "password123", "123456789", "welcome", "admin", "letmein"];
+    if (commonPasswords.includes(passwordToValidate.toLowerCase())) errors.push("Password is too common");
     return errors;
   };
 
   // Email validation function
-  const validateEmail = (email) => {
+  const validateEmail = (emailToValidate) => { // Renamed parameter
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    return emailRegex.test(emailToValidate);
   };
 
   // Handle password change with real-time validation
@@ -106,174 +85,183 @@ const Register = () => {
   };
 
   const handleRegister = () => {
-    // Validate name is not empty
     if (!name.trim()) {
-      alert("Please enter your name");
+      Alert.alert("Validation Error", "Please enter your name");
       return;
     }
-
-    // Validate email format
     if (!validateEmail(email)) {
-      alert("Please enter a valid email address");
+      Alert.alert("Validation Error", "Please enter a valid email address");
       return;
     }
-
-    // Validate password security
     const passwordValidationErrors = validatePassword(password);
     if (passwordValidationErrors.length > 0) {
-      alert(`Password must have:\n• ${passwordValidationErrors.join("\n• ")}`);
+      Alert.alert("Password Issue", `Password must have:\n• ${passwordValidationErrors.join("\n• ")}`);
       return;
     }
-
-    // Validate passwords match
     if (!passwordsMatch()) {
-      alert(
-        "Passwords do not match. Please check your password and try again."
-      );
+      Alert.alert("Password Issue", "Passwords do not match. Please check your password and try again.");
       return;
     }
-
-    // Validate terms acceptance
     if (!acceptedTerms) {
-      alert(
-        "Please accept the Terms of Agreement and Privacy Policy to continue"
-      );
+      Alert.alert("Terms Not Accepted", "Please accept the Terms of Agreement and Privacy Policy to continue");
       return;
     }
 
-    setIsLoading(true); // Start loading
+    setIsLoading(true);
 
     createUserWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
         const user = userCredential.user;
         console.log("Registration successful", user.uid);
 
-        // Store user data with multiple paths for reliability
         const updates = {};
+        const trimmedName = name.trim();
         updates[`users/${user.uid}/email`] = user.email;
-        updates[`users/${user.uid}/name`] = name.trim(); // Ensure no whitespace
-        updates[`users/${user.uid}/userInfo/name`] = name.trim(); // Backup path
+        updates[`users/${user.uid}/name`] = trimmedName;
+        updates[`users/${user.uid}/userInfo/name`] = trimmedName;
         updates[`users/${user.uid}/userInfo/email`] = user.email;
-        updates[`users/${user.uid}/profile/displayName`] = name.trim(); // Another backup
-        updates[`users/${user.uid}/termsAccepted`] = true; // Store terms acceptance
-        updates[`users/${user.uid}/termsAcceptedDate`] =
-          new Date().toISOString();
+        updates[`users/${user.uid}/profile/displayName`] = trimmedName;
+        updates[`users/${user.uid}/termsAccepted`] = true;
+        updates[`users/${user.uid}/termsAcceptedDate`] = new Date().toISOString();
+        updates[`users/${user.uid}/registrationDate`] = new Date().toISOString();
+        updates[`users/${user.uid}/authProvider`] = "email";
 
-        // Use update for atomicity
-        const { update } = require("firebase/database");
-        update(ref(database), updates)
+
+        firebaseUpdate(ref(database), updates)
           .then(() => {
-            console.log("User data saved successfully with name:", name);
-
-            // Also store in localStorage immediately
-            localStorage.setItem("userName", name.trim());
+            console.log("User data saved successfully with name:", trimmedName);
+            localStorage.setItem("userName", trimmedName);
             localStorage.setItem("userEmail", user.email);
             localStorage.setItem("userUID", user.uid);
-
-            alert("Registration successful! Please log in.");
+            Alert.alert("Success", "Registration successful! Please log in.");
             navigate("/login");
           })
           .catch((error) => {
             console.error("Error saving user data:", error);
-            alert(
-              "Registration completed, but there was an issue saving your name. Please update it after login."
-            );
+            Alert.alert("Partial Success", "Registration completed, but there was an issue saving your details. Please update it after login.");
             navigate("/login");
           })
           .finally(() => {
-            setIsLoading(false); // Stop loading
+            setIsLoading(false);
           });
       })
       .catch((error) => {
-        // Handle specific Firebase Auth errors
         let errorMessage = "Registration failed. Please try again.";
-
         switch (error.code) {
           case "auth/email-already-in-use":
-            errorMessage =
-              "This email is already registered. Please use a different email or try logging in.";
+            errorMessage = "This email is already registered. Please use a different email or try logging in.";
             break;
           case "auth/weak-password":
-            errorMessage =
-              "Password is too weak. Please choose a stronger password.";
+            errorMessage = "Password is too weak. Please choose a stronger password.";
             break;
           case "auth/invalid-email":
             errorMessage = "Please enter a valid email address.";
             break;
           case "auth/operation-not-allowed":
-            errorMessage =
-              "Email registration is not enabled. Please contact support.";
+            errorMessage = "Email registration is not enabled. Please contact support.";
             break;
           default:
             console.error("Registration error:", error);
         }
-
-        alert(errorMessage);
-        setIsLoading(false); // Stop loading on error
+        Alert.alert("Registration Error", errorMessage);
+        setIsLoading(false);
       });
   };
 
-  const handleGoogleSignIn = () => {
-    // Check terms acceptance before Google sign-in
+  const handleGoogleSignIn = async () => {
     if (!acceptedTerms) {
-      alert(
-        "Please accept the Terms of Agreement and Privacy Policy to continue"
-      );
+      Alert.alert("Terms Not Accepted", "Please accept the Terms of Agreement and Privacy Policy to continue");
       return;
     }
+    setIsLoading(true);
 
-    setIsLoading(true); // Start loading for Google sign-in
+    const saveUserData = (user, providerName = "google") => {
+      const displayName = user.displayName || name.trim() || "Google User"; // Use entered name if available for Google
+      const userEmail = user.email;
 
-    signInWithPopup(auth, googleProvider)
-      .then((result) => {
-        const user = result.user;
-        console.log("Google sign-in successful", user.uid);
+      const updates = {};
+      updates[`users/${user.uid}/email`] = userEmail;
+      updates[`users/${user.uid}/name`] = displayName;
+      updates[`users/${user.uid}/userInfo/name`] = displayName;
+      updates[`users/${user.uid}/userInfo/email`] = userEmail;
+      updates[`users/${user.uid}/profile/displayName`] = displayName;
+      updates[`users/${user.uid}/termsAccepted`] = true;
+      updates[`users/${user.uid}/termsAcceptedDate`] = new Date().toISOString();
+      updates[`users/${user.uid}/registrationDate`] = new Date().toISOString();
+      updates[`users/${user.uid}/authProvider`] = providerName;
 
-        // Ensure we have a name to use
-        const displayName = user.displayName || "Google User";
 
-        // Store user info in Firebase with multiple paths
-        const updates = {};
-        updates[`users/${user.uid}/email`] = user.email;
-        updates[`users/${user.uid}/name`] = displayName;
-        updates[`users/${user.uid}/userInfo/name`] = displayName; // Backup path
-        updates[`users/${user.uid}/userInfo/email`] = user.email;
-        updates[`users/${user.uid}/profile/displayName`] = displayName; // Another backup
-        updates[`users/${user.uid}/termsAccepted`] = true; // Store terms acceptance
-        updates[`users/${user.uid}/termsAcceptedDate`] =
-          new Date().toISOString();
+      return firebaseUpdate(ref(database), updates)
+        .then(() => {
+          console.log(`${providerName} user data saved with name:`, displayName);
+          localStorage.setItem("userUID", user.uid);
+          localStorage.setItem("userEmail", userEmail);
+          localStorage.setItem("userName", displayName);
+          // set(ref(database, "currentUserUID"), user.uid); // Consider if this global set is needed here or post-login
+          navigate("/app"); // Navigate to app after successful registration and data save
+        })
+        .catch((dbError) => {
+          console.error(`Error saving ${providerName} user data:`, dbError);
+          // Still attempt to navigate if auth was successful but DB write failed
+          localStorage.setItem("userUID", user.uid);
+          localStorage.setItem("userEmail", userEmail);
+          localStorage.setItem("userName", displayName);
+          Alert.alert("Partial Success", "Account created, but there was an issue saving some details. You can update them in your profile.");
+          navigate("/app");
+        });
+    };
 
-        const { update } = require("firebase/database");
-        update(ref(database), updates)
-          .then(() => {
-            console.log("Google user data saved with name:", displayName);
+    if (Platform.OS === 'web') {
+      // Web Google Sign-In
+      signInWithPopup(auth, googleProvider)
+        .then(async (result) => {
+          const user = result.user;
+          console.log("Google sign-in successful (Web)", user.uid);
+          await saveUserData(user, "google-web");
+        })
+        .catch((error) => {
+          console.error("Google Sign In Error (Web)", error);
+          Alert.alert("Google Sign-Up Error", `Failed to sign up with Google: ${error.message}`);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    } else {
+      // Native Google Sign-In
+      try {
+        await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+        const { idToken, user: googleNativeUser } = await GoogleSignin.signIn(); // googleNativeUser contains name, email from Google
+        const googleCredential = GoogleAuthProvider.credential(idToken);
+        const userCredential = await signInWithCredential(auth, googleCredential);
+        const user = userCredential.user; // This is the Firebase user object
 
-            // Store user session data
-            localStorage.setItem("userUID", user.uid);
-            localStorage.setItem("userEmail", user.email);
-            localStorage.setItem("userName", displayName);
+        // Prefer Google's display name, but allow fallback to entered name if any
+        const finalName = googleNativeUser.name || user.displayName || name.trim() || "Google User";
+        const firebaseUserWithDetails = {
+            ...user,
+            displayName: finalName, // Ensure displayName is set for saveUserData
+            email: googleNativeUser.email || user.email // Ensure email is set
+        };
 
-            set(ref(database, "currentUserUID"), user.uid);
-            navigate("/app");
-          })
-          .catch((error) => {
-            console.error("Error saving Google user data:", error);
-            // Still proceed with login despite data saving error
-            localStorage.setItem("userUID", user.uid);
-            localStorage.setItem("userEmail", user.email);
-            localStorage.setItem("userName", displayName);
-
-            set(ref(database, "currentUserUID"), user.uid);
-            navigate("/app");
-          })
-          .finally(() => {
-            setIsLoading(false); // Stop loading
-          });
-      })
-      .catch((error) => {
-        alert(error.message);
-        setIsLoading(false); // Stop loading on error
-      });
+        console.log("Google sign-in successful (Native)", user.uid);
+        await saveUserData(firebaseUserWithDetails, "google-native");
+      } catch (error) {
+        let message = "Google Sign-Up failed. Please try again.";
+        if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+          message = "Google Sign-Up was cancelled.";
+        } else if (error.code === statusCodes.IN_PROGRESS) {
+          message = "Google Sign-Up is already in progress.";
+        } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+          message = "Google Play services not available or outdated. Please update them.";
+        } else {
+          console.error("Google Sign In Error (Native)", error);
+          message = `Google Sign-Up Error: ${error.message || error.code}`;
+        }
+        Alert.alert("Google Sign-Up Error", message);
+      } finally {
+        setIsLoading(false);
+      }
+    }
   };
 
   const DocumentModal = ({ visible, onClose, title, content }) => (
@@ -383,7 +371,6 @@ const Register = () => {
             autoCapitalize="none"
           />
 
-          {/* Password Input with Eye Toggle */}
           <View style={styles.passwordContainer}>
             <TextInput
               style={[
@@ -404,7 +391,6 @@ const Register = () => {
             />
           </View>
 
-          {/* Confirm Password Input with Eye Toggle */}
           <View style={styles.passwordContainer}>
             <TextInput
               style={[
@@ -425,7 +411,6 @@ const Register = () => {
             />
           </View>
 
-          {/* Password Match Indicator */}
           {confirmPassword !== "" && !passwordsMatch() && (
             <View style={styles.passwordMismatchContainer}>
               <Text style={styles.passwordMismatchText}>
@@ -440,7 +425,6 @@ const Register = () => {
             </View>
           )}
 
-          {/* Password Requirements Display */}
           {password !== "" && passwordErrors.length > 0 && (
             <View style={styles.passwordRequirements}>
               <Text style={styles.passwordRequirementsTitle}>
@@ -454,7 +438,6 @@ const Register = () => {
             </View>
           )}
 
-          {/* Password Strength Indicator */}
           {password !== "" && (
             <View style={styles.passwordStrengthContainer}>
               <View style={styles.passwordStrengthBar}>
@@ -476,7 +459,9 @@ const Register = () => {
                   ]}
                 />
               </View>
-              <Text style={styles.passwordStrengthText}>
+              <Text style={[styles.passwordStrengthText, {
+                  color: passwordErrors.length === 0 ? "#5CA377" : passwordErrors.length <= 2 ? "#FFA500" : "#FF6B6B"
+              }]}>
                 {passwordErrors.length === 0
                   ? "Strong"
                   : passwordErrors.length <= 2
@@ -486,7 +471,6 @@ const Register = () => {
             </View>
           )}
 
-          {/* Terms and Privacy Policy Section */}
           <View style={styles.termsContainer}>
             <TouchableOpacity
               style={styles.checkboxContainer}
@@ -527,9 +511,11 @@ const Register = () => {
             onPress={handleRegister}
             disabled={!isFormValid() || isLoading}
           >
-            <Text style={styles.buttonText}>
-              {isLoading ? "Creating Account..." : "Register"}
-            </Text>
+            {isLoading && !showPrivacyPolicy && !showTermsOfAgreement ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={styles.buttonText}>Register</Text>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -540,9 +526,11 @@ const Register = () => {
             onPress={handleGoogleSignIn}
             disabled={!acceptedTerms || isLoading}
           >
-            <Text style={styles.googleButtonText}>
-              {isLoading ? "Signing up..." : "Sign up with Google"}
-            </Text>
+            {isLoading && !showPrivacyPolicy && !showTermsOfAgreement ? (
+                 <ActivityIndicator size="small" color="#1B1212" />
+            ) : (
+                 <Text style={styles.googleButtonText}>Sign up with Google</Text>
+            )}
           </TouchableOpacity>
 
           <View style={{ marginTop: 16 }}>
@@ -559,7 +547,6 @@ const Register = () => {
         </View>
       </ScrollView>
 
-      {/* Document Modals */}
       <DocumentModal
         visible={showPrivacyPolicy}
         onClose={() => setShowPrivacyPolicy(false)}
@@ -613,6 +600,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#1B1212",
+    backgroundColor: "#FFFFFF", // Added background color for consistency
   },
   inputError: {
     borderColor: "#FF6B6B",
@@ -641,17 +629,19 @@ const styles = StyleSheet.create({
   passwordStrengthContainer: {
     width: "80%",
     marginBottom: 16,
+    alignItems: 'center', // Center strength text
   },
   passwordStrengthBar: {
-    height: 4,
+    width: '100%', // Ensure bar takes full width of container
+    height: 6, // Slightly thicker bar
     backgroundColor: "#E0E0E0",
-    borderRadius: 2,
+    borderRadius: 3,
     marginBottom: 4,
   },
   passwordStrengthFill: {
     height: "100%",
-    borderRadius: 2,
-    transition: "all 0.3s ease",
+    borderRadius: 3,
+    // transition: "all 0.3s ease", // Transitions are not standard in React Native like CSS
   },
   passwordStrengthText: {
     fontSize: 12,
@@ -664,8 +654,8 @@ const styles = StyleSheet.create({
   },
   checkboxContainer: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    flexWrap: "wrap",
+    alignItems: "flex-start", // Align items to start for multi-line text
+    // flexWrap: "wrap", // Removed as checkboxText has flex:1
   },
   checkbox: {
     width: 20,
@@ -674,12 +664,13 @@ const styles = StyleSheet.create({
     borderColor: "#1B1212",
     borderRadius: 4,
     marginRight: 10,
-    marginTop: 2,
+    marginTop: 2, // Align with text better
     alignItems: "center",
     justifyContent: "center",
   },
   checkboxChecked: {
     backgroundColor: "#5CA377",
+    borderColor: "#5CA377", // Match background
   },
   checkmark: {
     color: "#FFFFFF",
@@ -687,7 +678,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   checkboxText: {
-    flex: 1,
+    flex: 1, // Allow text to wrap
     fontSize: 14,
     color: "#1B1212",
     lineHeight: 20,
@@ -700,16 +691,19 @@ const styles = StyleSheet.create({
   button: {
     width: "80%",
     backgroundColor: "#5CA377",
-    padding: 12,
+    paddingVertical: 12, // Ensure consistent padding
     borderRadius: 12,
     borderWidth: 2,
     borderColor: "#1B1212",
     alignItems: "center",
     marginBottom: 16,
+    minHeight: 48, // Ensure minimum height for tapability
+    justifyContent: 'center', // Center content vertically
   },
   buttonDisabled: {
-    backgroundColor: "#cccccc",
-    borderColor: "#999999",
+    backgroundColor: "#A9A9A9", // Darker grey for disabled
+    borderColor: "#696969",
+    opacity: 0.7,
   },
   buttonText: {
     fontSize: 16,
@@ -719,19 +713,20 @@ const styles = StyleSheet.create({
   googleButton: {
     width: "80%",
     backgroundColor: "#FFFFFF",
-    padding: 12,
+    paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 2,
     borderColor: "#1B1212",
     alignItems: "center",
     marginBottom: 16,
+    minHeight: 48,
+    justifyContent: 'center',
   },
   googleButtonText: {
     fontSize: 16,
     fontWeight: "600",
     color: "#1B1212",
   },
-  // Modal styles
   modalContainer: {
     flex: 1,
     backgroundColor: "#FAF9F6",
@@ -740,18 +735,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 15, // Adjusted padding
     borderBottomWidth: 1,
     borderBottomColor: "#E0E0E0",
     backgroundColor: "#FFFFFF",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    // Removed shadow for pageSheet presentationStyle as it might conflict
   },
   modalTitle: {
     fontSize: 20,
@@ -759,15 +748,10 @@ const styles = StyleSheet.create({
     color: "#1B1212",
   },
   closeButton: {
-    width: 30,
-    height: 30,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 15,
-    backgroundColor: "#F0F0F0",
+    padding: 5, // Make tap area slightly larger
   },
   closeButtonText: {
-    fontSize: 18,
+    fontSize: 24, // Larger close icon
     color: "#1B1212",
     fontWeight: "bold",
   },
@@ -777,21 +761,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#FAF9F6",
   },
   modalCloseButton: {
-    margin: 20,
+    marginHorizontal: 20,
+    marginBottom: Platform.OS === 'ios' ? 30 : 20, // Adjust for safe area on iOS
     backgroundColor: "#5CA377",
     padding: 15,
     borderRadius: 12,
     borderWidth: 2,
     borderColor: "#1B1212",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
   modalCloseButtonText: {
     fontSize: 16,
@@ -807,29 +784,28 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 16,
     backgroundColor: "#FFFFFF",
-    minHeight: 48,
-    position: "relative",
+    // minHeight: 48, // Handled by passwordInput's padding
+    position: "relative", // Keep for eyeIcon positioning
   },
   passwordInput: {
     flex: 1,
-    padding: 10,
+    paddingVertical: 10, // Consistent padding
     paddingHorizontal: 16,
-    paddingRight: 50,
+    paddingRight: 50, // Space for eye icon
     fontSize: 16,
     fontWeight: "600",
     color: "#1B1212",
-    borderWidth: 0,
-    minHeight: 44,
+    borderWidth: 0, // Border is on container
+    // minHeight: 44, // Ensure input is tall enough
   },
   eyeIcon: {
     position: "absolute",
-    right: 12,
-    top: "50%",
-    transform: [{ translateY: -12 }], // Changed from -10 to -12 for better centering
-    width: 40, // Set explicit width
-    height: 24, // Set explicit height
-    justifyContent: "center", // Center the icon horizontally
-    alignItems: "center", // Center the icon vertically
+    right: 0, // Align to the right edge of the container
+    top: 0,
+    bottom: 0,
+    width: 50, // Width of the tappable area for the icon
+    justifyContent: "center",
+    alignItems: "center",
     zIndex: 1,
   },
   passwordMismatchContainer: {
@@ -859,11 +835,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#5CA377",
     fontWeight: "600",
-  },
-  buttonDisabled: {
-    backgroundColor: "#cccccc",
-    borderColor: "#999999",
-    opacity: 0.6, // Add opacity for better visual feedback
   },
 });
 
