@@ -1382,14 +1382,17 @@ const PostureGraph = () => {
         fontSize: 12,
         fontWeight: "600",
         rotation: 0,
+        fontFamily: "System", // Or your app's default font
       },
       propsForVerticalLabels: {
         fontSize: 11,
         fontWeight: "500",
+        fontFamily: "System", // Or your app's default font
       },
       propsForHorizontalLabels: {
         fontSize: 11,
         fontWeight: "500",
+        fontFamily: "System", // Or your app's default font
       },
       style: {
         borderRadius: 16,
