@@ -10,6 +10,28 @@ import {
 import { ref, onValue } from "firebase/database";
 import { database } from "../firebase";
 
+const formatDate = (dateString) => {
+  if (!dateString) return "";
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString(); // Or your preferred format
+  } catch (e) {
+    return dateString; // Fallback
+  }
+};
+
+const formatTime = (timeString) => {
+  if (!timeString) return "";
+  // Assuming timeString is part of a full ISO date or a simple HH:MM:SS
+  try {
+    const date = new Date(`1970-01-01T${timeString}Z`); // Create a date object to use time formatting
+    if (isNaN(date.getTime())) return timeString; // Invalid time
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+  } catch (e) {
+    return timeString; // Fallback
+  }
+};
+
 const Achievements = ({
   onBack,
   achievementsData: parentAchievementsData,
@@ -106,7 +128,10 @@ const Achievements = ({
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.scrollContentContainer} // MODIFIED LINE
+    >
       <Text style={styles.header}>Your Achievements</Text>
 
       {/* Sensor Status */}
@@ -296,7 +321,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f9f9f9",
+  },
+  scrollContentContainer: {
     padding: 16,
+    paddingBottom: 90,
   },
   header: {
     fontSize: 24,
