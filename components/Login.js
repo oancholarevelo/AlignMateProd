@@ -31,8 +31,12 @@ const Login = () => {
   const [cooldownTime, setCooldownTime] = useState(0);
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [resetLinkExpiry, setResetLinkExpiry] = useState(null);
-  const [emailValidation, setEmailValidation] = useState({ isValid: true, message: '' });
-  
+  const [emailValidation, setEmailValidation] = useState({
+    isValid: true,
+    message: "",
+  });
+  const [loginError, setLoginError] = useState("");
+
   const navigate = useNavigate();
   const googleProvider = new GoogleAuthProvider();
 
@@ -51,15 +55,18 @@ const Login = () => {
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const isValid = emailRegex.test(email);
-    
+
     if (!email) {
-      setEmailValidation({ isValid: false, message: 'Email is required' });
+      setEmailValidation({ isValid: false, message: "Email is required" });
     } else if (!isValid) {
-      setEmailValidation({ isValid: false, message: 'Please enter a valid email address' });
+      setEmailValidation({
+        isValid: false,
+        message: "Please enter a valid email address",
+      });
     } else {
-      setEmailValidation({ isValid: true, message: '' });
+      setEmailValidation({ isValid: true, message: "" });
     }
-    
+
     return isValid;
   };
 
@@ -69,24 +76,24 @@ const Login = () => {
     }
 
     setIsLoading(true);
-    
+
     try {
       await sendPasswordResetEmail(auth, resetEmail, {
         url: `${window.location.origin}/login?emailVerified=true`,
         handleCodeInApp: false,
       });
-      
+
       setResetEmailSent(true);
       setCooldownTime(60);
-      setResetLinkExpiry(Date.now() + (60 * 60 * 1000)); // 1 hour from now
-      
+      setResetLinkExpiry(Date.now() + 60 * 60 * 1000); // 1 hour from now
+
       Alert.alert(
         "🔐 Reset Email Sent!",
         `A secure password reset link has been sent to ${resetEmail}.\n\n` +
-        "• Check your inbox and spam folder\n" +
-        "• The link expires in 1 hour\n" +
-        "• Click the link to set a new password\n\n" +
-        "Still having trouble? Contact our support team.",
+          "• Check your inbox and spam folder\n" +
+          "• The link expires in 1 hour\n" +
+          "• Click the link to set a new password\n\n" +
+          "Still having trouble? Contact our support team.",
         [
           {
             text: "Got it!",
@@ -97,10 +104,11 @@ const Login = () => {
     } catch (error) {
       let errorMessage = "Failed to send reset email. Please try again.";
       let errorTitle = "❌ Error";
-      
+
       switch (error.code) {
         case "auth/user-not-found":
-          errorMessage = "No AlignMate account found with this email address. Please check your email or create a new account.";
+          errorMessage =
+            "No AlignMate account found with this email address. Please check your email or create a new account.";
           errorTitle = "🔍 Account Not Found";
           break;
         case "auth/invalid-email":
@@ -108,18 +116,20 @@ const Login = () => {
           errorTitle = "📧 Invalid Email";
           break;
         case "auth/too-many-requests":
-          errorMessage = "Too many password reset attempts. Please wait a few minutes before trying again.";
+          errorMessage =
+            "Too many password reset attempts. Please wait a few minutes before trying again.";
           errorTitle = "⏰ Rate Limited";
           break;
         case "auth/network-request-failed":
-          errorMessage = "Network error. Please check your internet connection and try again.";
+          errorMessage =
+            "Network error. Please check your internet connection and try again.";
           errorTitle = "🌐 Connection Error";
           break;
         default:
           console.error("Password reset error:", error);
           break;
       }
-      
+
       Alert.alert(errorTitle, errorMessage);
     } finally {
       setIsLoading(false);
@@ -128,15 +138,18 @@ const Login = () => {
 
   const handleLogin = () => {
     if (!email || !password) {
-      Alert.alert("Error", "Please fill in all fields");
+      setLoginError("Please fill in all fields");
       return;
     }
 
     setIsLoading(true);
+    setLoginError(""); // Clear previous errors
+
     signInWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
         const user = userCredential.user;
         console.log("Login successful", user.uid);
+        setLoginError(""); // Clear error on success
 
         // Save UID to localStorage
         localStorage.setItem("userUID", user.uid);
@@ -167,16 +180,40 @@ const Login = () => {
       })
       .catch((error) => {
         let errorMessage = "Login failed. Please try again.";
-        if (error.code === "auth/user-not-found") {
-          errorMessage = "No account found with this email address.";
-        } else if (error.code === "auth/wrong-password") {
-          errorMessage = "Incorrect password. Please try again.";
-        } else if (error.code === "auth/invalid-email") {
-          errorMessage = "Invalid email address.";
-        } else if (error.code === "auth/too-many-requests") {
-          errorMessage = "Too many failed attempts. Please try again later.";
+
+        switch (error.code) {
+          case "auth/user-not-found":
+            errorMessage = "No account found with this email address.";
+            break;
+          case "auth/wrong-password":
+          case "auth/invalid-password":
+            errorMessage = "Incorrect password. Please try again.";
+            break;
+          case "auth/invalid-email":
+            errorMessage = "Please enter a valid email address.";
+            break;
+          case "auth/invalid-credential":
+            errorMessage =
+              "Invalid email or password. Please check your credentials.";
+            break;
+          case "auth/too-many-requests":
+            errorMessage =
+              "Too many failed attempts. Please wait before trying again.";
+            break;
+          case "auth/user-disabled":
+            errorMessage =
+              "This account has been disabled. Please contact support.";
+            break;
+          case "auth/network-request-failed":
+            errorMessage =
+              "Network error. Please check your internet connection.";
+            break;
+          default:
+            errorMessage = "Login failed. Please try again.";
+            break;
         }
-        Alert.alert("Login Error", errorMessage);
+
+        setLoginError(errorMessage);
       })
       .finally(() => {
         setIsLoading(false);
@@ -234,7 +271,12 @@ const Login = () => {
     <View style={styles.forgotPasswordContainer}>
       {/* Header with Icon */}
       <View style={styles.forgotPasswordHeader}>
-        <Svg width={60} height={60} viewBox="0 0 24 24" style={styles.forgotPasswordIcon}>
+        <Svg
+          width={60}
+          height={60}
+          viewBox="0 0 24 24"
+          style={styles.forgotPasswordIcon}
+        >
           <Path
             d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1H5C3.9 1 3 1.9 3 3V21C3 22.1 3.9 23 5 23H19C20.1 23 21 22.1 21 21V9M19 9H14V4H5V21H19V9ZM7 11H17V13H7V11ZM7 15H14V17H7V15Z"
             fill="#5CA377"
@@ -248,14 +290,15 @@ const Login = () => {
 
       <View style={styles.forgotPasswordCard}>
         <Text style={styles.forgotPasswordText}>
-          Enter your email address and we'll send you a secure link to reset your password.
+          Enter your email address and we'll send you a secure link to reset
+          your password.
         </Text>
 
         <View style={styles.inputContainer}>
           <TextInput
             style={[
               styles.forgotPasswordInput,
-              !emailValidation.isValid && styles.inputError
+              !emailValidation.isValid && styles.inputError,
             ]}
             placeholder="Enter your email address"
             placeholderTextColor="#666666"
@@ -285,7 +328,9 @@ const Login = () => {
             </Text>
             {resetLinkExpiry && (
               <Text style={styles.expiryText}>
-                Link expires in {Math.ceil((resetLinkExpiry - Date.now()) / (1000 * 60))} minutes
+                Link expires in{" "}
+                {Math.ceil((resetLinkExpiry - Date.now()) / (1000 * 60))}{" "}
+                minutes
               </Text>
             )}
           </View>
@@ -295,7 +340,7 @@ const Login = () => {
         <TouchableOpacity
           style={[
             styles.forgotPasswordButton,
-            (isLoading || cooldownTime > 0) && styles.disabledButton
+            (isLoading || cooldownTime > 0) && styles.disabledButton,
           ]}
           onPress={handleForgotPassword}
           disabled={isLoading || cooldownTime > 0}
@@ -321,11 +366,11 @@ const Login = () => {
         {/* Cooldown Progress Bar */}
         {cooldownTime > 0 && (
           <View style={styles.progressBarContainer}>
-            <View 
+            <View
               style={[
-                styles.progressBar, 
-                { width: `${((60 - cooldownTime) / 60) * 100}%` }
-              ]} 
+                styles.progressBar,
+                { width: `${((60 - cooldownTime) / 60) * 100}%` },
+              ]}
             />
           </View>
         )}
@@ -351,7 +396,7 @@ const Login = () => {
             • 🔑 Return here to login with your new password
           </Text>
         </View>
-        
+
         <View style={styles.supportContainer}>
           <Text style={styles.supportText}>
             💡 Still having trouble? Contact our support team for assistance.
@@ -399,20 +444,32 @@ const Login = () => {
       <TextInput
         style={styles.input}
         placeholder="Email"
-        placeholderTextColor="#666666"
         value={email}
-        onChangeText={setEmail}
+        onChangeText={(text) => {
+          setEmail(text);
+          setLoginError(""); // Clear error when user starts typing
+        }}
         keyboardType="email-address"
         autoCapitalize="none"
       />
+
       <TextInput
         style={styles.input}
         placeholder="Password"
-        placeholderTextColor="#666666"
-        secureTextEntry
         value={password}
-        onChangeText={setPassword}
+        onChangeText={(text) => {
+          setPassword(text);
+          setLoginError(""); // Clear error when user starts typing
+        }}
+        secureTextEntry
       />
+
+      {/* Add error message display */}
+      {loginError ? (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorMessageText}>{loginError}</Text>
+        </View>
+      ) : null}
 
       <TouchableOpacity
         style={[styles.button, isLoading && styles.disabledButton]}
@@ -543,7 +600,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textDecorationLine: "underline",
   },
-  
+
   // Enhanced Forgot Password Form Styles
   forgotPasswordContainer: {
     width: "100%",
@@ -727,6 +784,21 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontWeight: "500",
     fontStyle: "italic",
+  },
+  errorContainer: {
+    width: "80%",
+    backgroundColor: "#FFF5F5",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: "#FF6B6B",
+  },
+  errorMessageText: {
+    fontSize: 14,
+    color: "#FF6B6B",
+    fontWeight: "600",
+    textAlign: "center",
   },
 });
 

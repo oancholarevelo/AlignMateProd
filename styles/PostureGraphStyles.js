@@ -19,18 +19,19 @@ const THEME = {
 const styles = StyleSheet.create({
   // Main containers
   mainContainer: {
-    flex: 1,
-    backgroundColor: THEME.background,
-    position: "relative",
-  },
+  flex: 1,
+  backgroundColor: THEME.background,
+  position: "relative",
+  minHeight: "100vh", // Added for web compatibility
+  paddingBottom: 80, // Add padding to prevent content from being hidden behind footer
+},
   container: {
     flex: 1,
     backgroundColor: THEME.background,
   },
   contentContainer: {
-    padding: 16,
-    paddingBottom: 90, // Extra padding for footer
-  },
+  padding: 16,
+},
   footerPadding: {
     height: 20, // Ensures content isn't hidden behind footer
   },
@@ -1309,26 +1310,29 @@ const styles = StyleSheet.create({
 
   // Footer
   footer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    backgroundColor: "#FFFFFF",
-    borderTopWidth: 1,
-    borderTopColor: THEME.border,
-    height: 80,
-    justifyContent: "space-around",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingBottom: 10,
-    zIndex: 100,
-    shadowColor: THEME.shadow,
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
-  },
+  position: "fixed", // Changed from "absolute" to "fixed"
+  bottom: 0,
+  left: 0,
+  right: 0,
+  flexDirection: "row",
+  backgroundColor: "#FFFFFF",
+  borderTopWidth: 1,
+  borderTopColor: THEME.border,
+  height: 80,
+  justifyContent: "space-around",
+  alignItems: "center",
+  paddingHorizontal: 12,
+  paddingBottom: 10,
+  zIndex: 100,
+  shadowColor: THEME.shadow,
+  shadowOffset: { width: 0, height: -2 },
+  shadowOpacity: 0.1,
+  shadowRadius: 4,
+  elevation: 5,
+  // Add these properties for better cross-device support
+  width: "100%",
+  boxSizing: "border-box",
+},
   footerButton: {
     alignItems: "center",
     justifyContent: "center",

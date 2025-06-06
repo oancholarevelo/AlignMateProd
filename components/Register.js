@@ -807,19 +807,30 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 16,
     backgroundColor: "#FFFFFF",
+    minHeight: 48,
+    position: "relative",
   },
   passwordInput: {
     flex: 1,
     padding: 10,
     paddingHorizontal: 16,
+    paddingRight: 50,
     fontSize: 16,
     fontWeight: "600",
     color: "#1B1212",
     borderWidth: 0,
+    minHeight: 44,
   },
   eyeIcon: {
-    padding: 10,
-    paddingRight: 16,
+    position: "absolute",
+    right: 12,
+    top: "50%",
+    transform: [{ translateY: -12 }], // Changed from -10 to -12 for better centering
+    width: 40, // Set explicit width
+    height: 24, // Set explicit height
+    justifyContent: "center", // Center the icon horizontally
+    alignItems: "center", // Center the icon vertically
+    zIndex: 1,
   },
   passwordMismatchContainer: {
     width: "80%",

@@ -288,11 +288,6 @@ const Achievements = ({
           </View>
         </View>
       </View>
-
-      {/* Back Button */}
-      <TouchableOpacity style={styles.backButton} onPress={onBack}>
-        <Text style={styles.backButtonText}>← Back to Dashboard</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 };
