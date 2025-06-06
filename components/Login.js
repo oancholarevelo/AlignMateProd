@@ -3,6 +3,7 @@ import {
   // getAuth, // auth is imported from firebase.js
   signInWithEmailAndPassword,
   GoogleAuthProvider,
+  GithubAuthProvider,
   // signInWithPopup, // Replaced with signInWithCredential
   sendPasswordResetEmail,
   signInWithCredential, // Added for Google Sign-In
@@ -24,7 +25,10 @@ import {
   Platform, // For potential platform-specific logic if needed
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
-import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin'; // Import GoogleSignin
+import {
+  GoogleSignin,
+  statusCodes,
+} from "@react-native-google-signin/google-signin"; // Import GoogleSignin
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -43,12 +47,45 @@ const Login = () => {
 
   const navigate = useNavigate();
   const googleProvider = new GoogleAuthProvider(); // No longer directly used for popup
+  const githubProvider = new GithubAuthProvider();
+
+  const GoogleLogo = ({ size = 18, style }) => (
+    <Svg width={size} height={size} viewBox="0 0 18 18" style={style}>
+      <Path
+        d="M17.64 9.20455C17.64 8.56625 17.5827 7.95273 17.4764 7.36364H9V10.845H13.8436C13.635 11.9702 13.0009 12.9232 12.0477 13.5614V15.8195H14.9564C16.6582 14.2527 17.64 11.9455 17.64 9.20455Z"
+        fill="#4285F4"
+      />
+      <Path
+        d="M9 18C11.43 18 13.4673 17.1941 14.9564 15.8195L12.0477 13.5614C11.2418 14.1014 10.2109 14.4205 9 14.4205C6.65591 14.4205 4.67182 12.8373 3.96409 10.71H0.957275V13.0418C2.43818 15.9832 5.48182 18 9 18Z"
+        fill="#34A853"
+      />
+      <Path
+        d="M3.96409 10.71C3.78409 10.17 3.68182 9.59318 3.68182 9C3.68182 8.40682 3.78409 7.83 3.96409 7.29H0.957275C0.347727 8.36182 0 9.65455 0 11.0227C0 12.3909 0.347727 13.6836 0.957275 14.7555L3.96409 10.71Z"
+        fill="#FBBC05"
+      />
+      <Path
+        d="M9 3.57955C10.3214 3.57955 11.5077 4.03364 12.4405 4.92545L15.0218 2.34545C13.4632 0.891818 11.4259 0 9 0C5.48182 0 2.43818 2.01682 0.957275 4.95818L3.96409 7.29C4.67182 5.16273 6.65591 3.57955 9 3.57955Z"
+        fill="#EA4335"
+      />
+    </Svg>
+  );
+
+  const GitHubLogo = ({ size = 20, style, color = "#FFFFFF" }) => (
+    <Svg width={size} height={size} viewBox="0 0 16 16" style={style}>
+      <Path
+        fillRule="evenodd"
+        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
+        fill={color}
+      />
+    </Svg>
+  );
 
   // Configure Google Sign In
   useEffect(() => {
-    if (Platform.OS !== 'web') {
+    if (Platform.OS !== "web") {
       GoogleSignin.configure({
-        webClientId: '32530267491-ks7jna6s3nd58pq7trl888kb7hpr3oo3.apps.googleusercontent.com',
+        webClientId:
+          "32530267491-ks7jna6s3nd58pq7trl888kb7hpr3oo3.apps.googleusercontent.com",
         offlineAccess: false,
       });
     }
@@ -93,7 +130,7 @@ const Login = () => {
       // Consider a deep link or a specific URL for your app.
       const actionCodeSettings = {
         // url: `${window.location.origin}/login?emailVerified=true`, // Example for web
-        url: 'https://test-alignmate.firebaseapp.com/__/auth/action', // Replace with your actual URL or deep link
+        url: "https://test-alignmate.firebaseapp.com/__/auth/action", // Replace with your actual URL or deep link
         handleCodeInApp: false, // Set to true if you handle the link in-app
       };
       await sendPasswordResetEmail(auth, resetEmail, actionCodeSettings);
@@ -114,7 +151,8 @@ const Login = () => {
       let errorTitle = "❌ Error";
       switch (error.code) {
         case "auth/user-not-found":
-          errorMessage = "No AlignMate account found with this email address. Please check your email or create a new account.";
+          errorMessage =
+            "No AlignMate account found with this email address. Please check your email or create a new account.";
           errorTitle = "🔍 Account Not Found";
           break;
         case "auth/invalid-email":
@@ -122,11 +160,13 @@ const Login = () => {
           errorTitle = "📧 Invalid Email";
           break;
         case "auth/too-many-requests":
-          errorMessage = "Too many password reset attempts. Please wait a few minutes before trying again.";
+          errorMessage =
+            "Too many password reset attempts. Please wait a few minutes before trying again.";
           errorTitle = "⏰ Rate Limited";
           break;
         case "auth/network-request-failed":
-          errorMessage = "Network error. Please check your internet connection and try again.";
+          errorMessage =
+            "Network error. Please check your internet connection and try again.";
           errorTitle = "🌐 Connection Error";
           break;
         default:
@@ -148,7 +188,8 @@ const Login = () => {
     setLoginError("");
 
     signInWithEmailAndPassword(auth, email, password)
-      .then(async (userCredential) => { // made async
+      .then(async (userCredential) => {
+        // made async
         const user = userCredential.user;
         setLoginError("");
 
@@ -165,7 +206,8 @@ const Login = () => {
               localStorage.setItem("userName", userData.name);
             }
             // Update lastLogin
-            await update(userRef, { // Changed from set to update to avoid overwriting other data
+            await update(userRef, {
+              // Changed from set to update to avoid overwriting other data
               lastLogin: new Date().toISOString(),
             });
           } else {
@@ -180,11 +222,13 @@ const Login = () => {
           }
           // Write the UID to the global currentUserUID path for hardware detection
           await set(ref(database, "currentUserUID"), user.uid);
-
         } catch (dbError) {
-          console.error("Error accessing or updating user data in DB:", dbError);
+          console.error(
+            "Error accessing or updating user data in DB:",
+            dbError
+          );
         }
-        
+
         navigate("/app"); // Or your desired screen
       })
       .catch((error) => {
@@ -201,19 +245,23 @@ const Login = () => {
             errorMessage = "Please enter a valid email address.";
             break;
           case "auth/invalid-credential": // General error for wrong email/password
-            errorMessage = "Invalid email or password. Please check your credentials.";
+            errorMessage =
+              "Invalid email or password. Please check your credentials.";
             break;
           case "auth/too-many-requests":
-            errorMessage = "Too many failed attempts. Please wait before trying again.";
+            errorMessage =
+              "Too many failed attempts. Please wait before trying again.";
             break;
           case "auth/user-disabled":
-            errorMessage = "This account has been disabled. Please contact support.";
+            errorMessage =
+              "This account has been disabled. Please contact support.";
             break;
           case "auth/network-request-failed":
-            errorMessage = "Network error. Please check your internet connection.";
+            errorMessage =
+              "Network error. Please check your internet connection.";
             break;
           default:
-            console.error("Login error:", error)
+            console.error("Login error:", error);
             errorMessage = `Login failed: ${error.message}`; // More specific error
             break;
         }
@@ -224,38 +272,55 @@ const Login = () => {
       });
   };
 
+  const handleOAuthSignIn = async (providerName, user) => {
+    localStorage.setItem("userUID", user.uid);
+    localStorage.setItem("userEmail", user.email);
+    // For GitHub, user.displayName might be null initially if not set on their profile or not provided by the OAuth flow.
+    // It's good to have a fallback.
+    const displayName =
+      user.displayName ||
+      `${providerName.charAt(0).toUpperCase() + providerName.slice(1)} User`;
+    localStorage.setItem("userName", displayName);
+
+    const userRef = ref(database, `users/${user.uid}`);
+    try {
+      const snapshot = await get(userRef);
+      if (!snapshot.exists()) {
+        await set(userRef, {
+          email: user.email,
+          name: displayName,
+          registrationDate: new Date().toISOString(),
+          lastLogin: new Date().toISOString(),
+          authProvider: providerName,
+        });
+      } else {
+        await update(userRef, {
+          lastLogin: new Date().toISOString(),
+          authProvider: providerName, // Update auth provider in case they switch
+        });
+      }
+      await set(ref(database, "currentUserUID"), user.uid);
+      navigate("/app");
+    } catch (dbError) {
+      console.error(
+        `Error accessing or updating ${providerName} user data in DB:`,
+        dbError
+      );
+      // Still navigate if auth was successful
+      navigate("/app");
+    }
+  };
+
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     setLoginError("");
 
-    if (Platform.OS === 'web') {
-      // Web Google Sign-In
+    if (Platform.OS === "web") {
       try {
         const result = await signInWithPopup(auth, googleProvider);
         const user = result.user;
         console.log("Google sign-in successful (Web)", user.uid);
-
-        localStorage.setItem("userUID", user.uid);
-        localStorage.setItem("userEmail", user.email);
-        localStorage.setItem("userName", user.displayName || "Google User");
-
-        const userRef = ref(database, `users/${user.uid}`);
-        const snapshot = await get(userRef);
-        if (!snapshot.exists()) {
-          await set(userRef, {
-            email: user.email,
-            name: user.displayName || "Google User",
-            registrationDate: new Date().toISOString(),
-            lastLogin: new Date().toISOString(),
-            authProvider: "google",
-          });
-        } else {
-          await update(userRef, { lastLogin: new Date().toISOString() });
-        }
-        // Write the UID to the global currentUserUID path for hardware detection
-        await set(ref(database, "currentUserUID"), user.uid);
-
-        navigate("/app");
+        await handleOAuthSignIn("google", user);
       } catch (error) {
         console.error("Google Sign In Error (Web)", error);
         setLoginError(`Google Sign-In Failed (Web): ${error.message}`);
@@ -265,41 +330,24 @@ const Login = () => {
     } else {
       // Native Google Sign-In
       try {
-        await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+        await GoogleSignin.hasPlayServices({
+          showPlayServicesUpdateDialog: true,
+        });
         const { idToken, user: googleUser } = await GoogleSignin.signIn();
         const googleCredential = GoogleAuthProvider.credential(idToken);
-        const userCredential = await signInWithCredential(auth, googleCredential);
-        const user = userCredential.user;
-
-        console.log("Google sign-in successful (Native)", user.uid);
-
-        // Use AsyncStorage for React Native instead of localStorage
-        // await AsyncStorage.setItem("userUID", user.uid);
-        // await AsyncStorage.setItem("userEmail", user.email);
-        // await AsyncStorage.setItem("userName", user.displayName || googleUser.name || "Google User");
-        // For now, using localStorage as per your existing code, but this should be AsyncStorage
-        localStorage.setItem("userUID", user.uid);
-        localStorage.setItem("userEmail", user.email);
-        localStorage.setItem("userName", user.displayName || googleUser.name || "Google User");
-
-
-        const userRef = ref(database, `users/${user.uid}`);
-        const snapshot = await get(userRef);
-        if (!snapshot.exists()) {
-          await set(userRef, {
-            email: user.email,
-            name: user.displayName || googleUser.name || "Google User",
-            registrationDate: new Date().toISOString(),
-            lastLogin: new Date().toISOString(),
-            authProvider: "google",
-          });
-        } else {
-          await update(userRef, { lastLogin: new Date().toISOString() });
-        }
-        // Write the UID to the global currentUserUID path for hardware detection
-        await set(ref(database, "currentUserUID"), user.uid);
-
-        navigate("/app");
+        const userCredential = await signInWithCredential(
+          auth,
+          googleCredential
+        );
+        const firebaseUser = userCredential.user;
+        // Ensure displayName is passed correctly, preferring Google's info
+        const userWithDetails = {
+          ...firebaseUser,
+          displayName: googleUser.name || firebaseUser.displayName,
+          email: googleUser.email || firebaseUser.email,
+        };
+        console.log("Google sign-in successful (Native)", userWithDetails.uid);
+        await handleOAuthSignIn("google", userWithDetails);
       } catch (error) {
         let message = "Google Sign-In failed. Please try again.";
         if (error.code === statusCodes.SIGN_IN_CANCELLED) {
@@ -307,7 +355,8 @@ const Login = () => {
         } else if (error.code === statusCodes.IN_PROGRESS) {
           message = "Google Sign-In is already in progress.";
         } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-          message = "Google Play services not available or outdated. Please update them.";
+          message =
+            "Google Play services not available or outdated. Please update them.";
           Alert.alert("Play Services Error", message);
         } else {
           console.error("Google Sign In Error (Native)", error);
@@ -318,6 +367,34 @@ const Login = () => {
       } finally {
         setIsLoading(false);
       }
+    }
+  };
+
+  const handleGitHubSignIn = async () => {
+    setIsLoading(true);
+    setLoginError("");
+    // Note: For native platforms, signInWithPopup will open a browser.
+    // Ensure you have enabled GitHub as a sign-in provider in your Firebase console.
+    try {
+      const result = await signInWithPopup(auth, githubProvider);
+      const user = result.user;
+      console.log("GitHub sign-in successful", user.uid);
+      await handleOAuthSignIn("github", user);
+    } catch (error) {
+      console.error("GitHub Sign In Error", error);
+      let errorMessage = `GitHub Sign-In Failed: ${error.message}`;
+      if (error.code === "auth/account-exists-with-different-credential") {
+        errorMessage =
+          "An account already exists with the same email address but different sign-in credentials. Try signing in with the original method or link the accounts if supported.";
+      } else if (
+        error.code === "auth/cancelled-popup-request" ||
+        error.code === "auth/popup-closed-by-user"
+      ) {
+        errorMessage = "GitHub Sign-In cancelled.";
+      }
+      setLoginError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -391,7 +468,10 @@ const Login = () => {
             {resetLinkExpiry && (
               <Text style={styles.expiryText}>
                 Link expires in{" "}
-                {Math.max(0, Math.ceil((resetLinkExpiry - Date.now()) / (1000 * 60)))}{" "}
+                {Math.max(
+                  0,
+                  Math.ceil((resetLinkExpiry - Date.now()) / (1000 * 60))
+                )}{" "}
                 minutes
               </Text>
             )}
@@ -401,10 +481,19 @@ const Login = () => {
         <TouchableOpacity
           style={[
             styles.forgotPasswordButton,
-            (isLoading || cooldownTime > 0 || !emailValidation.isValid || !resetEmail) && styles.disabledButton, // Disable if email invalid or empty
+            (isLoading ||
+              cooldownTime > 0 ||
+              !emailValidation.isValid ||
+              !resetEmail) &&
+              styles.disabledButton, // Disable if email invalid or empty
           ]}
           onPress={handleForgotPassword}
-          disabled={isLoading || cooldownTime > 0 || !emailValidation.isValid || !resetEmail}
+          disabled={
+            isLoading ||
+            cooldownTime > 0 ||
+            !emailValidation.isValid ||
+            !resetEmail
+          }
         >
           {isLoading ? (
             <View style={styles.loadingContainer}>
@@ -529,7 +618,10 @@ const Login = () => {
       ) : null}
 
       <TouchableOpacity
-        style={[styles.button, (isLoading || !email || !password) && styles.disabledButton]}
+        style={[
+          styles.button,
+          (isLoading || !email || !password) && styles.disabledButton,
+        ]}
         onPress={handleLogin}
         disabled={isLoading || !email || !password}
       >
@@ -543,9 +635,30 @@ const Login = () => {
         onPress={handleGoogleSignIn}
         disabled={isLoading}
       >
-        <Text style={styles.googleButtonText}>
-          {isLoading && !showForgotPassword ? "Connecting..." : "Sign in with Google"}
-        </Text>
+        <View style={styles.oauthButtonContent}>
+          <GoogleLogo style={styles.oauthLogo} />
+          {isLoading && !showForgotPassword ? (
+            <ActivityIndicator size="small" color="#1B1212" />
+          ) : (
+            <Text style={styles.googleButtonText}>Sign in with Google</Text>
+          )}
+        </View>
+      </TouchableOpacity>
+
+      {/* GitHub Sign In Button */}
+      <TouchableOpacity
+        style={[styles.githubButton, isLoading && styles.disabledButton]}
+        onPress={handleGitHubSignIn}
+        disabled={isLoading}
+      >
+        <View style={styles.oauthButtonContent}>
+          <GitHubLogo style={styles.oauthLogo} />
+          {isLoading && !showForgotPassword ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Text style={styles.githubButtonText}>Sign in with GitHub</Text>
+          )}
+        </View>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -648,6 +761,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#1B1212",
+  },
+  // Add styles for GitHub button
+  githubButton: {
+    width: "80%",
+    backgroundColor: "#24292E", // GitHub dark color
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#1B1212", // Or a lighter border if preferred
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  githubButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  oauthButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  oauthLogo: {
+    marginRight: 10,
   },
   disabledButton: {
     opacity: 0.6,
