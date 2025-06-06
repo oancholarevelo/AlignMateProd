@@ -179,12 +179,14 @@ const Login = () => {
               authProvider: "email",
             });
           }
+          // Write the UID to the global currentUserUID path for hardware detection
+          await set(ref(database, "currentUserUID"), user.uid);
+          console.log("currentUserUID set in database:", user.uid);
+
         } catch (dbError) {
           console.error("Error accessing or updating user data in DB:", dbError);
         }
         
-        // This seems to be for global state, ensure it's handled correctly
-        // set(ref(database, "currentUserUID"), user.uid); 
         navigate("/app"); // Or your desired screen
       })
       .catch((error) => {
@@ -252,6 +254,10 @@ const Login = () => {
         } else {
           await update(userRef, { lastLogin: new Date().toISOString() });
         }
+        // Write the UID to the global currentUserUID path for hardware detection
+        await set(ref(database, "currentUserUID"), user.uid);
+        console.log("currentUserUID set in database (Google Web):", user.uid);
+
         navigate("/app");
       } catch (error) {
         console.error("Google Sign In Error (Web)", error);
@@ -293,6 +299,10 @@ const Login = () => {
         } else {
           await update(userRef, { lastLogin: new Date().toISOString() });
         }
+        // Write the UID to the global currentUserUID path for hardware detection
+        await set(ref(database, "currentUserUID"), user.uid);
+        console.log("currentUserUID set in database (Google Native):", user.uid);
+
         navigate("/app");
       } catch (error) {
         let message = "Google Sign-In failed. Please try again.";

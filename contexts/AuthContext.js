@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { auth } from "../firebase";
+import { auth, database } from "../firebase"; // Make sure database is imported
+import { ref, set } from "firebase/database"; // Import ref and set
 
 const AuthContext = createContext();
 
@@ -9,12 +10,23 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, async (authUser) => { // Made async
+      setUser(authUser);
+      if (!authUser) {
+        // User is logged out or session expired
+        try {
+          await set(ref(database, "currentUserUID"), null); // Clear the UID in the database
+          console.log("currentUserUID cleared from database on logout/session end.");
+        } catch (error) {
+          console.error("Error clearing currentUserUID from database:", error);
+        }
+      }
+      // If authUser exists, Login.js handles setting currentUserUID on initial login.
+      // No need to set it here again on every auth state change if Login.js does it.
       setLoading(false);
     });
 
-    return unsubscribe;
+    return unsubscribe; // Cleanup subscription
   }, []);
 
   return (
