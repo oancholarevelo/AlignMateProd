@@ -1900,7 +1900,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   header: {
-    fontSize: 24,
+    fontSize: 16,
     fontWeight: "bold",
     color: "#FFFFFF",
     textAlign: "center",

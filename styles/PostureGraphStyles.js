@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
 
   // Typography
   pageTitleContainer: {
-    backgroundColor: '#5CA377',
+    backgroundColor: "#5CA377",
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 20,
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   pageTitle: {
-    fontSize: 24,
+    fontSize: 16,
     fontWeight: "bold",
     color: "#FFFFFF",
     textAlign: "center",
@@ -2090,6 +2090,74 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: THEME.primary,
     fontWeight: "600",
+  },
+  chartExplanationContainer: {
+    marginTop: 20,
+    backgroundColor: "#F8F9FA",
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#E9ECEF",
+  },
+  chartExplanationTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1B1212",
+    marginBottom: 4,
+  },
+  chartExplanationSubtitle: {
+    fontSize: 14,
+    color: "#6C757D",
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  explanationList: {
+    gap: 12,
+  },
+  explanationItem: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+  explanationDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginTop: 4,
+    flexShrink: 0,
+  },
+  explanationContent: {
+    flex: 1,
+  },
+  explanationLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1B1212",
+    marginBottom: 2,
+  },
+  explanationText: {
+    fontSize: 13,
+    color: "#6C757D",
+    lineHeight: 18,
+  },
+  chartInsightBox: {
+    marginTop: 16,
+    backgroundColor: "#E8F5E8",
+    borderRadius: 8,
+    padding: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: THEME.primary,
+  },
+  chartInsightTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#2D5530",
+    marginBottom: 4,
+  },
+  chartInsightText: {
+    fontSize: 13,
+    color: "#2D5530",
+    lineHeight: 18,
   },
 });
 

@@ -73,6 +73,24 @@ const ICONS = {
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234299E1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E",
   feedback:
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%235CA377' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'/%3E%3C/svg%3E",
+  brainIcon:
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234A5568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.5 2A2.5 2.5 0 0 0 7 4.5V7H4.5A2.5 2.5 0 0 0 2 9.5v5A2.5 2.5 0 0 0 4.5 17H7v2.5A2.5 2.5 0 0 0 9.5 22h5a2.5 2.5 0 0 0 2.5-2.5V17h2.5a2.5 2.5 0 0 0 2.5-2.5v-5A2.5 2.5 0 0 0 19.5 7H17V4.5A2.5 2.5 0 0 0 14.5 2h-5zM12 10a2 2 0 1 1 0 4 2 2 0 0 1 0-4z'/%3E%3C/svg%3E",
+  thinkingLayersIcon:
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234A5568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='3' y1='12' x2='21' y2='12'/%3E%3Cline x1='3' y1='6' x2='21' y2='6'/%3E%3Cline x1='3' y1='18' x2='21' y2='18'/%3E%3C/svg%3E",
+  decisionPointsIcon:
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234A5568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M12 15v6M12 3v6M17.6 14.4l4.2-2.4M6.4 9.6l-4.2 2.4M17.6 9.6l4.2 2.4M6.4 14.4l-4.2-2.4'/%3E%3C/svg%3E",
+  finalAnswersIcon:
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234A5568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 11.08V12a10 10 0 1 1-5.93-9.14'/%3E%3Cpolyline points='22 4 12 14.01 9 11.01'/%3E%3C/svg%3E",
+  trainedDateIcon:
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234A5568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E",
+  decisionTreeIcon:
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234A5568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2v6M12 12v10M5 5l-3 3 3 3M19 5l3 3-3 3M3 11h18M3 17h18'/%3E%3C/svg%3E",
+  funFactIcon:
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234A5568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 19c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5zM15 19c2.8 0 5-2.2 5-5s-2.2-5-5-5-5 2.2-5 5 2.2 5 5 5zM12 5V2M4.22 7.22l-2-2M19.78 7.22l2-2'/%3E%3Cpath d='M12 12a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 001 1h2a1 1 0 001-1v-2z'/%3E%3C/svg%3E", // Simplified lightbulb
+  performanceIcon:
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234A5568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 14a4 4 0 100-8 4 4 0 000 8z'/%3E%3Cpath d='M12 6v2M12 16v2M16 12h2M6 12h2'/%3E%3C/svg%3E", // Gauge-like
+  infoIcon:
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23A0AEC0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='12' y1='16' x2='12' y2='12'/%3E%3Cline x1='12' y1='8' x2='12.01' y2='8'/%3E%3C/svg%3E",
 };
 
 // Card component for consistent styling
@@ -2082,13 +2100,6 @@ const PostureGraph = () => {
           strokeWidth: 2,
         },
       ],
-      legend: [
-        "Pitch Mean",
-        "Roll Range",
-        "Variance/1000",
-        "Angular Velocity",
-        "EWMA",
-      ],
     };
   }, [mlData]);
 
@@ -3173,65 +3184,10 @@ const PostureGraph = () => {
       {/* ML Features */}
       {showMlFeatures && mlData.length > 0 && (
         <Card style={styles.mlFeatureContainer}>
-          <Text style={styles.cardTitle}>ML Features Analysis</Text>
+          <Text style={[styles.cardTitle, { textAlign: 'center' }]}>ML Features Analysis</Text>
           <Text style={styles.mlFeatureSubtitle}>
             Last 10 readings trend analysis
           </Text>
-
-          {/* Custom Legend */}
-          <View style={styles.mlFeatureLegend}>
-            <View style={styles.legendRow}>
-              <View style={styles.legendItem}>
-                <View
-                  style={[
-                    styles.legendDot,
-                    { backgroundColor: "rgba(0, 0, 255, 1)" },
-                  ]}
-                />
-                <Text style={styles.legendLabel}>Pitch Mean</Text>
-              </View>
-              <View style={styles.legendItem}>
-                <View
-                  style={[
-                    styles.legendDot,
-                    { backgroundColor: "rgba(255, 0, 0, 1)" },
-                  ]}
-                />
-                <Text style={styles.legendLabel}>Roll Range</Text>
-              </View>
-            </View>
-            <View style={styles.legendRow}>
-              <View style={styles.legendItem}>
-                <View
-                  style={[
-                    styles.legendDot,
-                    { backgroundColor: "rgba(0, 255, 0, 1)" },
-                  ]}
-                />
-                <Text style={styles.legendLabel}>Variance/1000</Text>
-              </View>
-              <View style={styles.legendItem}>
-                <View
-                  style={[
-                    styles.legendDot,
-                    { backgroundColor: "rgba(255, 165, 0, 1)" },
-                  ]}
-                />
-                <Text style={styles.legendLabel}>Angular Velocity</Text>
-              </View>
-            </View>
-            <View style={styles.legendRow}>
-              <View style={styles.legendItem}>
-                <View
-                  style={[
-                    styles.legendDot,
-                    { backgroundColor: "rgba(128, 0, 128, 1)" },
-                  ]}
-                />
-                <Text style={styles.legendLabel}>EWMA Trend</Text>
-              </View>
-            </View>
-          </View>
 
           <LineChart
             data={getMlFeatureData()}
@@ -3275,34 +3231,92 @@ const PostureGraph = () => {
             yAxisLabel=""
             yAxisSuffix=""
             hideLegend={true}
-            withLegend={false} // Additional property to hide legend
-            renderLegend={() => null} // Force no legend rendering
+            withLegend={false}
+            renderLegend={() => null}
           />
 
-          {/* Feature Importance Section */}
-          <View style={styles.featureImportanceContainer}>
-            <Text style={styles.featureImportanceTitle}>
-              🎯 Feature Importance in ML Model
+          {/* UPDATED: Chart Explanation instead of Feature Importance */}
+          <View style={styles.chartExplanationContainer}>
+            <Text style={styles.chartExplanationTitle}>
+              📊 Understanding Your Posture Data
             </Text>
-            <Text style={styles.featureImportanceSubtitle}>
-              How much each feature influences posture classification
+            <Text style={styles.chartExplanationSubtitle}>
+              What each line in the chart tells us about your posture:
             </Text>
-            <View style={styles.featureImportanceBars}>
-              {Object.entries(featureImportance).map(([feature, value]) => (
-                <View key={feature} style={styles.featureBar}>
-                  <Text style={styles.featureBarLabel}>
-                    {getPrimaryFeatureDisplay(feature)}
+            
+            <View style={styles.explanationList}>
+              <View style={styles.explanationItem}>
+                <View style={[styles.explanationDot, { backgroundColor: "rgba(0, 0, 255, 1)" }]} />
+                <View style={styles.explanationContent}>
+                  <Text style={styles.explanationLabel}>Pitch Mean (Blue)</Text>
+                  <Text style={styles.explanationText}>
+                    Your forward/backward lean angle. Lower is better - shows how upright you're sitting.
                   </Text>
-                  <View style={styles.featureBarContainer}>
-                    <View style={styles.featureBarOuter}>
-                      <View
-                        style={[styles.featureBarInner, { width: `${value}%` }]}
-                      />
-                    </View>
-                    <Text style={styles.featureBarValue}>{value}%</Text>
-                  </View>
                 </View>
-              ))}
+              </View>
+
+              <View style={styles.explanationItem}>
+                <View style={[styles.explanationDot, { backgroundColor: "rgba(255, 0, 0, 1)" }]} />
+                <View style={styles.explanationContent}>
+                  <Text style={styles.explanationLabel}>Roll Range (Red)</Text>
+                  <Text style={styles.explanationText}>
+                    How much you lean left/right. Steady values mean you're sitting balanced.
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.explanationItem}>
+                <View style={[styles.explanationDot, { backgroundColor: "rgba(0, 255, 0, 1)" }]} />
+                <View style={styles.explanationContent}>
+                  <Text style={styles.explanationLabel}>Variance (Green)</Text>
+                  <Text style={styles.explanationText}>
+                    How much your posture changes. Low variance = stable sitting position.
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.explanationItem}>
+                <View style={[styles.explanationDot, { backgroundColor: "rgba(255, 165, 0, 1)" }]} />
+                <View style={styles.explanationContent}>
+                  <Text style={styles.explanationLabel}>Angular Velocity (Orange)</Text>
+                  <Text style={styles.explanationText}>
+                    How fast you're moving. Spikes show when you adjust your position.
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.explanationItem}>
+                <View style={[styles.explanationDot, { backgroundColor: "rgba(128, 0, 128, 1)" }]} />
+                <View style={styles.explanationContent}>
+                  <Text style={styles.explanationLabel}>EWMA Trend (Purple)</Text>
+                  <Text style={styles.explanationText}>
+                    Smoothed trend line that shows your overall posture direction over time.
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.chartInsightBox}>
+              <Text style={styles.chartInsightTitle}>💡 Quick Insight:</Text>
+              <Text style={styles.chartInsightText}>
+                {(() => {
+                  if (mlData.length === 0) return "Start using your sensor to see personalized insights!";
+                  
+                  const recentData = mlData.slice(-5);
+                  const avgPitch = recentData.reduce((sum, item) => sum + (item.mean || 0), 0) / recentData.length;
+                  const avgVariance = recentData.reduce((sum, item) => sum + (item.variance || 0), 0) / recentData.length;
+                  
+                  if (avgPitch <= customThresholds.good && avgVariance < 50) {
+                    return "Excellent! You're maintaining steady, upright posture. Keep it up! 🎉";
+                  } else if (avgPitch <= customThresholds.warning) {
+                    return "Good posture overall. Try to keep that blue line (pitch) as low as possible. 👍";
+                  } else if (avgVariance > 100) {
+                    return "You're moving around a lot. Try to find a comfortable, stable position. 🪑";
+                  } else {
+                    return "Focus on reducing that blue line - it shows you're leaning forward. Sit back and straighten up! 💪";
+                  }
+                })()}
+              </Text>
             </View>
           </View>
         </Card>
