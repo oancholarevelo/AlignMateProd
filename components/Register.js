@@ -280,7 +280,7 @@ const Register = () => {
     if (!acceptedTerms) {
       Alert.alert(
         "Terms Not Accepted",
-        "Please accept the Terms of Agreement and Privacy Policy to continue"
+        "Please accept the Terms of Service and Privacy Policy to continue"
       );
       return;
     }
