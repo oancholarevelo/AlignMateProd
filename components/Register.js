@@ -27,7 +27,7 @@ import {
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import PrivacyPolicyContent from "./PrivacyPolicy";
-import TermsOfAgreementContent from "./TermsOfAgreement";
+import TermsOfServiceContent from "./TermsOfService";
 import DocumentRenderer from "./DocumentRenderer";
 import {
   GoogleSignin,
@@ -41,7 +41,7 @@ const Register = () => {
   const [name, setName] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
-  const [showTermsOfAgreement, setShowTermsOfAgreement] = useState(false);
+  const [showTermsOfService, setShowTermsOfService] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -163,7 +163,7 @@ const Register = () => {
     if (!acceptedTerms) {
       Alert.alert(
         "Terms Not Accepted",
-        "Please accept the Terms of Agreement and Privacy Policy to continue"
+        "Please accept the Terms of Service and Privacy Policy to continue"
       );
       return;
     }
@@ -357,7 +357,7 @@ const Register = () => {
     if (!acceptedTerms) {
       Alert.alert(
         "Terms Not Accepted",
-        "Please accept the Terms of Agreement and Privacy Policy to continue"
+        "Please accept the Terms of Service and Privacy Policy to continue"
       );
       return;
     }
@@ -622,9 +622,9 @@ const Register = () => {
                 I agree to the{" "}
                 <Text
                   style={styles.linkText}
-                  onPress={() => setShowTermsOfAgreement(true)}
+                  onPress={() => setShowTermsOfService(true)}
                 >
-                  Terms of Agreement
+                  Terms of Service
                 </Text>{" "}
                 and{" "}
                 <Text
@@ -645,7 +645,7 @@ const Register = () => {
             onPress={handleRegister}
             disabled={!isFormValid() || isLoading}
           >
-            {isLoading && !showPrivacyPolicy && !showTermsOfAgreement ? (
+            {isLoading && !showPrivacyPolicy && !showTermsOfService ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
               <Text style={styles.buttonText}>Register</Text>
@@ -662,7 +662,7 @@ const Register = () => {
           >
             <View style={styles.oauthButtonContent}>
               <GoogleLogo style={styles.oauthLogo} />
-              {isLoading && !showPrivacyPolicy && !showTermsOfAgreement ? (
+              {isLoading && !showPrivacyPolicy && !showTermsOfService ? (
                 <ActivityIndicator size="small" color="#1B1212" />
               ) : (
                 <Text style={styles.googleButtonText}>Sign up with Google</Text>
@@ -681,7 +681,7 @@ const Register = () => {
           >
             <View style={styles.oauthButtonContent}>
               <GitHubLogo style={styles.oauthLogo} />
-              {isLoading && !showPrivacyPolicy && !showTermsOfAgreement ? (
+              {isLoading && !showPrivacyPolicy && !showTermsOfService ? (
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
                 <Text style={styles.githubButtonText}>Sign up with GitHub</Text>
@@ -711,10 +711,10 @@ const Register = () => {
       />
 
       <DocumentModal
-        visible={showTermsOfAgreement}
-        onClose={() => setShowTermsOfAgreement(false)}
-        title="Terms of Agreement"
-        content={TermsOfAgreementContent}
+        visible={showTermsOfService}
+        onClose={() => setShowTermsOfService(false)}
+        title="Terms of Service"
+        content={TermsOfServiceContent}
       />
     </SafeAreaView>
   );
