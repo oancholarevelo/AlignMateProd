@@ -352,41 +352,84 @@ const GAMIFICATION_THEMES = {
     icon: THEME_ICONS.pet.egg,
     color: "#FF6B8A",
     rewards: [
+      // Research Phase (0-20 minutes)
       {
         at: 1,
         reward: "Pet Egg",
         description: "Your first companion!",
         icon: THEME_ICONS.pet.egg,
+        phase: "research",
       },
       {
         at: 3,
         reward: "Baby Pet",
         description: "Your pet hatched!",
         icon: THEME_ICONS.pet.baby,
+        phase: "research",
       },
       {
         at: 6,
         reward: "Adult Pet",
         description: "Fully grown companion!",
         icon: THEME_ICONS.pet.adult,
+        phase: "research",
       },
       {
         at: 10,
         reward: "Happy Pet",
         description: "Joyful companion!",
         icon: THEME_ICONS.pet.adult,
+        phase: "research",
       },
       {
         at: 15,
         reward: "Legendary Pet",
         description: "Mythical evolution!",
         icon: THEME_ICONS.pet.legendary,
+        phase: "research",
       },
       {
         at: 20,
         reward: "Pet Master",
         description: "Ultimate pet trainer!",
         icon: THEME_ICONS.pet.legendary,
+        phase: "research",
+      },
+      // Extended Phase (21+ minutes) - For Full Release
+      {
+        at: 30,
+        reward: "Pet Whisperer",
+        description: "You understand all pets!",
+        icon: THEME_ICONS.pet.legendary,
+        phase: "extended",
+      },
+      {
+        at: 45,
+        reward: "Pet Sanctuary",
+        description: "Home to many companions!",
+        icon: THEME_ICONS.pet.legendary,
+        phase: "extended",
+      },
+      {
+        at: 60,
+        reward: "Pet Kingdom",
+        description: "Ruler of all pets!",
+        icon: THEME_ICONS.pet.legendary,
+        phase: "extended",
+      },
+      {
+        at: 90,
+        reward: "Pet Dimension",
+        description: "Master of pet reality!",
+        icon: THEME_ICONS.pet.legendary,
+        phase: "extended",
+      },
+      {
+        at: 120,
+        reward: "Pet Universe",
+        description: "Creator of pet worlds!",
+        icon: THEME_ICONS.pet.legendary,
+        phase: "extended",
       },
     ],
   },
@@ -398,41 +441,84 @@ const GAMIFICATION_THEMES = {
     icon: THEME_ICONS.city.house,
     color: "#4CAF50",
     rewards: [
+      // Research Phase
       {
         at: 1,
         reward: "First House",
         description: "Welcome home!",
         icon: THEME_ICONS.city.house,
+        phase: "research",
       },
       {
         at: 3,
         reward: "Neighborhood",
         description: "Community growing!",
         icon: THEME_ICONS.city.neighborhood,
+        phase: "research",
       },
       {
         at: 6,
         reward: "Shopping District",
         description: "Commerce thrives!",
         icon: THEME_ICONS.city.neighborhood,
+        phase: "research",
       },
       {
         at: 10,
         reward: "Business Center",
         description: "Economic hub!",
         icon: THEME_ICONS.city.megacity,
+        phase: "research",
       },
       {
         at: 15,
         reward: "Bustling City",
         description: "Metropolitan area!",
         icon: THEME_ICONS.city.megacity,
+        phase: "research",
       },
       {
         at: 20,
         reward: "Megacity",
         description: "Urban masterpiece!",
         icon: THEME_ICONS.city.megacity,
+        phase: "research",
+      },
+      // Extended Phase
+      {
+        at: 30,
+        reward: "Smart City",
+        description: "Technology integrated!",
+        icon: THEME_ICONS.city.megacity,
+        phase: "extended",
+      },
+      {
+        at: 45,
+        reward: "Metropolitan Area",
+        description: "Multiple cities connected!",
+        icon: THEME_ICONS.city.megacity,
+        phase: "extended",
+      },
+      {
+        at: 60,
+        reward: "Global Hub",
+        description: "World trading center!",
+        icon: THEME_ICONS.city.megacity,
+        phase: "extended",
+      },
+      {
+        at: 90,
+        reward: "Floating Cities",
+        description: "Defying gravity itself!",
+        icon: THEME_ICONS.city.megacity,
+        phase: "extended",
+      },
+      {
+        at: 120,
+        reward: "Planetary Capital",
+        description: "Center of civilization!",
+        icon: THEME_ICONS.city.megacity,
+        phase: "extended",
       },
     ],
   },
@@ -444,41 +530,84 @@ const GAMIFICATION_THEMES = {
     icon: THEME_ICONS.fitness.novice,
     color: "#FF9800",
     rewards: [
+      // Research Phase
       {
         at: 1,
         reward: "Novice Warrior",
         description: "Your journey begins!",
         icon: THEME_ICONS.fitness.novice,
+        phase: "research",
       },
       {
         at: 3,
         reward: "Skilled Fighter",
         description: "Gaining experience!",
         icon: THEME_ICONS.fitness.novice,
+        phase: "research",
       },
       {
         at: 6,
         reward: "Posture Knight",
         description: "Noble protector!",
         icon: THEME_ICONS.fitness.knight,
+        phase: "research",
       },
       {
         at: 10,
         reward: "Posture Champion",
         description: "Elite fighter!",
         icon: THEME_ICONS.fitness.champion,
+        phase: "research",
       },
       {
         at: 15,
         reward: "Posture Master",
         description: "Supreme warrior!",
         icon: THEME_ICONS.fitness.legendary,
+        phase: "research",
       },
       {
         at: 20,
         reward: "Legendary Hero",
         description: "Living legend!",
         icon: THEME_ICONS.fitness.legendary,
+        phase: "research",
+      },
+      // Extended Phase
+      {
+        at: 30,
+        reward: "Spine Guardian",
+        description: "Protector of perfect posture!",
+        icon: THEME_ICONS.fitness.legendary,
+        phase: "extended",
+      },
+      {
+        at: 45,
+        reward: "Posture Sensei",
+        description: "Master teacher of alignment!",
+        icon: THEME_ICONS.fitness.legendary,
+        phase: "extended",
+      },
+      {
+        at: 60,
+        reward: "Ergonomic Emperor",
+        description: "Ruler of workplace wellness!",
+        icon: THEME_ICONS.fitness.legendary,
+        phase: "extended",
+      },
+      {
+        at: 90,
+        reward: "Alignment Avatar",
+        description: "Perfect posture incarnate!",
+        icon: THEME_ICONS.fitness.legendary,
+        phase: "extended",
+      },
+      {
+        at: 120,
+        reward: "Posture Deity",
+        description: "Divine spine alignment!",
+        icon: THEME_ICONS.fitness.legendary,
+        phase: "extended",
       },
     ],
   },
@@ -490,41 +619,84 @@ const GAMIFICATION_THEMES = {
     icon: THEME_ICONS.space.rocket,
     color: "#3F51B5",
     rewards: [
+      // Research Phase
       {
         at: 1,
         reward: "First Launch",
         description: "Blast off!",
         icon: THEME_ICONS.space.rocket,
+        phase: "research",
       },
       {
         at: 3,
         reward: "Moon Landing",
         description: "One small step!",
         icon: THEME_ICONS.space.rocket,
+        phase: "research",
       },
       {
         at: 6,
         reward: "Mars Colony",
         description: "Red planet conquered!",
         icon: THEME_ICONS.space.shuttle,
+        phase: "research",
       },
       {
         at: 10,
         reward: "Space Station",
         description: "Orbital outpost!",
         icon: THEME_ICONS.space.station,
+        phase: "research",
       },
       {
         at: 15,
         reward: "Galaxy Explorer",
         description: "Beyond our system!",
         icon: THEME_ICONS.space.mothership,
+        phase: "research",
       },
       {
         at: 20,
         reward: "Universe Master",
         description: "Cosmic champion!",
         icon: THEME_ICONS.space.mothership,
+        phase: "research",
+      },
+      // Extended Phase
+      {
+        at: 30,
+        reward: "Interstellar Admiral",
+        description: "Commander of star fleets!",
+        icon: THEME_ICONS.space.mothership,
+        phase: "extended",
+      },
+      {
+        at: 45,
+        reward: "Galactic Emperor",
+        description: "Ruler of galaxies!",
+        icon: THEME_ICONS.space.mothership,
+        phase: "extended",
+      },
+      {
+        at: 60,
+        reward: "Dimension Walker",
+        description: "Traveler between realities!",
+        icon: THEME_ICONS.space.mothership,
+        phase: "extended",
+      },
+      {
+        at: 90,
+        reward: "Cosmic Architect",
+        description: "Builder of universes!",
+        icon: THEME_ICONS.space.mothership,
+        phase: "extended",
+      },
+      {
+        at: 120,
+        reward: "Multiverse God",
+        description: "Creator of infinite realities!",
+        icon: THEME_ICONS.space.mothership,
+        phase: "extended",
       },
     ],
   },
@@ -536,41 +708,84 @@ const GAMIFICATION_THEMES = {
     icon: THEME_ICONS.trees.seedling,
     color: "#4CAF50",
     rewards: [
+      // Research Phase
       {
         at: 1,
         reward: "First Seedling",
         description: "Growth begins!",
         icon: THEME_ICONS.trees.seedling,
+        phase: "research",
       },
       {
         at: 3,
         reward: "Small Grove",
         description: "Forest forming!",
         icon: THEME_ICONS.trees.seedling,
+        phase: "research",
       },
       {
         at: 6,
         reward: "Young Tree",
         description: "Growing strong!",
         icon: THEME_ICONS.trees.sapling,
+        phase: "research",
       },
       {
         at: 10,
         reward: "Forest Guardian",
         description: "Nature's protector!",
         icon: THEME_ICONS.trees.tree,
+        phase: "research",
       },
       {
         at: 15,
         reward: "Amazon Guardian",
         description: "Rainforest protector!",
         icon: THEME_ICONS.trees.forest,
+        phase: "research",
       },
       {
         at: 20,
         reward: "Planet Saver",
         description: "Earth's champion!",
         icon: THEME_ICONS.trees.forest,
+        phase: "research",
+      },
+      // Extended Phase
+      {
+        at: 30,
+        reward: "Forest Sage",
+        description: "Wisdom of ancient trees!",
+        icon: THEME_ICONS.trees.forest,
+        phase: "extended",
+      },
+      {
+        at: 45,
+        reward: "Nature's Voice",
+        description: "Speaker for all forests!",
+        icon: THEME_ICONS.trees.forest,
+        phase: "extended",
+      },
+      {
+        at: 60,
+        reward: "Gaia's Champion",
+        description: "Earth's chosen protector!",
+        icon: THEME_ICONS.trees.forest,
+        phase: "extended",
+      },
+      {
+        at: 90,
+        reward: "World Tree",
+        description: "Connection to all life!",
+        icon: THEME_ICONS.trees.forest,
+        phase: "extended",
+      },
+      {
+        at: 120,
+        reward: "Life Creator",
+        description: "Source of all nature!",
+        icon: THEME_ICONS.trees.forest,
+        phase: "extended",
       },
     ],
   },
@@ -596,13 +811,14 @@ const Achievements = ({
 
   // Use userUID from parent or fallback to localStorage
   const userUID = parentUserUID || localStorage.getItem("userUID");
+  const [isResearchMode, setIsResearchMode] = useState(true);
 
   // Point display configuration - Adjusted for 20-minute sessions
   const POINT_DISPLAY_CONFIG = {
     pointsPerDisplayPoint: 18,
     pointUnit: "minute",
     pointUnitPlural: "minutes",
-    maxSessionPoints: 20,
+    maxSessionPoints: isResearchMode ? 20 : 180, // 20 min for research, 3 hours for release
   };
 
   // Theme-specific reward rates - Adjusted for 20-minute max
@@ -632,9 +848,18 @@ const Achievements = ({
     return displayPoints % rate;
   };
 
+  const getAvailableRewards = (theme) => {
+    const allRewards = GAMIFICATION_THEMES[theme].rewards;
+    if (isResearchMode) {
+      return allRewards.filter((reward) => reward.phase === "research");
+    }
+    return allRewards; // Show all rewards in full release
+  };
+
   const getCurrentReward = (rewardCount) => {
     const theme = GAMIFICATION_THEMES[selectedTheme];
-    const sortedRewards = [...theme.rewards].sort((a, b) => a.at - b.at);
+    const availableRewards = getAvailableRewards(selectedTheme);
+    const sortedRewards = [...availableRewards].sort((a, b) => a.at - b.at);
 
     for (let i = sortedRewards.length - 1; i >= 0; i--) {
       if (rewardCount >= sortedRewards[i].at) {
@@ -646,7 +871,8 @@ const Achievements = ({
 
   const getNextReward = (rewardCount) => {
     const theme = GAMIFICATION_THEMES[selectedTheme];
-    const sortedRewards = [...theme.rewards].sort((a, b) => a.at - b.at);
+    const availableRewards = getAvailableRewards(selectedTheme);
+    const sortedRewards = [...availableRewards].sort((a, b) => a.at - b.at);
 
     for (let reward of sortedRewards) {
       if (rewardCount < reward.at) {
@@ -756,6 +982,18 @@ const Achievements = ({
           { backgroundColor: currentTheme.color + "15" },
         ]}
       >
+        {/* Research Mode Indicator */}
+        {isResearchMode && (
+          <View style={styles.researchModeIndicator}>
+            <Text style={styles.researchModeText}>
+              🔬 Research Mode - 20 Min Max
+            </Text>
+            <Text style={styles.researchModeSubtext}>
+              Full version will unlock extended achievements!
+            </Text>
+          </View>
+        )}
+
         <View style={styles.statusHeader}>
           <Text style={[styles.statusTitle, { color: currentTheme.color }]}>
             {currentTheme.name}
@@ -810,7 +1048,8 @@ const Achievements = ({
           </View>
         )}
 
-        {achievementsData.points === 20 && (
+        {/* Perfect Session or Max Research Achievement */}
+        {achievementsData.points === POINT_DISPLAY_CONFIG.maxSessionPoints && (
           <View
             style={[
               styles.perfectSessionBanner,
@@ -818,11 +1057,517 @@ const Achievements = ({
             ]}
           >
             <Text style={styles.perfectSessionTitle}>
-              ⭐ Perfect Session! ⭐
+              {isResearchMode
+                ? "⭐ Research Complete! ⭐"
+                : "⭐ Perfect Session! ⭐"}
             </Text>
             <Text style={styles.perfectSessionDesc}>
-              Maximum points achieved! You're a posture champion!
+              {isResearchMode
+                ? "Thank you for participating in our research!"
+                : "Maximum points achieved! You're a posture champion!"}
             </Text>
+          </View>
+        )}
+
+        {/* Coming Soon Preview for Research Mode */}
+        {isResearchMode && achievementsData.points >= 15 && (
+          <View style={styles.comingSoonContainer}>
+            <Text style={styles.comingSoonTitle}>
+              🚀 Coming in Full Release!
+            </Text>
+            <Text style={styles.comingSoonText}>
+              Extended achievements up to 2+ hours, new themes, and epic
+              rewards!
+            </Text>
+          </View>
+        )}
+      </View>
+    );
+  };
+
+  const MilestonesSection = () => {
+    const availableRewards = getAvailableRewards(selectedTheme);
+
+    return (
+      <View style={styles.milestonesContainer}>
+        <Text style={styles.milestonesTitle}>
+          {isResearchMode
+            ? "Research Phase Milestones"
+            : "Achievement Milestones"}
+        </Text>
+        <View style={styles.milestonesGrid}>
+          {availableRewards.map((reward, index) => {
+            const unlocked = achievementsData.themeRewards >= reward.at;
+            return (
+              <View
+                key={index}
+                style={[
+                  styles.milestone,
+                  unlocked ? styles.milestoneUnlocked : styles.milestoneLocked,
+                  unlocked && {
+                    borderColor: GAMIFICATION_THEMES[selectedTheme].color,
+                  },
+                ]}
+              >
+                <Text style={styles.milestoneReward}>{reward.reward}</Text>
+                <Text style={styles.milestoneDesc}>{reward.description}</Text>
+                <View style={styles.milestoneRequirementContainer}>
+                  {unlocked && (
+                    <Image
+                      source={{ uri: checkIcon }}
+                      style={styles.checkIcon}
+                    />
+                  )}
+                  <Text style={styles.milestoneRequirement}>
+                    {unlocked
+                      ? "Unlocked!"
+                      : `Need ${reward.at} ${GAMIFICATION_THEMES[selectedTheme].unit}`}
+                  </Text>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+
+        {/* Extended Achievements Preview */}
+        {isResearchMode && (
+          <View style={styles.extendedPreviewContainer}>
+            <View style={styles.extendedPreviewHeader}>
+              <Text style={styles.extendedPreviewTitle}>
+                🔮 Extended Achievements Preview
+              </Text>
+              <View style={styles.comingSoonBadge}>
+                <Text style={styles.comingSoonBadgeText}>COMING SOON</Text>
+              </View>
+            </View>
+
+            <Text style={styles.extendedPreviewSubtitle}>
+              Full release will unlock epic achievements up to 2+ hours!
+            </Text>
+
+            <View style={styles.previewCardsContainer}>
+              {selectedTheme === "pet" && (
+                <>
+                  <View style={[styles.previewCard, styles.previewCardLocked]}>
+                    <View style={styles.previewCardHeader}>
+                      <Text style={styles.previewCardTitle}>Pet Whisperer</Text>
+                      <Text style={styles.previewCardTime}>30 min</Text>
+                    </View>
+                    <Text style={styles.previewCardDesc}>
+                      You understand all pets!
+                    </Text>
+                    <View style={styles.previewCardBadge}>
+                      <Text style={styles.previewCardBadgeText}>🔒 LOCKED</Text>
+                    </View>
+                  </View>
+
+                  <View style={[styles.previewCard, styles.previewCardLocked]}>
+                    <View style={styles.previewCardHeader}>
+                      <Text style={styles.previewCardTitle}>Pet Sanctuary</Text>
+                      <Text style={styles.previewCardTime}>45 min</Text>
+                    </View>
+                    <Text style={styles.previewCardDesc}>
+                      Home to many companions!
+                    </Text>
+                    <View style={styles.previewCardBadge}>
+                      <Text style={styles.previewCardBadgeText}>🔒 LOCKED</Text>
+                    </View>
+                  </View>
+
+                  <View style={[styles.previewCard, styles.previewCardEpic]}>
+                    <View style={styles.previewCardHeader}>
+                      <Text style={styles.previewCardTitle}>Pet Kingdom</Text>
+                      <Text style={styles.previewCardTime}>60 min</Text>
+                    </View>
+                    <Text style={styles.previewCardDesc}>
+                      Ruler of all pets!
+                    </Text>
+                    <View style={[styles.previewCardBadge, styles.epicBadge]}>
+                      <Text style={styles.epicBadgeText}>👑 EPIC</Text>
+                    </View>
+                  </View>
+
+                  <View
+                    style={[styles.previewCard, styles.previewCardLegendary]}
+                  >
+                    <View style={styles.previewCardHeader}>
+                      <Text style={styles.previewCardTitle}>Pet Dimension</Text>
+                      <Text style={styles.previewCardTime}>90 min</Text>
+                    </View>
+                    <Text style={styles.previewCardDesc}>
+                      Master of pet reality!
+                    </Text>
+                    <View
+                      style={[styles.previewCardBadge, styles.legendaryBadge]}
+                    >
+                      <Text style={styles.legendaryBadgeText}>
+                        ⭐ LEGENDARY
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={[styles.previewCard, styles.previewCardMythic]}>
+                    <View style={styles.previewCardHeader}>
+                      <Text style={styles.previewCardTitle}>
+                        Pet Universe Creator
+                      </Text>
+                      <Text style={styles.previewCardTime}>120 min</Text>
+                    </View>
+                    <Text style={styles.previewCardDesc}>
+                      Creator of pet worlds!
+                    </Text>
+                    <View style={[styles.previewCardBadge, styles.mythicBadge]}>
+                      <Text style={styles.mythicBadgeText}>💎 MYTHIC</Text>
+                    </View>
+                  </View>
+                </>
+              )}
+
+              {selectedTheme === "city" && (
+                <>
+                  <View style={[styles.previewCard, styles.previewCardLocked]}>
+                    <View style={styles.previewCardHeader}>
+                      <Text style={styles.previewCardTitle}>Smart City</Text>
+                      <Text style={styles.previewCardTime}>30 min</Text>
+                    </View>
+                    <Text style={styles.previewCardDesc}>
+                      Technology integrated!
+                    </Text>
+                    <View style={styles.previewCardBadge}>
+                      <Text style={styles.previewCardBadgeText}>🔒 LOCKED</Text>
+                    </View>
+                  </View>
+
+                  <View style={[styles.previewCard, styles.previewCardLocked]}>
+                    <View style={styles.previewCardHeader}>
+                      <Text style={styles.previewCardTitle}>
+                        Metropolitan Area
+                      </Text>
+                      <Text style={styles.previewCardTime}>45 min</Text>
+                    </View>
+                    <Text style={styles.previewCardDesc}>
+                      Multiple cities connected!
+                    </Text>
+                    <View style={styles.previewCardBadge}>
+                      <Text style={styles.previewCardBadgeText}>🔒 LOCKED</Text>
+                    </View>
+                  </View>
+
+                  <View style={[styles.previewCard, styles.previewCardEpic]}>
+                    <View style={styles.previewCardHeader}>
+                      <Text style={styles.previewCardTitle}>Global Hub</Text>
+                      <Text style={styles.previewCardTime}>60 min</Text>
+                    </View>
+                    <Text style={styles.previewCardDesc}>
+                      World trading center!
+                    </Text>
+                    <View style={[styles.previewCardBadge, styles.epicBadge]}>
+                      <Text style={styles.epicBadgeText}>👑 EPIC</Text>
+                    </View>
+                  </View>
+
+                  <View
+                    style={[styles.previewCard, styles.previewCardLegendary]}
+                  >
+                    <View style={styles.previewCardHeader}>
+                      <Text style={styles.previewCardTitle}>
+                        Floating Cities
+                      </Text>
+                      <Text style={styles.previewCardTime}>90 min</Text>
+                    </View>
+                    <Text style={styles.previewCardDesc}>
+                      Defying gravity itself!
+                    </Text>
+                    <View
+                      style={[styles.previewCardBadge, styles.legendaryBadge]}
+                    >
+                      <Text style={styles.legendaryBadgeText}>
+                        ⭐ LEGENDARY
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={[styles.previewCard, styles.previewCardMythic]}>
+                    <View style={styles.previewCardHeader}>
+                      <Text style={styles.previewCardTitle}>
+                        Planetary Capital
+                      </Text>
+                      <Text style={styles.previewCardTime}>120 min</Text>
+                    </View>
+                    <Text style={styles.previewCardDesc}>
+                      Center of civilization!
+                    </Text>
+                    <View style={[styles.previewCardBadge, styles.mythicBadge]}>
+                      <Text style={styles.mythicBadgeText}>💎 MYTHIC</Text>
+                    </View>
+                  </View>
+                </>
+              )}
+
+              {selectedTheme === "fitness" && (
+                <>
+                  <View style={[styles.previewCard, styles.previewCardLocked]}>
+                    <View style={styles.previewCardHeader}>
+                      <Text style={styles.previewCardTitle}>
+                        Spine Guardian
+                      </Text>
+                      <Text style={styles.previewCardTime}>30 min</Text>
+                    </View>
+                    <Text style={styles.previewCardDesc}>
+                      Protector of perfect posture!
+                    </Text>
+                    <View style={styles.previewCardBadge}>
+                      <Text style={styles.previewCardBadgeText}>🔒 LOCKED</Text>
+                    </View>
+                  </View>
+
+                  <View style={[styles.previewCard, styles.previewCardLocked]}>
+                    <View style={styles.previewCardHeader}>
+                      <Text style={styles.previewCardTitle}>
+                        Posture Sensei
+                      </Text>
+                      <Text style={styles.previewCardTime}>45 min</Text>
+                    </View>
+                    <Text style={styles.previewCardDesc}>
+                      Master teacher of alignment!
+                    </Text>
+                    <View style={styles.previewCardBadge}>
+                      <Text style={styles.previewCardBadgeText}>🔒 LOCKED</Text>
+                    </View>
+                  </View>
+
+                  <View style={[styles.previewCard, styles.previewCardEpic]}>
+                    <View style={styles.previewCardHeader}>
+                      <Text style={styles.previewCardTitle}>
+                        Ergonomic Emperor
+                      </Text>
+                      <Text style={styles.previewCardTime}>60 min</Text>
+                    </View>
+                    <Text style={styles.previewCardDesc}>
+                      Ruler of workplace wellness!
+                    </Text>
+                    <View style={[styles.previewCardBadge, styles.epicBadge]}>
+                      <Text style={styles.epicBadgeText}>👑 EPIC</Text>
+                    </View>
+                  </View>
+
+                  <View
+                    style={[styles.previewCard, styles.previewCardLegendary]}
+                  >
+                    <View style={styles.previewCardHeader}>
+                      <Text style={styles.previewCardTitle}>
+                        Alignment Avatar
+                      </Text>
+                      <Text style={styles.previewCardTime}>90 min</Text>
+                    </View>
+                    <Text style={styles.previewCardDesc}>
+                      Perfect posture incarnate!
+                    </Text>
+                    <View
+                      style={[styles.previewCardBadge, styles.legendaryBadge]}
+                    >
+                      <Text style={styles.legendaryBadgeText}>
+                        ⭐ LEGENDARY
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={[styles.previewCard, styles.previewCardMythic]}>
+                    <View style={styles.previewCardHeader}>
+                      <Text style={styles.previewCardTitle}>Posture Deity</Text>
+                      <Text style={styles.previewCardTime}>120 min</Text>
+                    </View>
+                    <Text style={styles.previewCardDesc}>
+                      Divine spine alignment!
+                    </Text>
+                    <View style={[styles.previewCardBadge, styles.mythicBadge]}>
+                      <Text style={styles.mythicBadgeText}>💎 MYTHIC</Text>
+                    </View>
+                  </View>
+                </>
+              )}
+
+              {selectedTheme === "space" && (
+                <>
+                  <View style={[styles.previewCard, styles.previewCardLocked]}>
+                    <View style={styles.previewCardHeader}>
+                      <Text style={styles.previewCardTitle}>
+                        Interstellar Admiral
+                      </Text>
+                      <Text style={styles.previewCardTime}>30 min</Text>
+                    </View>
+                    <Text style={styles.previewCardDesc}>
+                      Commander of star fleets!
+                    </Text>
+                    <View style={styles.previewCardBadge}>
+                      <Text style={styles.previewCardBadgeText}>🔒 LOCKED</Text>
+                    </View>
+                  </View>
+
+                  <View style={[styles.previewCard, styles.previewCardLocked]}>
+                    <View style={styles.previewCardHeader}>
+                      <Text style={styles.previewCardTitle}>
+                        Galactic Emperor
+                      </Text>
+                      <Text style={styles.previewCardTime}>45 min</Text>
+                    </View>
+                    <Text style={styles.previewCardDesc}>
+                      Ruler of galaxies!
+                    </Text>
+                    <View style={styles.previewCardBadge}>
+                      <Text style={styles.previewCardBadgeText}>🔒 LOCKED</Text>
+                    </View>
+                  </View>
+
+                  <View style={[styles.previewCard, styles.previewCardEpic]}>
+                    <View style={styles.previewCardHeader}>
+                      <Text style={styles.previewCardTitle}>
+                        Dimension Walker
+                      </Text>
+                      <Text style={styles.previewCardTime}>60 min</Text>
+                    </View>
+                    <Text style={styles.previewCardDesc}>
+                      Traveler between realities!
+                    </Text>
+                    <View style={[styles.previewCardBadge, styles.epicBadge]}>
+                      <Text style={styles.epicBadgeText}>👑 EPIC</Text>
+                    </View>
+                  </View>
+
+                  <View
+                    style={[styles.previewCard, styles.previewCardLegendary]}
+                  >
+                    <View style={styles.previewCardHeader}>
+                      <Text style={styles.previewCardTitle}>
+                        Cosmic Architect
+                      </Text>
+                      <Text style={styles.previewCardTime}>90 min</Text>
+                    </View>
+                    <Text style={styles.previewCardDesc}>
+                      Builder of universes!
+                    </Text>
+                    <View
+                      style={[styles.previewCardBadge, styles.legendaryBadge]}
+                    >
+                      <Text style={styles.legendaryBadgeText}>
+                        ⭐ LEGENDARY
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={[styles.previewCard, styles.previewCardMythic]}>
+                    <View style={styles.previewCardHeader}>
+                      <Text style={styles.previewCardTitle}>
+                        Multiverse God
+                      </Text>
+                      <Text style={styles.previewCardTime}>120 min</Text>
+                    </View>
+                    <Text style={styles.previewCardDesc}>
+                      Creator of infinite realities!
+                    </Text>
+                    <View style={[styles.previewCardBadge, styles.mythicBadge]}>
+                      <Text style={styles.mythicBadgeText}>💎 MYTHIC</Text>
+                    </View>
+                  </View>
+                </>
+              )}
+
+              {selectedTheme === "trees" && (
+                <>
+                  <View style={[styles.previewCard, styles.previewCardLocked]}>
+                    <View style={styles.previewCardHeader}>
+                      <Text style={styles.previewCardTitle}>Forest Sage</Text>
+                      <Text style={styles.previewCardTime}>30 min</Text>
+                    </View>
+                    <Text style={styles.previewCardDesc}>
+                      Wisdom of ancient trees!
+                    </Text>
+                    <View style={styles.previewCardBadge}>
+                      <Text style={styles.previewCardBadgeText}>🔒 LOCKED</Text>
+                    </View>
+                  </View>
+
+                  <View style={[styles.previewCard, styles.previewCardLocked]}>
+                    <View style={styles.previewCardHeader}>
+                      <Text style={styles.previewCardTitle}>
+                        Nature's Voice
+                      </Text>
+                      <Text style={styles.previewCardTime}>45 min</Text>
+                    </View>
+                    <Text style={styles.previewCardDesc}>
+                      Speaker for all forests!
+                    </Text>
+                    <View style={styles.previewCardBadge}>
+                      <Text style={styles.previewCardBadgeText}>🔒 LOCKED</Text>
+                    </View>
+                  </View>
+
+                  <View style={[styles.previewCard, styles.previewCardEpic]}>
+                    <View style={styles.previewCardHeader}>
+                      <Text style={styles.previewCardTitle}>
+                        Gaia's Champion
+                      </Text>
+                      <Text style={styles.previewCardTime}>60 min</Text>
+                    </View>
+                    <Text style={styles.previewCardDesc}>
+                      Earth's chosen protector!
+                    </Text>
+                    <View style={[styles.previewCardBadge, styles.epicBadge]}>
+                      <Text style={styles.epicBadgeText}>👑 EPIC</Text>
+                    </View>
+                  </View>
+
+                  <View
+                    style={[styles.previewCard, styles.previewCardLegendary]}
+                  >
+                    <View style={styles.previewCardHeader}>
+                      <Text style={styles.previewCardTitle}>World Tree</Text>
+                      <Text style={styles.previewCardTime}>90 min</Text>
+                    </View>
+                    <Text style={styles.previewCardDesc}>
+                      Connection to all life!
+                    </Text>
+                    <View
+                      style={[styles.previewCardBadge, styles.legendaryBadge]}
+                    >
+                      <Text style={styles.legendaryBadgeText}>
+                        ⭐ LEGENDARY
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={[styles.previewCard, styles.previewCardMythic]}>
+                    <View style={styles.previewCardHeader}>
+                      <Text style={styles.previewCardTitle}>Life Creator</Text>
+                      <Text style={styles.previewCardTime}>120 min</Text>
+                    </View>
+                    <Text style={styles.previewCardDesc}>
+                      Source of all nature!
+                    </Text>
+                    <View style={[styles.previewCardBadge, styles.mythicBadge]}>
+                      <Text style={styles.mythicBadgeText}>💎 MYTHIC</Text>
+                    </View>
+                  </View>
+                </>
+              )}
+            </View>
+
+            <View style={styles.fullReleaseTeaser}>
+              <Text style={styles.fullReleaseTeaserTitle}>
+                🚀 Full Release Features
+              </Text>
+              <View style={styles.featuresList}>
+                <Text style={styles.featureItem}>
+                  ✨ Extended sessions up to 3+ hours
+                </Text>
+                <Text style={styles.featureItem}>
+                  🎮 Interactive mini-games
+                </Text>
+                <Text style={styles.featureItem}>🏆 Global leaderboards</Text>
+                <Text style={styles.featureItem}>👥 Social challenges</Text>
+                <Text style={styles.featureItem}>🎨 Customizable themes</Text>
+              </View>
+            </View>
           </View>
         )}
       </View>
@@ -981,7 +1726,7 @@ const Achievements = ({
 
   const fireIcon =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 100 100'%3E%3Cg%3E%3Cpath d='M50 10 Q40 30 45 50 Q35 45 30 60 Q25 75 40 85 Q55 90 70 85 Q85 75 80 60 Q75 45 65 50 Q70 30 60 10 Q55 20 50 10' fill='%23FF4500'/%3E%3Cpath d='M50 20 Q45 35 48 50 Q42 47 38 57 Q35 67 45 75 Q55 78 65 75 Q75 67 72 57 Q68 47 62 50 Q65 35 60 20 Q55 25 50 20' fill='%23FF6B00'/%3E%3Cpath d='M50 30 Q47 40 49 50 Q46 48 44 54 Q42 60 48 65 Q52 67 56 65 Q62 60 60 54 Q58 48 55 50 Q57 40 54 30 Q52 32 50 30' fill='%23FFD700'/%3E%3C/g%3E%3C/svg%3E";
-    
+
   const checkIcon =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 100 100'%3E%3Cpath d='M20 50 L40 70 L80 20' stroke='%234CAF50' stroke-width='12' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E";
 
@@ -1072,43 +1817,7 @@ const Achievements = ({
         </View>
       </View>
 
-      {/* Achievement Milestones */}
-      <View style={styles.milestonesContainer}>
-        <Text style={styles.milestonesTitle}>Achievement Milestones</Text>
-        <View style={styles.milestonesGrid}>
-          {GAMIFICATION_THEMES[selectedTheme].rewards.map((reward, index) => {
-            const unlocked = achievementsData.themeRewards >= reward.at;
-            return (
-              <View
-                key={index}
-                style={[
-                  styles.milestone,
-                  unlocked ? styles.milestoneUnlocked : styles.milestoneLocked,
-                  unlocked && {
-                    borderColor: GAMIFICATION_THEMES[selectedTheme].color,
-                  },
-                ]}
-              >
-                <Text style={styles.milestoneReward}>{reward.reward}</Text>
-                <Text style={styles.milestoneDesc}>{reward.description}</Text>
-                <View style={styles.milestoneRequirementContainer}>
-                  {unlocked && (
-                    <Image
-                      source={{ uri: checkIcon }}
-                      style={styles.checkIcon}
-                    />
-                  )}
-                  <Text style={styles.milestoneRequirement}>
-                    {unlocked
-                      ? "Unlocked!"
-                      : `Need ${reward.at} ${GAMIFICATION_THEMES[selectedTheme].unit}`}
-                  </Text>
-                </View>
-              </View>
-            );
-          })}
-        </View>
-      </View>
+      <MilestonesSection />
 
       {/* Recent History */}
       <View style={styles.historyContainer}>
@@ -1757,6 +2466,282 @@ const styles = StyleSheet.create({
     color: "#1976D2",
     fontWeight: "500",
   },
+  researchModeIndicator: {
+    backgroundColor: "rgba(33, 150, 243, 0.1)",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: "#2196F3",
+  },
+  researchModeText: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#1976D2",
+    marginBottom: 4,
+  },
+  researchModeSubtext: {
+    fontSize: 12,
+    color: "#1976D2",
+    opacity: 0.8,
+  },
+  comingSoonContainer: {
+    backgroundColor: "rgba(156, 39, 176, 0.1)",
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 16,
+    borderWidth: 2,
+    borderColor: "#9C27B0",
+    borderStyle: "dashed",
+  },
+  comingSoonTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#7B1FA2",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  comingSoonText: {
+    fontSize: 14,
+    color: "#7B1FA2",
+    textAlign: "center",
+    lineHeight: 18,
+  },
+  extendedPreviewContainer: {
+    backgroundColor: "rgba(255, 193, 7, 0.1)",
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 16,
+    borderWidth: 2,
+    borderColor: "#FFC107",
+  },
+  extendedPreviewTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#F57C00",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  extendedPreviewText: {
+    fontSize: 14,
+    color: "#F57C00",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  previewList: {
+    paddingLeft: 16,
+  },
+  previewItem: {
+    fontSize: 12,
+    color: "#F57C00",
+    marginBottom: 4,
+    fontWeight: "500",
+  },
+  extendedPreviewContainer: {
+  backgroundColor: "#ffffff",
+  borderRadius: 20,
+  padding: 20,
+  marginTop: 16,
+  borderWidth: 2,
+  borderColor: "#667eea",
+  shadowColor: "#667eea",
+  shadowOffset: { width: 0, height: 8 },
+  shadowOpacity: 0.15,
+  shadowRadius: 16,
+  elevation: 8,
+},
+
+extendedPreviewHeader: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: 12,
+},
+
+extendedPreviewTitle: {
+  fontSize: 20,
+  fontWeight: "800",
+  color: "#1a202c",
+  flex: 1,
+},
+
+comingSoonBadge: {
+  backgroundColor: "#667eea",
+  borderRadius: 12,
+  paddingHorizontal: 10,
+  paddingVertical: 4,
+  shadowColor: "#667eea",
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.3,
+  shadowRadius: 4,
+  elevation: 3,
+},
+
+comingSoonBadgeText: {
+  fontSize: 10,
+  fontWeight: "700",
+  color: "#ffffff",
+  letterSpacing: 0.5,
+},
+
+extendedPreviewSubtitle: {
+  fontSize: 16,
+  color: "#4a5568",
+  textAlign: "center",
+  marginBottom: 20,
+  fontWeight: "600",
+  lineHeight: 22,
+},
+
+previewCardsContainer: {
+  gap: 12,
+},
+
+previewCard: {
+  backgroundColor: "#ffffff",
+  borderRadius: 16,
+  padding: 16,
+  marginBottom: 8,
+  borderWidth: 2,
+  shadowColor: "#000000",
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.1,
+  shadowRadius: 8,
+  elevation: 5,
+},
+
+previewCardLocked: {
+  backgroundColor: "#f8fafc",
+  borderColor: "#cbd5e0",
+},
+
+previewCardEpic: {
+  backgroundColor: "#faf5ff",
+  borderColor: "#8b5cf6",
+  borderWidth: 2,
+},
+
+previewCardLegendary: {
+  backgroundColor: "#fffbeb",
+  borderColor: "#f59e0b",
+  borderWidth: 2,
+},
+
+previewCardMythic: {
+  backgroundColor: "#fdf2f8",
+  borderColor: "#ec4899",
+  borderWidth: 3,
+},
+
+previewCardHeader: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: 8,
+},
+
+previewCardTitle: {
+  fontSize: 16,
+  fontWeight: "700",
+  color: "#1a202c",
+  flex: 1,
+  marginRight: 8,
+},
+
+previewCardTime: {
+  fontSize: 12,
+  fontWeight: "600",
+  color: "#4c51bf",
+  backgroundColor: "#e0e7ff",
+  borderRadius: 8,
+  paddingHorizontal: 8,
+  paddingVertical: 4,
+  minWidth: 50,
+  textAlign: "center",
+},
+
+previewCardDesc: {
+  fontSize: 14,
+  color: "#4a5568",
+  marginBottom: 12,
+  lineHeight: 18,
+},
+
+previewCardBadge: {
+  backgroundColor: "#f1f5f9",
+  borderRadius: 8,
+  paddingHorizontal: 8,
+  paddingVertical: 4,
+  alignSelf: "flex-start",
+  borderWidth: 1,
+  borderColor: "#cbd5e0",
+},
+
+previewCardBadgeText: {
+  fontSize: 10,
+  fontWeight: "600",
+  color: "#64748b",
+},
+
+epicBadge: {
+  backgroundColor: "#f3e8ff",
+  borderColor: "#8b5cf6",
+},
+
+epicBadgeText: {
+  color: "#7c3aed",
+  fontWeight: "700",
+},
+
+legendaryBadge: {
+  backgroundColor: "#fef3c7",
+  borderColor: "#f59e0b",
+},
+
+legendaryBadgeText: {
+  color: "#d97706",
+  fontWeight: "700",
+},
+
+mythicBadge: {
+  backgroundColor: "#fce7f3",
+  borderColor: "#ec4899",
+},
+
+mythicBadgeText: {
+  color: "#db2777",
+  fontWeight: "700",
+},
+
+fullReleaseTeaser: {
+  backgroundColor: "#f0f4ff",
+  borderRadius: 16,
+  padding: 16,
+  marginTop: 20,
+  borderWidth: 2,
+  borderColor: "#667eea",
+  borderStyle: "dashed",
+},
+
+fullReleaseTeaserTitle: {
+  fontSize: 18,
+  fontWeight: "700",
+  color: "#4c51bf",
+  textAlign: "center",
+  marginBottom: 12,
+},
+
+featuresList: {
+  gap: 8,
+},
+
+featureItem: {
+  fontSize: 14,
+  color: "#374151",
+  fontWeight: "500",
+  lineHeight: 20,
+  paddingLeft: 4,
+},
 });
 
 export default Achievements;
