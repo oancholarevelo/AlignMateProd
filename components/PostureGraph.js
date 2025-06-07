@@ -594,7 +594,7 @@ const PostureGraph = () => {
         const data = snapshot.val();
         setAchievementsData({
           points: data.points || 0,
-          treeCount: Math.floor((data.points || 0) / 50),
+          treeCount: Math.floor((data.points || 0) / 20),
           history: data.history || [],
           streaks: data.streaks || { current: 0, longest: 0 },
         });
@@ -675,7 +675,7 @@ const PostureGraph = () => {
       // Update local state
       setAchievementsData({
         points: newPoints,
-        treeCount: Math.floor(newPoints / 50),
+        treeCount: Math.floor(newPoints / 20),
         history: history,
         streaks: streaks,
       });
@@ -4340,7 +4340,9 @@ const PostureGraph = () => {
       contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.pageTitle}>Settings</Text>
+      <View style={styles.pageTitleContainer}>
+  <Text style={styles.pageTitle}>Settings</Text>
+</View>
 
       {/* Profile Section - SIMPLIFIED */}
       <Card style={styles.profileSection}>

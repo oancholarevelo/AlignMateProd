@@ -19,20 +19,20 @@ const THEME = {
 const styles = StyleSheet.create({
   // Main containers
   mainContainer: {
-  flex: 1,
-  backgroundColor: THEME.background,
-  position: "relative",
-  minHeight: "100vh", // Added for web compatibility
-  paddingBottom: 80, // Add padding to prevent content from being hidden behind footer
-},
+    flex: 1,
+    backgroundColor: THEME.background,
+    position: "relative",
+    minHeight: "100vh", // Added for web compatibility
+    paddingBottom: 80, // Add padding to prevent content from being hidden behind footer
+  },
   container: {
     flex: 1,
     backgroundColor: THEME.background,
   },
   contentContainer: {
-  padding: 16,
-  paddingBottom: 90,
-},
+    padding: 16,
+    paddingBottom: 90,
+  },
   footerPadding: {
     height: 20, // Ensures content isn't hidden behind footer
   },
@@ -203,12 +203,23 @@ const styles = StyleSheet.create({
   },
 
   // Typography
+  pageTitleContainer: {
+    backgroundColor: '#5CA377',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
   pageTitle: {
     fontSize: 24,
-    fontWeight: "700",
-    marginBottom: 24,
+    fontWeight: "bold",
+    color: "#FFFFFF",
     textAlign: "center",
-    color: THEME.text,
   },
   sectionHeader: {
     fontSize: 19,
@@ -1311,29 +1322,29 @@ const styles = StyleSheet.create({
 
   // Footer
   footer: {
-  position: "fixed", // Changed from "absolute" to "fixed"
-  bottom: 0,
-  left: 0,
-  right: 0,
-  flexDirection: "row",
-  backgroundColor: "#FFFFFF",
-  borderTopWidth: 1,
-  borderTopColor: THEME.border,
-  height: 80,
-  justifyContent: "space-around",
-  alignItems: "center",
-  paddingHorizontal: 12,
-  paddingBottom: 10,
-  zIndex: 100,
-  shadowColor: THEME.shadow,
-  shadowOffset: { width: 0, height: -2 },
-  shadowOpacity: 0.1,
-  shadowRadius: 4,
-  elevation: 5,
-  // Add these properties for better cross-device support
-  width: "100%",
-  boxSizing: "border-box",
-},
+    position: "fixed", // Changed from "absolute" to "fixed"
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    backgroundColor: "#FFFFFF",
+    borderTopWidth: 1,
+    borderTopColor: THEME.border,
+    height: 80,
+    justifyContent: "space-around",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingBottom: 10,
+    zIndex: 100,
+    shadowColor: THEME.shadow,
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+    // Add these properties for better cross-device support
+    width: "100%",
+    boxSizing: "border-box",
+  },
   footerButton: {
     alignItems: "center",
     justifyContent: "center",
@@ -1955,30 +1966,34 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flex: 1,
     paddingHorizontal: 16,
+    justifyContent: "center", // Added to ensure vertical centering
   },
 
   dateDisplayText: {
     fontSize: 18,
     fontWeight: "bold",
-    color: THEME.text, // Changed from THEME.textPrimary to THEME.text
+    color: THEME.text,
     textAlign: "center",
-    flexWrap: "nowrap", // Prevent text wrapping
-    numberOfLines: 1, // Force single line
-    whiteSpace: "nowrap", // Prevent wrapping on web
+    flexWrap: "nowrap",
+    numberOfLines: 1,
+    whiteSpace: "nowrap",
+    width: "100%", // Added to ensure full width for proper centering
   },
 
   todayButton: {
-    marginTop: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    marginTop: 6, // Slightly increased for better spacing
+    paddingHorizontal: 10, // Increased padding
+    paddingVertical: 5, // Increased padding
     backgroundColor: THEME.primary,
-    borderRadius: 4,
+    borderRadius: 6, // Slightly larger radius
+    alignSelf: "center", // Added to ensure button centers itself
   },
 
   todayButtonText: {
     fontSize: 12,
     color: "#FFFFFF",
     fontWeight: "600",
+    textAlign: "center", // Added explicit text alignment
   },
 
   // Quick navigation styles
