@@ -34,6 +34,9 @@ export const generateDailyReportPDF = async (reportData) => {
     aggregatedData = [],
     goodPosturePercentage,
     badPosturePercentage,
+    // For comparison feature, you would need to pass data like:
+    // previousDaySummary: { goodPosturePercentage: 70, badPosturePercentage: 30 }, 
+    // previousWeekAverage: { goodPosturePercentage: 65, badPosturePercentage: 35 },
   } = reportData;
 
   const PDF_THEME = {
@@ -53,7 +56,7 @@ export const generateDailyReportPDF = async (reportData) => {
   const TEXT_LIGHT_COLOR_RGB = hexToRgb(PDF_THEME.textLight);
   const WHITE_RGB = hexToRgb(PDF_THEME.white);
   const DANGER_RGB = hexToRgb(PDF_THEME.danger);
-  const WARNING_RGB = hexToRgb(PDF_THEME.warning); // If you want to use it
+  const WARNING_RGB = hexToRgb(PDF_THEME.warning);
   const BORDER_COLOR_RGB = hexToRgb(PDF_THEME.border);
   const LIGHT_GRAY_RGB = hexToRgb(PDF_THEME.lightGray);
 
@@ -104,7 +107,7 @@ export const generateDailyReportPDF = async (reportData) => {
   
   // --- Daily Summary Section ---
   drawSectionTitle("Daily Summary");
-  doc.setFontSize(11); // Adjusted font size for content
+  doc.setFontSize(11);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...TEXT_COLOR_RGB);
 
@@ -128,7 +131,7 @@ export const generateDailyReportPDF = async (reportData) => {
   doc.text(`Total Posture Readings: ${postureData.length}`, 14, yPos);
   yPos += summaryLineHeight;
   doc.text(`Total ML Classifications: ${mlData.length}`, 14, yPos);
-  yPos += 12; // Increased spacing after section
+  yPos += 12;
 
   // --- Machine Learning Insights ---
   if (mlData.length > 0) {
@@ -137,7 +140,7 @@ export const generateDailyReportPDF = async (reportData) => {
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...TEXT_COLOR_RGB);
     
-    const predictions = mlData.map(item => item.prediction);
+    const predictions = mlData.map(item => item.prediction || "Unknown"); // Handle undefined predictions
     const predictionCounts = predictions.reduce((acc, curr) => {
       acc[curr] = (acc[curr] || 0) + 1;
       return acc;
@@ -155,9 +158,9 @@ export const generateDailyReportPDF = async (reportData) => {
     const totalConfidence = mlData.reduce((acc, curr) => acc + (curr.confidence || 0), 0);
     const averageConfidence = mlData.length > 0 ? (totalConfidence / mlData.length * 100).toFixed(1) : "N/A";
 
-    doc.text(`Most Frequent Posture: `, 14, yPos);
+    doc.text(`Most Frequent Classification: `, 14, yPos);
     doc.setFont("helvetica", "bold");
-    doc.text(`${mostFrequentPrediction} (${maxCount} times)`, 65, yPos);
+    doc.text(`${mostFrequentPrediction} (${maxCount} times)`, 70, yPos);
     yPos += summaryLineHeight;
 
     doc.setFont("helvetica", "normal");
@@ -165,8 +168,64 @@ export const generateDailyReportPDF = async (reportData) => {
     doc.text(`Average Prediction Confidence: `, 14, yPos);
     doc.setFont("helvetica", "bold");
     doc.text(`${averageConfidence}%`, 75, yPos);
-    yPos += 12; // Increased spacing after section
+    yPos += summaryLineHeight;
+
+    // Full ML Prediction Breakdown
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...TEXT_COLOR_RGB);
+    doc.text("Classification Counts:", 14, yPos);
+    yPos += summaryLineHeight;
+    const categories = ["Good", "Warning", "Bad", "Unknown"]; // Define order for display
+    categories.forEach(cat => {
+        if (predictionCounts[cat]) {
+            doc.setFont("helvetica", "normal");
+            doc.text(`  • ${cat}: `, 18, yPos);
+            doc.setFont("helvetica", "bold");
+            doc.text(`${predictionCounts[cat]} times`, 50, yPos);
+            yPos += summaryLineHeight;
+        }
+    });
+    yPos += 6; // Extra spacing after this sub-section
   }
+
+  // --- Comparison to Previous Periods (Placeholder) ---
+  // This section requires data like 'previousDaySummary' or 'previousWeekAverage'
+  // to be passed in the 'reportData' object from PostureGraph.js
+  if (reportData.previousDaySummary || reportData.previousWeekAverage) {
+    drawSectionTitle("Performance Trends");
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...TEXT_COLOR_RGB);
+
+    if (reportData.previousDaySummary && typeof goodPosturePercentage === 'number') {
+        const prevGood = reportData.previousDaySummary.goodPosturePercentage;
+        if (typeof prevGood === 'number') {
+            const diff = goodPosturePercentage - prevGood;
+            doc.text(`Compared to Previous Day (Good Posture): `, 14, yPos);
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(diff >= 0 ? PRIMARY_COLOR_RGB : DANGER_RGB);
+            doc.text(`${diff >= 0 ? '+' : ''}${diff.toFixed(1)}%`, 85, yPos);
+            yPos += summaryLineHeight;
+            doc.setTextColor(...TEXT_COLOR_RGB); // Reset color
+        }
+    }
+    // Add similar logic for previousWeekAverage if data is available
+    // Example:
+    // if (reportData.previousWeekAverage && typeof goodPosturePercentage === 'number') {
+    //     const prevWeekGood = reportData.previousWeekAverage.goodPosturePercentage;
+    //     if (typeof prevWeekGood === 'number') {
+    //         const diffWeek = goodPosturePercentage - prevWeekGood;
+    //         doc.text(`Compared to Last Week Avg (Good Posture): `, 14, yPos);
+    //         doc.setFont("helvetica", "bold");
+    //         doc.setTextColor(diffWeek >= 0 ? PRIMARY_COLOR_RGB : DANGER_RGB);
+    //         doc.text(`${diffWeek >= 0 ? '+' : ''}${diffWeek.toFixed(1)}%`, 95, yPos);
+    //         yPos += summaryLineHeight;
+    //         doc.setTextColor(...TEXT_COLOR_RGB); // Reset color
+    //     }
+    // }
+    yPos += 6;
+  }
+
 
   // --- Aggregated Data (Hourly Averages) ---
   if (aggregatedData.length > 0) {
@@ -312,20 +371,57 @@ export const generateDailyReportPDF = async (reportData) => {
     doc.text(tip, 14, yPos, { maxWidth: doc.internal.pageSize.getWidth() - 28 });
     yPos += 6;
   });
-  yPos += 12; // Increased spacing
+  yPos += 12;
+
+
+  // --- Notes & Glossary ---
+  if (yPos > doc.internal.pageSize.getHeight() - 60) { // Adjusted space check
+    doc.addPage();
+    drawHeader();
+  }
+  drawSectionTitle("Notes & Glossary");
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...TEXT_COLOR_RGB);
+  const notes = [
+    "• Pitch Angle: Refers to your forward or backward lean. Lower angles generally indicate more upright posture.",
+    "• ML Classification: Posture assessment by the app's machine learning model based on sensor data.",
+    "• Avg. Pitch: The average pitch angle recorded during a specific period (e.g., an hour).",
+    // Add more if needed, e.g., if calibrationStatus is passed:
+    // reportData.calibrationStatus ? `• Calibration: ${reportData.calibrationStatus}` : "",
+  ].filter(note => note); // Filter out empty strings
+
+  notes.forEach(note => {
+    if (yPos > doc.internal.pageSize.getHeight() - 20) {
+        doc.addPage();
+        drawHeader(); 
+        yPos += 10; 
+        doc.setFontSize(10);
+        doc.setTextColor(...TEXT_COLOR_RGB);
+    }
+    doc.text(note, 14, yPos, { maxWidth: doc.internal.pageSize.getWidth() - 28 });
+    yPos += 6;
+  });
+  yPos += 10;
 
 
   // --- Footer ---
   const pageCount = doc.internal.getNumberOfPages();
   const footerY = doc.internal.pageSize.getHeight() - 10;
+  const contactText = "Contact us: https://alignmate.vercel.app/contact";
+  const contactTextWidth = doc.getTextWidth(contactText);
+
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
-    doc.setFontSize(8.5); // Slightly smaller footer text
+    doc.setFontSize(8.5);
     doc.setTextColor(...TEXT_LIGHT_COLOR_RGB);
     doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.getWidth() / 2, footerY, { align: 'center' });
     doc.text("Generated by AlignMate", 14, footerY);
-    // Optional: Add a line above footer
-    if (i === pageCount && yPos < footerY - 5) { // Only on last page if space allows
+    
+    // Add contact link to the right
+    doc.text(contactText, doc.internal.pageSize.getWidth() - 14 - contactTextWidth, footerY);
+
+    if (i === pageCount && yPos < footerY - 5) { 
         doc.setDrawColor(...BORDER_COLOR_RGB);
         doc.setLineWidth(0.1);
         doc.line(14, footerY - 5, doc.internal.pageSize.getWidth() - 14, footerY - 5);
