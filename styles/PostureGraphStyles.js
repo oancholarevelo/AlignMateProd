@@ -204,21 +204,16 @@ const styles = StyleSheet.create({
 
   // Typography
   pageTitleContainer: {
-    backgroundColor: "#5CA377",
-    borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 20,
     marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(27, 18, 18, 0.1)",
   },
   pageTitle: {
-    fontSize: 16,
+    fontSize: 24,
     fontWeight: "bold",
-    color: "#FFFFFF",
+    color: "#1B1212",
     textAlign: "center",
   },
   sectionHeader: {

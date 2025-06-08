@@ -1043,6 +1043,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#1B1212",
     borderWidth: 0, // Border is on container
+    minWidth: 0,
   },
   eyeIcon: {
     position: "absolute",

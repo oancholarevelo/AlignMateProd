@@ -1888,21 +1888,16 @@ const styles = StyleSheet.create({
     paddingBottom: 90,
   },
   headerContainer: {
-    backgroundColor: "#5CA377",
-    borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 20,
     marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(27, 18, 18, 0.1)",
   },
   header: {
-    fontSize: 16,
+    fontSize: 24,
     fontWeight: "bold",
-    color: "#FFFFFF",
+    color: "#1B1212",
     textAlign: "center",
   },
   sensorStatusContainer: {
@@ -2538,210 +2533,210 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   extendedPreviewContainer: {
-  backgroundColor: "#ffffff",
-  borderRadius: 20,
-  padding: 20,
-  marginTop: 16,
-  borderWidth: 2,
-  borderColor: "#667eea",
-  shadowColor: "#667eea",
-  shadowOffset: { width: 0, height: 8 },
-  shadowOpacity: 0.15,
-  shadowRadius: 16,
-  elevation: 8,
-},
+    backgroundColor: "#ffffff",
+    borderRadius: 20,
+    padding: 20,
+    marginTop: 16,
+    borderWidth: 2,
+    borderColor: "#667eea",
+    shadowColor: "#667eea",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
+  },
 
-extendedPreviewHeader: {
-  flexDirection: "row",
-  justifyContent: "space-between",
-  alignItems: "center",
-  marginBottom: 12,
-},
+  extendedPreviewHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
 
-extendedPreviewTitle: {
-  fontSize: 20,
-  fontWeight: "800",
-  color: "#1a202c",
-  flex: 1,
-},
+  extendedPreviewTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#1a202c",
+    flex: 1,
+  },
 
-comingSoonBadge: {
-  backgroundColor: "#667eea",
-  borderRadius: 12,
-  paddingHorizontal: 10,
-  paddingVertical: 4,
-  shadowColor: "#667eea",
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.3,
-  shadowRadius: 4,
-  elevation: 3,
-},
+  comingSoonBadge: {
+    backgroundColor: "#667eea",
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    shadowColor: "#667eea",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
 
-comingSoonBadgeText: {
-  fontSize: 10,
-  fontWeight: "700",
-  color: "#ffffff",
-  letterSpacing: 0.5,
-},
+  comingSoonBadgeText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#ffffff",
+    letterSpacing: 0.5,
+  },
 
-extendedPreviewSubtitle: {
-  fontSize: 16,
-  color: "#4a5568",
-  textAlign: "center",
-  marginBottom: 20,
-  fontWeight: "600",
-  lineHeight: 22,
-},
+  extendedPreviewSubtitle: {
+    fontSize: 16,
+    color: "#4a5568",
+    textAlign: "center",
+    marginBottom: 20,
+    fontWeight: "600",
+    lineHeight: 22,
+  },
 
-previewCardsContainer: {
-  gap: 12,
-},
+  previewCardsContainer: {
+    gap: 12,
+  },
 
-previewCard: {
-  backgroundColor: "#ffffff",
-  borderRadius: 16,
-  padding: 16,
-  marginBottom: 8,
-  borderWidth: 2,
-  shadowColor: "#000000",
-  shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.1,
-  shadowRadius: 8,
-  elevation: 5,
-},
+  previewCard: {
+    backgroundColor: "#ffffff",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 8,
+    borderWidth: 2,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
 
-previewCardLocked: {
-  backgroundColor: "#f8fafc",
-  borderColor: "#cbd5e0",
-},
+  previewCardLocked: {
+    backgroundColor: "#f8fafc",
+    borderColor: "#cbd5e0",
+  },
 
-previewCardEpic: {
-  backgroundColor: "#faf5ff",
-  borderColor: "#8b5cf6",
-  borderWidth: 2,
-},
+  previewCardEpic: {
+    backgroundColor: "#faf5ff",
+    borderColor: "#8b5cf6",
+    borderWidth: 2,
+  },
 
-previewCardLegendary: {
-  backgroundColor: "#fffbeb",
-  borderColor: "#f59e0b",
-  borderWidth: 2,
-},
+  previewCardLegendary: {
+    backgroundColor: "#fffbeb",
+    borderColor: "#f59e0b",
+    borderWidth: 2,
+  },
 
-previewCardMythic: {
-  backgroundColor: "#fdf2f8",
-  borderColor: "#ec4899",
-  borderWidth: 3,
-},
+  previewCardMythic: {
+    backgroundColor: "#fdf2f8",
+    borderColor: "#ec4899",
+    borderWidth: 3,
+  },
 
-previewCardHeader: {
-  flexDirection: "row",
-  justifyContent: "space-between",
-  alignItems: "center",
-  marginBottom: 8,
-},
+  previewCardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
 
-previewCardTitle: {
-  fontSize: 16,
-  fontWeight: "700",
-  color: "#1a202c",
-  flex: 1,
-  marginRight: 8,
-},
+  previewCardTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1a202c",
+    flex: 1,
+    marginRight: 8,
+  },
 
-previewCardTime: {
-  fontSize: 12,
-  fontWeight: "600",
-  color: "#4c51bf",
-  backgroundColor: "#e0e7ff",
-  borderRadius: 8,
-  paddingHorizontal: 8,
-  paddingVertical: 4,
-  minWidth: 50,
-  textAlign: "center",
-},
+  previewCardTime: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#4c51bf",
+    backgroundColor: "#e0e7ff",
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    minWidth: 50,
+    textAlign: "center",
+  },
 
-previewCardDesc: {
-  fontSize: 14,
-  color: "#4a5568",
-  marginBottom: 12,
-  lineHeight: 18,
-},
+  previewCardDesc: {
+    fontSize: 14,
+    color: "#4a5568",
+    marginBottom: 12,
+    lineHeight: 18,
+  },
 
-previewCardBadge: {
-  backgroundColor: "#f1f5f9",
-  borderRadius: 8,
-  paddingHorizontal: 8,
-  paddingVertical: 4,
-  alignSelf: "flex-start",
-  borderWidth: 1,
-  borderColor: "#cbd5e0",
-},
+  previewCardBadge: {
+    backgroundColor: "#f1f5f9",
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    alignSelf: "flex-start",
+    borderWidth: 1,
+    borderColor: "#cbd5e0",
+  },
 
-previewCardBadgeText: {
-  fontSize: 10,
-  fontWeight: "600",
-  color: "#64748b",
-},
+  previewCardBadgeText: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#64748b",
+  },
 
-epicBadge: {
-  backgroundColor: "#f3e8ff",
-  borderColor: "#8b5cf6",
-},
+  epicBadge: {
+    backgroundColor: "#f3e8ff",
+    borderColor: "#8b5cf6",
+  },
 
-epicBadgeText: {
-  color: "#7c3aed",
-  fontWeight: "700",
-},
+  epicBadgeText: {
+    color: "#7c3aed",
+    fontWeight: "700",
+  },
 
-legendaryBadge: {
-  backgroundColor: "#fef3c7",
-  borderColor: "#f59e0b",
-},
+  legendaryBadge: {
+    backgroundColor: "#fef3c7",
+    borderColor: "#f59e0b",
+  },
 
-legendaryBadgeText: {
-  color: "#d97706",
-  fontWeight: "700",
-},
+  legendaryBadgeText: {
+    color: "#d97706",
+    fontWeight: "700",
+  },
 
-mythicBadge: {
-  backgroundColor: "#fce7f3",
-  borderColor: "#ec4899",
-},
+  mythicBadge: {
+    backgroundColor: "#fce7f3",
+    borderColor: "#ec4899",
+  },
 
-mythicBadgeText: {
-  color: "#db2777",
-  fontWeight: "700",
-},
+  mythicBadgeText: {
+    color: "#db2777",
+    fontWeight: "700",
+  },
 
-fullReleaseTeaser: {
-  backgroundColor: "#f0f4ff",
-  borderRadius: 16,
-  padding: 16,
-  marginTop: 20,
-  borderWidth: 2,
-  borderColor: "#667eea",
-  borderStyle: "dashed",
-},
+  fullReleaseTeaser: {
+    backgroundColor: "#f0f4ff",
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 20,
+    borderWidth: 2,
+    borderColor: "#667eea",
+    borderStyle: "dashed",
+  },
 
-fullReleaseTeaserTitle: {
-  fontSize: 18,
-  fontWeight: "700",
-  color: "#4c51bf",
-  textAlign: "center",
-  marginBottom: 12,
-},
+  fullReleaseTeaserTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#4c51bf",
+    textAlign: "center",
+    marginBottom: 12,
+  },
 
-featuresList: {
-  gap: 8,
-},
+  featuresList: {
+    gap: 8,
+  },
 
-featureItem: {
-  fontSize: 14,
-  color: "#374151",
-  fontWeight: "500",
-  lineHeight: 20,
-  paddingLeft: 4,
-},
+  featureItem: {
+    fontSize: 14,
+    color: "#374151",
+    fontWeight: "500",
+    lineHeight: 20,
+    paddingLeft: 4,
+  },
 });
 
 export default Achievements;

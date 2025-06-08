@@ -4,6 +4,7 @@ import React, {
   useCallback,
   useMemo,
   useRef,
+  use,
 } from "react";
 import {
   View,
@@ -184,7 +185,6 @@ const PostureGraph = () => {
   const [latestPrediction, setLatestPrediction] = useState("Unknown");
   const [predictionConfidence, setPredictionConfidence] = useState(0);
   const [primaryFeature, setPrimaryFeature] = useState("none");
-  const [showMlFeatures, setShowMlFeatures] = useState(false);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [userName, setUserName] = useState("");
   const [isCalibrated, setIsCalibrated] = useState(false);
@@ -210,6 +210,7 @@ const PostureGraph = () => {
   const [treeMetadata, setTreeMetadata] = useState(null);
   const [showTreeModal, setShowTreeModal] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0)); // Animation for transitions
+  const [showMlFeaturesModal, setShowMlFeaturesModal] = useState(false);
 
   // NEW: First-time user setup modal state
   const [showFirstTimeModal, setShowFirstTimeModal] = useState(false);
@@ -226,6 +227,8 @@ const PostureGraph = () => {
   const [profilePicture, setProfilePicture] = useState(null);
   const [isUploadingPicture, setIsUploadingPicture] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+
+  const fileInputRef = useRef(null);
 
   const [achievementsData, setAchievementsData] = useState({
     points: 0,
@@ -449,7 +452,6 @@ const PostureGraph = () => {
     }
 
     try {
-
       // Check if ANY of these fields exist to determine if user has been set up
       const userRef = ref(database, `users/${userUID}`);
       const userSnapshot = await get(userRef);
@@ -920,20 +922,25 @@ const PostureGraph = () => {
             </View>
 
             <View style={styles.modalActions}>
-              <label
-                htmlFor="profile-picture-upload"
-                style={styles.modalButton}
+              {/* MODIFIED: Changed label to TouchableOpacity */}
+              <TouchableOpacity
+                style={styles.modalButton} // This should be your primary button style for modals
+                onPress={() =>
+                  fileInputRef.current && fileInputRef.current.click()
+                }
+                disabled={isUploadingPicture}
               >
                 <Text style={styles.modalButtonText}>
                   {profilePicture ? "Change Picture" : "Upload Picture"}
                 </Text>
-              </label>
+              </TouchableOpacity>
               <input
+                ref={fileInputRef} // Assign the ref here
                 id="profile-picture-upload"
                 type="file"
                 accept="image/*"
                 onChange={handleProfilePictureUpload}
-                style={styles.hiddenInput}
+                style={styles.hiddenInput} // Make sure this style effectively hides the input
                 disabled={isUploadingPicture}
               />
 
@@ -2179,6 +2186,245 @@ const PostureGraph = () => {
     setShowQuickLogs(false);
   };
 
+  const MlFeaturesModal = () => (
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={showMlFeaturesModal}
+      onRequestClose={() => setShowMlFeaturesModal(false)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.treeModalContent}>
+          <ScrollView
+            style={styles.treeModalScroll}
+            contentContainerStyle={styles.treeModalScrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Modal Header */}
+            <View style={styles.treeModalHeader}>
+              <Text style={styles.treeModalTitle}>ML Features Analysis</Text>
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setShowMlFeaturesModal(false)}
+              >
+                <Image
+                  source={{ uri: ICONS.close }}
+                  style={styles.modalCloseIcon}
+                />
+              </TouchableOpacity>
+            </View>
+
+            {/* Modal Content */}
+            <View style={styles.treeModalBody}>
+              {mlData.length > 0 ? (
+                <>
+                  <Text style={styles.mlFeatureSubtitle}>
+                    Last 10 readings trend analysis
+                  </Text>
+
+                  <LineChart
+                    data={getMlFeatureData()}
+                    width={CHART_WIDTH}
+                    height={220}
+                    chartConfig={{
+                      backgroundColor: THEME.cardBackground,
+                      backgroundGradientFrom: THEME.cardBackground,
+                      backgroundGradientTo: THEME.cardBackground,
+                      backgroundGradientFromOpacity: 1,
+                      backgroundGradientToOpacity: 1,
+                      color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                      labelColor: (opacity = 1) =>
+                        `rgba(27, 18, 18, ${opacity})`,
+                      strokeWidth: 2,
+                      propsForDots: {
+                        r: "4",
+                        strokeWidth: "2",
+                      },
+                      propsForLabels: {
+                        fontSize: 11,
+                        fontWeight: "500",
+                      },
+                      style: {
+                        borderRadius: 12,
+                      },
+                      propsForBackgroundLines: {
+                        strokeDasharray: "",
+                        stroke: THEME.border,
+                        strokeWidth: 1,
+                        strokeOpacity: 0.3,
+                      },
+                    }}
+                    style={styles.enhancedChart}
+                    bezier
+                    fromZero={false}
+                    withDots={true}
+                    withShadow={false}
+                    withInnerLines={true}
+                    withOuterLines={true}
+                    withHorizontalLabels={true}
+                    yAxisLabel=""
+                    yAxisSuffix=""
+                    hideLegend={true}
+                    withLegend={false}
+                    renderLegend={() => null}
+                  />
+
+                  <View style={styles.chartExplanationContainer}>
+                    <Text style={styles.chartExplanationTitle}>
+                      📊 Understanding Your Posture Data
+                    </Text>
+                    <Text style={styles.chartExplanationSubtitle}>
+                      What each line in the chart tells us about your posture:
+                    </Text>
+
+                    <View style={styles.explanationList}>
+                      <View style={styles.explanationItem}>
+                        <View
+                          style={[
+                            styles.explanationDot,
+                            { backgroundColor: "rgba(0, 0, 255, 1)" },
+                          ]}
+                        />
+                        <View style={styles.explanationContent}>
+                          <Text style={styles.explanationLabel}>
+                            Pitch Mean (Blue)
+                          </Text>
+                          <Text style={styles.explanationText}>
+                            Your forward/backward lean angle. Lower is better -
+                            shows how upright you're sitting.
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.explanationItem}>
+                        <View
+                          style={[
+                            styles.explanationDot,
+                            { backgroundColor: "rgba(255, 0, 0, 1)" },
+                          ]}
+                        />
+                        <View style={styles.explanationContent}>
+                          <Text style={styles.explanationLabel}>
+                            Roll Range (Red)
+                          </Text>
+                          <Text style={styles.explanationText}>
+                            How much you lean left/right. Steady values mean
+                            you're sitting balanced.
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.explanationItem}>
+                        <View
+                          style={[
+                            styles.explanationDot,
+                            { backgroundColor: "rgba(0, 255, 0, 1)" },
+                          ]}
+                        />
+                        <View style={styles.explanationContent}>
+                          <Text style={styles.explanationLabel}>
+                            Variance (Green)
+                          </Text>
+                          <Text style={styles.explanationText}>
+                            How much your posture changes. Low variance = stable
+                            sitting position.
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.explanationItem}>
+                        <View
+                          style={[
+                            styles.explanationDot,
+                            { backgroundColor: "rgba(255, 165, 0, 1)" },
+                          ]}
+                        />
+                        <View style={styles.explanationContent}>
+                          <Text style={styles.explanationLabel}>
+                            Angular Velocity (Orange)
+                          </Text>
+                          <Text style={styles.explanationText}>
+                            How fast you're moving. Spikes show when you adjust
+                            your position.
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.explanationItem}>
+                        <View
+                          style={[
+                            styles.explanationDot,
+                            { backgroundColor: "rgba(128, 0, 128, 1)" },
+                          ]}
+                        />
+                        <View style={styles.explanationContent}>
+                          <Text style={styles.explanationLabel}>
+                            EWMA Trend (Purple)
+                          </Text>
+                          <Text style={styles.explanationText}>
+                            Smoothed trend line that shows your overall posture
+                            direction over time.
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    <View style={styles.chartInsightBox}>
+                      <Text style={styles.chartInsightTitle}>
+                        💡 Quick Insight:
+                      </Text>
+                      <Text style={styles.chartInsightText}>
+                        {(() => {
+                          if (mlData.length === 0)
+                            return "Not enough data for insights.";
+
+                          const recentData = mlData.slice(-5);
+                          const avgPitch =
+                            recentData.reduce(
+                              (sum, item) => sum + (item.mean || 0),
+                              0
+                            ) / recentData.length;
+                          const avgVariance =
+                            recentData.reduce(
+                              (sum, item) => sum + (item.variance || 0),
+                              0
+                            ) / recentData.length;
+
+                          if (
+                            avgPitch <= customThresholds.good &&
+                            avgVariance < 50
+                          ) {
+                            return "Your recent posture looks stable and upright. Great job!";
+                          } else if (avgPitch > customThresholds.warning) {
+                            return "Your posture seems to be leaning forward quite a bit. Try sitting more upright.";
+                          } else {
+                            return "Your posture is a bit varied. Focus on maintaining a consistent, upright position.";
+                          }
+                        })()}
+                      </Text>
+                    </View>
+                  </View>
+                </>
+              ) : (
+                <Text style={styles.noDataText}>
+                  No ML data available to display features.
+                </Text>
+              )}
+
+              {/* Close Button - Moved inside treeModalBody */}
+              <TouchableOpacity
+                style={styles.treeModalCloseButton}
+                onPress={() => setShowMlFeaturesModal(false)}
+              >
+                <Text style={styles.treeModalCloseButtonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
+
   const handleBarClick = (index) => {
     const clickedData = aggregatedData[index];
     if (!clickedData) return;
@@ -3160,10 +3406,10 @@ const PostureGraph = () => {
           <View style={styles.mlActionsContainer}>
             <TouchableOpacity
               style={styles.mlActionButton}
-              onPress={() => setShowMlFeatures(!showMlFeatures)}
+              onPress={() => setShowMlFeaturesModal(!showMlFeaturesModal)}
             >
               <Text style={styles.mlActionButtonText}>
-                {showMlFeatures ? "Hide" : "Show"} ML Features
+                {showMlFeaturesModal ? "Hide" : "Show"} ML Features
               </Text>
             </TouchableOpacity>
 
@@ -3177,147 +3423,6 @@ const PostureGraph = () => {
                 </Text>
               </TouchableOpacity>
             )}
-          </View>
-        </Card>
-      )}
-
-      {/* ML Features */}
-      {showMlFeatures && mlData.length > 0 && (
-        <Card style={styles.mlFeatureContainer}>
-          <Text style={[styles.cardTitle, { textAlign: 'center' }]}>ML Features Analysis</Text>
-          <Text style={styles.mlFeatureSubtitle}>
-            Last 10 readings trend analysis
-          </Text>
-
-          <LineChart
-            data={getMlFeatureData()}
-            width={CHART_WIDTH}
-            height={220}
-            chartConfig={{
-              backgroundColor: THEME.cardBackground,
-              backgroundGradientFrom: THEME.cardBackground,
-              backgroundGradientTo: THEME.cardBackground,
-              backgroundGradientFromOpacity: 1,
-              backgroundGradientToOpacity: 1,
-              color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-              labelColor: (opacity = 1) => `rgba(27, 18, 18, ${opacity})`,
-              strokeWidth: 2,
-              propsForDots: {
-                r: "4",
-                strokeWidth: "2",
-              },
-              propsForLabels: {
-                fontSize: 11,
-                fontWeight: "500",
-              },
-              style: {
-                borderRadius: 12,
-              },
-              propsForBackgroundLines: {
-                strokeDasharray: "",
-                stroke: THEME.border,
-                strokeWidth: 1,
-                strokeOpacity: 0.3,
-              },
-            }}
-            style={styles.enhancedChart}
-            bezier
-            fromZero={false}
-            withDots={true}
-            withShadow={false}
-            withInnerLines={true}
-            withOuterLines={true}
-            withHorizontalLabels={true}
-            yAxisLabel=""
-            yAxisSuffix=""
-            hideLegend={true}
-            withLegend={false}
-            renderLegend={() => null}
-          />
-
-          {/* UPDATED: Chart Explanation instead of Feature Importance */}
-          <View style={styles.chartExplanationContainer}>
-            <Text style={styles.chartExplanationTitle}>
-              📊 Understanding Your Posture Data
-            </Text>
-            <Text style={styles.chartExplanationSubtitle}>
-              What each line in the chart tells us about your posture:
-            </Text>
-            
-            <View style={styles.explanationList}>
-              <View style={styles.explanationItem}>
-                <View style={[styles.explanationDot, { backgroundColor: "rgba(0, 0, 255, 1)" }]} />
-                <View style={styles.explanationContent}>
-                  <Text style={styles.explanationLabel}>Pitch Mean (Blue)</Text>
-                  <Text style={styles.explanationText}>
-                    Your forward/backward lean angle. Lower is better - shows how upright you're sitting.
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.explanationItem}>
-                <View style={[styles.explanationDot, { backgroundColor: "rgba(255, 0, 0, 1)" }]} />
-                <View style={styles.explanationContent}>
-                  <Text style={styles.explanationLabel}>Roll Range (Red)</Text>
-                  <Text style={styles.explanationText}>
-                    How much you lean left/right. Steady values mean you're sitting balanced.
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.explanationItem}>
-                <View style={[styles.explanationDot, { backgroundColor: "rgba(0, 255, 0, 1)" }]} />
-                <View style={styles.explanationContent}>
-                  <Text style={styles.explanationLabel}>Variance (Green)</Text>
-                  <Text style={styles.explanationText}>
-                    How much your posture changes. Low variance = stable sitting position.
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.explanationItem}>
-                <View style={[styles.explanationDot, { backgroundColor: "rgba(255, 165, 0, 1)" }]} />
-                <View style={styles.explanationContent}>
-                  <Text style={styles.explanationLabel}>Angular Velocity (Orange)</Text>
-                  <Text style={styles.explanationText}>
-                    How fast you're moving. Spikes show when you adjust your position.
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.explanationItem}>
-                <View style={[styles.explanationDot, { backgroundColor: "rgba(128, 0, 128, 1)" }]} />
-                <View style={styles.explanationContent}>
-                  <Text style={styles.explanationLabel}>EWMA Trend (Purple)</Text>
-                  <Text style={styles.explanationText}>
-                    Smoothed trend line that shows your overall posture direction over time.
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            <View style={styles.chartInsightBox}>
-              <Text style={styles.chartInsightTitle}>💡 Quick Insight:</Text>
-              <Text style={styles.chartInsightText}>
-                {(() => {
-                  if (mlData.length === 0) return "Start using your sensor to see personalized insights!";
-                  
-                  const recentData = mlData.slice(-5);
-                  const avgPitch = recentData.reduce((sum, item) => sum + (item.mean || 0), 0) / recentData.length;
-                  const avgVariance = recentData.reduce((sum, item) => sum + (item.variance || 0), 0) / recentData.length;
-                  
-                  if (avgPitch <= customThresholds.good && avgVariance < 50) {
-                    return "Excellent! You're maintaining steady, upright posture. Keep it up! 🎉";
-                  } else if (avgPitch <= customThresholds.warning) {
-                    return "Good posture overall. Try to keep that blue line (pitch) as low as possible. 👍";
-                  } else if (avgVariance > 100) {
-                    return "You're moving around a lot. Try to find a comfortable, stable position. 🪑";
-                  } else {
-                    return "Focus on reducing that blue line - it shows you're leaning forward. Sit back and straighten up! 💪";
-                  }
-                })()}
-              </Text>
-            </View>
           </View>
         </Card>
       )}
@@ -3408,7 +3513,7 @@ const PostureGraph = () => {
                       { backgroundColor: THEME.warning },
                     ]}
                   />
-                  <Text style={styles.historyLegendText}>Needs Work</Text>
+                  <Text style={styles.historyLegendText}>Warning</Text>
                 </View>
                 <View style={styles.historyLegendItem}>
                   <View
@@ -3434,7 +3539,7 @@ const PostureGraph = () => {
                     }
                     return labels;
                   })(),
-                  legend: ["Excellent", "Needs Work", "Poor"],
+                  legend: ["Excellent", "Warning", "Poor"],
                   data: (() => {
                     const chartData = [];
                     const endDate = new Date(currentSelectedDate);
@@ -3544,43 +3649,62 @@ const PostureGraph = () => {
                 style={styles.historyChart}
                 hideLegend={true}
                 withHorizontalLabels={false}
-                withVerticalLabels={true}
+                withVerticalLabels={false}
                 fromZero={true}
               />
 
               {/* Interactive overlay for history bar clicks */}
               <View style={styles.historyBarClickOverlay}>
-                {Array.from({ length: 7 }, (_, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={styles.historyBarClickArea}
-                    onPress={() => {
-                      // FIXED: Calculate correct date based on selected date window
-                      const endDate = new Date(currentSelectedDate);
-                      const clickDate = new Date(endDate);
-                      clickDate.setDate(endDate.getDate() - 6 + index);
+                {Array.from({ length: 7 }, (_, index) => {
+                  // Determine if this day has data
+                  const endDate = new Date(currentSelectedDate);
+                  const clickDate = new Date(endDate);
+                  clickDate.setDate(endDate.getDate() - 6 + index);
+                  const dateString = clickDate.toISOString().split("T")[0];
 
-                      // Navigate to that date
-                      setSelectedDate(clickDate);
-                      setIsViewingToday(isDateToday(clickDate));
+                  const hasHistoryDataForThisDay = historyData.some(
+                    (item) => item.date === dateString
+                  );
+                  const hasCurrentDataForThisDay = data.some(
+                    (entry) =>
+                      entry &&
+                      entry.hour &&
+                      entry.hour.getDate() === clickDate.getDate() &&
+                      entry.hour.getMonth() === clickDate.getMonth() &&
+                      entry.hour.getFullYear() === clickDate.getFullYear()
+                  );
+                  const dayHasData =
+                    hasHistoryDataForThisDay || hasCurrentDataForThisDay;
 
-                      // Also show history detail if there's data
-                      const dateString = clickDate.toISOString().split("T")[0];
-                      const dayData = historyData.find(
-                        (item) => item.date === dateString
-                      );
+                  return (
+                    <TouchableOpacity
+                      key={index}
+                      style={styles.historyBarClickArea}
+                      disabled={!dayHasData} // Disable if no data
+                      onPress={() => {
+                        if (!dayHasData) return; // Should not be called if disabled, but good practice
 
-                      if (
-                        dayData ||
-                        (isDateToday(clickDate) && data.length > 0)
-                      ) {
-                        // Create enhanced data for history detail
-                        let enhancedData = dayData;
+                        // FIXED: Calculate correct date based on selected date window
+                        const endDate = new Date(currentSelectedDate);
+                        const clickDate = new Date(endDate);
+                        clickDate.setDate(endDate.getDate() - 6 + index);
+
+                        // Navigate to that date
+                        setSelectedDate(clickDate);
+                        setIsViewingToday(isDateToday(clickDate));
+
+                        // Also show history detail if there's data
+                        const dateString = clickDate
+                          .toISOString()
+                          .split("T")[0];
+                        let dayDataForDetail = historyData.find(
+                          (item) => item.date === dateString
+                        );
 
                         if (
-                          !dayData &&
+                          !dayDataForDetail &&
                           isDateToday(clickDate) &&
-                          data.length > 0
+                          data.length > 0 // Check if there's any current data
                         ) {
                           // Calculate today's data if not in history yet
                           const todaysData = data.filter(
@@ -3623,7 +3747,7 @@ const PostureGraph = () => {
 
                             const total = goodCount + warningCount + badCount;
                             if (total > 0) {
-                              enhancedData = {
+                              dayDataForDetail = {
                                 date: dateString,
                                 good: (goodCount / total) * 100,
                                 warning: (warningCount / total) * 100,
@@ -3635,9 +3759,9 @@ const PostureGraph = () => {
                           }
                         }
 
-                        if (enhancedData) {
+                        if (dayDataForDetail) {
                           setSelectedHistoryData({
-                            ...enhancedData,
+                            ...dayDataForDetail,
                             formattedDate: formatHistoryDate(dateString),
                             isToday: isDateToday(clickDate),
                             mlInsights: calculateMLInsights(
@@ -3646,16 +3770,16 @@ const PostureGraph = () => {
                             ),
                             trendAnalysis: calculateTrendAnalysis(
                               dateString,
-                              index
+                              index // index within the 7-day window
                             ),
                           });
                           setActiveTab("historyDetail");
                         }
-                      }
-                    }}
-                    activeOpacity={0.7}
-                  />
-                ))}
+                      }}
+                      activeOpacity={0.7}
+                    />
+                  );
+                })}
               </View>
 
               {/* Custom Date Labels - Based on selected date window */}
@@ -3692,7 +3816,10 @@ const PostureGraph = () => {
                     labels.push(
                       <TouchableOpacity
                         key={i}
+                        disabled={!hasData} // Disable if no data
                         onPress={() => {
+                          if (!hasData) return; // Should not be called if disabled
+
                           setSelectedDate(currentDate);
                           setIsViewingToday(isToday);
                         }}
@@ -3705,6 +3832,7 @@ const PostureGraph = () => {
                             isSelectedDate && styles.selectedDateLabel, // Highlight selected date
                             !hasData && styles.noDataDateLabel,
                             hasData && styles.clickableDateLabel,
+                            // You might want a specific style for disabled labels, e.g., styles.disabledDateLabel
                           ]}
                         >
                           {formatChartDate(dateString, isToday)}
@@ -4355,8 +4483,8 @@ const PostureGraph = () => {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.pageTitleContainer}>
-  <Text style={styles.pageTitle}>Settings</Text>
-</View>
+        <Text style={styles.pageTitle}>Settings</Text>
+      </View>
 
       {/* Profile Section - SIMPLIFIED */}
       <Card style={styles.profileSection}>
@@ -4560,6 +4688,9 @@ const PostureGraph = () => {
     <Animated.View style={[styles.mainContainer, { opacity: fadeAnim }]}>
       {/* First-time user setup modal */}
       {renderFirstTimeModal()}
+
+      {/* NEW: Render ML Features Modal */}
+      <MlFeaturesModal />
 
       {showNotification && (
         <PostureNotification
