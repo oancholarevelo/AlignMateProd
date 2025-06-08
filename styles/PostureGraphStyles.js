@@ -1910,17 +1910,46 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
+  datePickerGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1, // Allows the date picker to take available space
+    marginRight: 8, // Add some space if "Today" button is visible
+  },
+
+  calendarIcon: {
+    width: 22,
+    height: 22,
+    marginRight: 8,
+    tintColor: THEME.textLight, // Or THEME.primary if you prefer
+  },
+
+  datePickerInput: {
+    borderWidth: 1,
+    borderColor: THEME.border,
+    borderRadius: 6,
+    padding: '8px 10px', // Using px for web consistency with input elements
+    fontSize: 14,
+    color: THEME.text,
+    backgroundColor: THEME.cardBackground, // Or THEME.background
+    height: 38, // Standard input height
+    flex: 1, // Allow input to grow
+    // Basic reset for web
+    appearance: 'none',
+    WebkitAppearance: 'none',
+    MozAppearance: 'none',
+  },
 
   dateNavButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: THEME.secondary,
-    minWidth: 80,
-    justifyContent: "center",
-  },
+  width: 100,  // Same width for both previous and next
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+  paddingHorizontal: 10,
+  paddingVertical: 8,
+  borderRadius: 8,
+  backgroundColor: THEME.secondary,
+},
 
   dateNavButtonEnabled: {
     backgroundColor: THEME.primary,
@@ -1960,7 +1989,6 @@ const styles = StyleSheet.create({
   dateDisplayContainer: {
     alignItems: "center",
     flex: 1,
-    paddingHorizontal: 16,
     justifyContent: "center", // Added to ensure vertical centering
   },
 

@@ -63,7 +63,6 @@ const ICONS = {
   settings:
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z'/%3E%3C/svg%3E",
   logs: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/%3E%3Cpolyline points='14 2 14 8 20 8'/%3E%3Cline x1='16' y1='13' x2='8' y2='13'/%3E%3Cline x1='16' y1='17' x2='8' y2='17'/%3E%3Cpolyline points='10 9 9 9 8 9'/%3E%3C/svg%3E",
-  back: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='19' y1='12' x2='5' y2='12'/%3E%3Cpolyline points='12 19 5 12 12 5'/%3E%3C/svg%3E",
   alert:
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23856404' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'/%3E%3Cline x1='12' y1='9' x2='12' y2='13'/%3E%3Cline x1='12' y1='17' x2='12.01' y2='17'/%3E%3C/svg%3E",
   close:
@@ -242,6 +241,13 @@ const PostureGraph = () => {
 
   // Add this state variable with your other useState declarations
   const [setupType, setSetupType] = useState("unknown"); // Add this line
+
+  const formatDateToYYYYMMDD = (date) => {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const day = date.getDate().toString().padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
 
   // Add this useEffect to get the actual setup type from Firebase
   useEffect(() => {
@@ -1246,31 +1252,39 @@ const PostureGraph = () => {
     );
   };
 
-  // NEW: Navigation functions
-  const goToPreviousDay = useCallback(() => {
-    const previousDay = new Date(selectedDate);
-    previousDay.setDate(selectedDate.getDate() - 1);
-    setSelectedDate(previousDay);
-    setIsViewingToday(isDateToday(previousDay));
-  }, [selectedDate]);
-
-  const goToNextDay = useCallback(() => {
-    const nextDay = new Date(selectedDate);
-    nextDay.setDate(selectedDate.getDate() + 1);
-    const today = new Date();
-
-    // Don't allow going beyond today
-    if (nextDay <= today) {
-      setSelectedDate(nextDay);
-      setIsViewingToday(isDateToday(nextDay));
-    }
-  }, [selectedDate]);
-
   const goToToday = useCallback(() => {
     const today = new Date();
     setSelectedDate(today);
     setIsViewingToday(true);
   }, []);
+
+  // NEW: Handle date change from date picker
+  const handleDateChange = useCallback(
+    (event) => {
+      const dateString = event.target.value; // YYYY-MM-DD
+      if (!dateString) return;
+
+      const parts = dateString.split("-");
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed in JS Date
+      const day = parseInt(parts[2], 10);
+
+      let newDate = new Date(year, month, day);
+      newDate.setHours(0, 0, 0, 0); // Normalize to start of day
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (newDate > today) {
+        setSelectedDate(today);
+        setIsViewingToday(true);
+      } else {
+        setSelectedDate(newDate);
+        setIsViewingToday(isDateToday(newDate));
+      }
+    },
+    [isDateToday]
+  );
 
   // Aggregate data into time blocks for the chart
   const aggregateDataIntoTimeBlocks = useCallback(
@@ -2995,41 +3009,30 @@ const PostureGraph = () => {
       {/* Date Navigation Header */}
       <Card style={styles.dateNavigationCard}>
         <View style={styles.dateNavigationContainer}>
-          <TouchableOpacity
-            style={styles.dateNavButton}
-            onPress={goToPreviousDay}
-            disabled={false} // Allow going back indefinitely
-          >
-            <Image source={{ uri: ICONS.back }} style={styles.dateNavIcon} />
-            <Text style={styles.dateNavText}>Previous</Text>
-          </TouchableOpacity>
-
-          <View style={styles.dateDisplayContainer}>
-            <Text style={styles.dateDisplayText}>{formatSelectedDate()}</Text>
-            {!isViewingToday && (
-              <TouchableOpacity style={styles.todayButton} onPress={goToToday}>
-                <Text style={styles.todayButtonText}>Today</Text>
-              </TouchableOpacity>
-            )}
+          {/* Date Picker Input Group */}
+          <View style={styles.datePickerGroup}>
+            <Image
+              source={{ uri: ICONS.trainedDateIcon }}
+              style={styles.calendarIcon}
+            />
+            <input
+              type="date"
+              value={formatDateToYYYYMMDD(selectedDate)} // UPDATED
+              onChange={handleDateChange}
+              max={formatDateToYYYYMMDD(new Date())} // UPDATED
+              style={styles.datePickerInput}
+              aria-label="Select date"
+            />
+            {/* Optional: Display formatted date text if input styling is limited */}
+            {/* <Text style={styles.selectedDateTextDisplay}>{formatSelectedDate()}</Text> */}
           </View>
 
-          <TouchableOpacity
-            style={[
-              styles.dateNavButton,
-              isViewingToday ? styles.dateNavButtonDisabled : null,
-            ]}
-            onPress={goToNextDay}
-            disabled={isViewingToday}
-          >
-            <Image
-              source={{ uri: ICONS.back }}
-              style={[
-                styles.dateNavIcon,
-                styles.dateNavIconRight,
-                isViewingToday ? styles.dateNavIconDisabled : null,
-              ]}
-            />
-          </TouchableOpacity>
+          {/* Today Button */}
+          {!isViewingToday && (
+            <TouchableOpacity style={styles.todayButton} onPress={goToToday}>
+              <Text style={styles.todayButtonText}>Today</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </Card>
 
