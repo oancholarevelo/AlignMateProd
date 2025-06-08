@@ -31,6 +31,7 @@ import HistoryDetail from "./HistoryDetail";
 import LogViewer from "./LogViewer";
 import ResearchForm from "./ResearchForm";
 import ContactUs from "./ContactUs";
+import { generateDailyReportPDF } from "./DataExport";
 import { styles, THEME } from "../styles/PostureGraphStyles";
 
 // Constants based on IMU sensor and ML model
@@ -136,13 +137,6 @@ const SectionHeader = ({ title }) => (
   <Text style={styles.sectionHeader}>{title}</Text>
 );
 
-// Format hour for display
-const formatHourAmPm = (hour) => {
-  const h = hour % 12 || 12;
-  const ampm = hour < 12 || hour === 24 ? "AM" : "PM";
-  return `${h}${ampm}`;
-};
-
 // Format date for display
 const formatChartDate = (dateString, isToday = false) => {
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
@@ -215,6 +209,8 @@ const PostureGraph = () => {
   const [showFirstTimeModal, setShowFirstTimeModal] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
   const [isCheckingUserStatus, setIsCheckingUserStatus] = useState(true);
+
+  const [isExporting, setIsExporting] = useState(false);
 
   const userUID = localStorage.getItem("userUID");
   const navigate = useNavigate();
@@ -811,6 +807,63 @@ const PostureGraph = () => {
       cleanupAchievementsTracking();
     };
   }, [userUID, isCheckingUserStatus, isNewUser, trackPostureForAchievements]);
+
+  const handleExportDailyReport = async () => {
+    if (!userUID) {
+      alert("User not identified. Cannot export data.");
+      return;
+    }
+    setIsExporting(true);
+
+    try {
+      // 1. Filter data for the selectedDate
+      const reportDateStr = formatDateToYYYYMMDD(selectedDate);
+      const dailyPostureData = data.filter(
+        (entry) =>
+          entry &&
+          entry.hour &&
+          formatDateToYYYYMMDD(entry.hour) === reportDateStr
+      );
+
+      const dailyMlData = mlData.filter(
+        (entry) =>
+          entry &&
+          entry.hour &&
+          formatDateToYYYYMMDD(entry.hour) === reportDateStr
+      );
+
+      // 2. Recalculate percentages for the selected date (ensure these are up-to-date)
+      //    The existing useEffect for goodPosturePercentage/badPosturePercentage already does this based on selectedDate.
+      //    So, we can use the current state values.
+
+      // 3. Get aggregated data for the selected date
+      //    The existing useEffect for aggregatedData also updates based on selectedDate.
+
+      console.log("Exporting - goodPosturePercentage:", goodPosturePercentage, typeof goodPosturePercentage);
+    console.log("Exporting - badPosturePercentage:", badPosturePercentage, typeof badPosturePercentage);
+
+      const reportData = {
+        userName: userName || "AlignMate User",
+        reportDate: selectedDate,
+        postureData: dailyPostureData,
+        mlData: dailyMlData,
+        aggregatedData: aggregatedData.filter(item => item.dataCount > 0), // Use current aggregatedData state
+        goodPosturePercentage: goodPosturePercentage,
+        badPosturePercentage: badPosturePercentage,
+        latestPrediction: latestPrediction, // This is the overall latest, might need to be specific to the day
+        predictionConfidence: predictionConfidence, // Same as above
+        // You can add more specific daily summaries here if needed
+      };
+
+      await generateDailyReportPDF(reportData);
+      alert("Daily report PDF generated successfully!");
+    } catch (error) {
+      console.error("Error generating PDF report:", error);
+      alert("Failed to generate PDF report. See console for details.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   // NEW: Handle profile picture upload
   const handleProfilePictureUpload = useCallback(
@@ -1985,21 +2038,28 @@ const PostureGraph = () => {
 
   // Calculate posture percentages
   useEffect(() => {
-    if (data.length === 0) return;
+    if (data.length === 0) {
+      // Ensure selectedDate is a Date object before using its methods
+      if (!(selectedDate instanceof Date)) {
+        setGoodPosturePercentage(0);
+        setBadPosturePercentage(0);
+        return;
+      }
+    }
 
-    // 🔧 CHANGED: Filter data to include the selected date's readings instead of just today
     const selectedDateData = data.filter(
       (entry) =>
         entry &&
         entry.hour &&
+        selectedDate instanceof Date && // Add check here too
         entry.hour.getDate() === selectedDate.getDate() &&
         entry.hour.getMonth() === selectedDate.getMonth() &&
         entry.hour.getFullYear() === selectedDate.getFullYear()
     );
 
     if (selectedDateData.length === 0) {
-      setGoodPosturePercentage("0.0");
-      setBadPosturePercentage("0.0");
+      setGoodPosturePercentage(0); // Store as number
+      setBadPosturePercentage(0);  // Store as number
       return;
     }
 
@@ -2007,18 +2067,17 @@ const PostureGraph = () => {
     let badCount = 0;
     let warningCount = 0;
 
-    // 🔧 CHANGED: Use selected date's ML data if available
     const selectedDateMlData = mlData.filter(
       (entry) =>
         entry &&
         entry.hour &&
+        selectedDate instanceof Date && // Add check here too
         entry.hour.getDate() === selectedDate.getDate() &&
         entry.hour.getMonth() === selectedDate.getMonth() &&
         entry.hour.getFullYear() === selectedDate.getFullYear()
     );
 
     if (selectedDateMlData.length > 0) {
-      // Use ML predictions if available
       selectedDateMlData.forEach((entry) => {
         if (entry.prediction === "Good") {
           goodCount++;
@@ -2029,11 +2088,14 @@ const PostureGraph = () => {
         }
       });
     } else {
-      // Fall back to simple threshold using selected date's data
       selectedDateData.forEach((entry) => {
-        if (entry.pitch <= PITCH_GOOD_THRESHOLD) {
+        // Ensure customThresholds are numbers before comparison
+        const goodThreshold = typeof customThresholds.good === 'number' ? customThresholds.good : PITCH_GOOD_THRESHOLD;
+        const warningThreshold = typeof customThresholds.warning === 'number' ? customThresholds.warning : PITCH_WARNING_THRESHOLD;
+
+        if (entry.pitch <= goodThreshold) {
           goodCount++;
-        } else if (entry.pitch <= PITCH_WARNING_THRESHOLD) {
+        } else if (entry.pitch <= warningThreshold) {
           warningCount++;
         } else {
           badCount++;
@@ -2043,16 +2105,19 @@ const PostureGraph = () => {
 
     const total = goodCount + badCount + warningCount;
     if (total === 0) {
-      setGoodPosturePercentage("0.0");
-      setBadPosturePercentage("0.0");
+      setGoodPosturePercentage(0); // Store as number
+      setBadPosturePercentage(0);  // Store as number
       return;
     }
 
-    setGoodPosturePercentage(((goodCount / total) * 100).toFixed(1));
-    setBadPosturePercentage(
-      (((badCount + warningCount) / total) * 100).toFixed(1)
-    );
-  }, [data, mlData, selectedDate]);
+    // Calculate as number, then store as number
+    const goodPercentageNumber = (goodCount / total) * 100;
+    const badPercentageNumber = ((badCount + warningCount) / total) * 100;
+
+    setGoodPosturePercentage(goodPercentageNumber);
+    setBadPosturePercentage(badPercentageNumber);
+
+  }, [data, mlData, selectedDate, customThresholds]);
 
   useEffect(() => {
     if (!userUID) return;
@@ -3286,11 +3351,15 @@ const PostureGraph = () => {
       <View style={styles.statsContainer}>
         <Card style={[styles.statsBox, { backgroundColor: THEME.primary }]}>
           <Text style={styles.statsLabel}>Good Posture</Text>
-          <Text style={styles.statsPercentage}>{goodPosturePercentage}%</Text>
+          <Text style={styles.statsPercentage}>
+            {typeof goodPosturePercentage === 'number' ? goodPosturePercentage.toFixed(1) : '0.0'}%
+          </Text>
         </Card>
         <Card style={[styles.statsBox, { backgroundColor: THEME.danger }]}>
           <Text style={styles.statsLabel}>Poor Posture</Text>
-          <Text style={styles.statsPercentage}>{badPosturePercentage}%</Text>
+          <Text style={styles.statsPercentage}>
+            {typeof badPosturePercentage === 'number' ? badPosturePercentage.toFixed(1) : '0.0'}%
+          </Text>
         </Card>
       </View>
 
@@ -4583,6 +4652,22 @@ const PostureGraph = () => {
         <View style={styles.calibrationButtonContainer}>
           <Calibration />
         </View>
+      </Card>
+
+      {/* Data Export Section - ADD THIS NEW CARD */}
+      <Card style={styles.settingsCard}>
+        <Text style={styles.settingsCardTitle}>Data Export</Text>
+        <Text style={styles.settingsDescription}>
+          Export your posture data for {isViewingToday ? "today" : `the selected day (${formatSelectedDate()})`} as a PDF document.
+        </Text>
+        <Button
+          title={isExporting ? "Exporting..." : `Export ${isViewingToday ? "Today's" : "Selected Day's"} Report (PDF)`}
+          type="primary"
+          icon={ICONS.logs} // Example icon, you can change this
+          onPress={handleExportDailyReport}
+          style={styles.settingsButton}
+          disabled={isExporting}
+        />
       </Card>
 
       {/* Device Logs */}
