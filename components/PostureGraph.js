@@ -2797,20 +2797,6 @@ const PostureGraph = () => {
     />
   );
 
-  const handleRetrainModel = () => {
-    if (!userUID) return;
-
-    const retrainRef = ref(database, `users/${userUID}/retrainModel`);
-    set(retrainRef, true)
-      .then(() => {
-        // Use a toast notification instead of alert for better UX
-        showToast("Retraining request sent to device");
-      })
-      .catch((err) => {
-        showToast("Error: " + err.message, "error");
-      });
-  };
-
   // Simple toast notification function (can be expanded)
   const showToast = (message, type = "success") => {
     // This is a placeholder - in a real app, implement a proper toast notification
@@ -4690,22 +4676,6 @@ const PostureGraph = () => {
             <LogViewer userUID={userUID} visible={true} maxLogs={10} />
           </View>
         )}
-      </Card>
-
-      {/* ML Model */}
-      <Card style={styles.settingsCard}>
-        <Text style={styles.settingsCardTitle}>Machine Learning Model</Text>
-        <Text style={styles.settingsDescription}>
-          Your device is using an enhanced ML model to detect posture with high
-          accuracy.
-        </Text>
-
-        <Button
-          title="Retrain ML Model"
-          type="primary"
-          onPress={handleRetrainModel}
-          style={styles.settingsButton}
-        />
       </Card>
 
       {/* Research Section */}
