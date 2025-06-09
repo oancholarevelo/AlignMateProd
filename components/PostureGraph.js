@@ -3074,8 +3074,6 @@ const PostureGraph = () => {
               style={styles.datePickerInput}
               aria-label="Select date"
             />
-            {/* Optional: Display formatted date text if input styling is limited */}
-            {/* <Text style={styles.selectedDateTextDisplay}>{formatSelectedDate()}</Text> */}
           </View>
 
           {/* Today Button */}
@@ -4640,22 +4638,6 @@ const PostureGraph = () => {
         </View>
       </Card>
 
-      {/* Data Export Section - ADD THIS NEW CARD */}
-      <Card style={styles.settingsCard}>
-        <Text style={styles.settingsCardTitle}>Data Export</Text>
-        <Text style={styles.settingsDescription}>
-          Export your posture data for {isViewingToday ? "today" : `the selected day (${formatSelectedDate()})`} as a PDF document.
-        </Text>
-        <Button
-          title={isExporting ? "Exporting..." : `Export ${isViewingToday ? "Today's" : "Selected Day's"} Report (PDF)`}
-          type="primary"
-          icon={ICONS.logs} // Example icon, you can change this
-          onPress={handleExportDailyReport}
-          style={styles.settingsButton}
-          disabled={isExporting}
-        />
-      </Card>
-
       {/* Device Logs */}
       <Card style={styles.settingsCard}>
         <Text style={styles.settingsCardTitle}>Device Logs</Text>
@@ -4676,6 +4658,22 @@ const PostureGraph = () => {
             <LogViewer userUID={userUID} visible={true} maxLogs={10} />
           </View>
         )}
+      </Card>
+
+      {/* Data Export Section - ADD THIS NEW CARD */}
+      <Card style={styles.settingsCard}>
+        <Text style={styles.settingsCardTitle}>Data Export</Text>
+        <Text style={styles.settingsDescription}>
+          Export your posture data for {isViewingToday ? "today" : `the selected day (${formatSelectedDate()})`} as a PDF document.
+        </Text>
+        <Button
+          title={isExporting ? "Exporting..." : `Export ${isViewingToday ? "Today's" : "Selected Day's"} Report (PDF)`}
+          type="primary"
+          icon={ICONS.logs} // Example icon, you can change this
+          onPress={handleExportDailyReport}
+          style={styles.settingsButton}
+          disabled={isExporting}
+        />
       </Card>
 
       {/* Research Section */}

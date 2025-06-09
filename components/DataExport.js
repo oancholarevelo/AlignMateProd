@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import autoTable from 'jspdf-autotable';
+import autoTable from "jspdf-autotable";
 
 const formatDateForPDF = (date) => {
   return date.toLocaleDateString("en-US", {
@@ -21,7 +21,11 @@ const hexToRgb = (hex) => {
   if (!hex) return [0, 0, 0]; // Default to black if hex is undefined
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result
-    ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)]
+    ? [
+        parseInt(result[1], 16),
+        parseInt(result[2], 16),
+        parseInt(result[3], 16),
+      ]
     : [0, 0, 0]; // Default to black on parse error
 };
 
@@ -35,7 +39,7 @@ export const generateDailyReportPDF = async (reportData) => {
     goodPosturePercentage,
     badPosturePercentage,
     // For comparison feature, you would need to pass data like:
-    // previousDaySummary: { goodPosturePercentage: 70, badPosturePercentage: 30 }, 
+    // previousDaySummary: { goodPosturePercentage: 70, badPosturePercentage: 30 },
     // previousWeekAverage: { goodPosturePercentage: 65, badPosturePercentage: 35 },
   } = reportData;
 
@@ -60,27 +64,36 @@ export const generateDailyReportPDF = async (reportData) => {
   const BORDER_COLOR_RGB = hexToRgb(PDF_THEME.border);
   const LIGHT_GRAY_RGB = hexToRgb(PDF_THEME.lightGray);
 
-
   const doc = new jsPDF();
   let yPos = 0;
 
   const drawHeader = () => {
     const headerHeight = 25;
     doc.setFillColor(...PRIMARY_COLOR_RGB);
-    doc.rect(0, 0, doc.internal.pageSize.getWidth(), headerHeight, 'F');
-    
+    doc.rect(0, 0, doc.internal.pageSize.getWidth(), headerHeight, "F");
+
     doc.setFontSize(18);
     doc.setTextColor(...WHITE_RGB);
     doc.setFont("helvetica", "bold");
-    doc.text("AlignMate Daily Posture Report", doc.internal.pageSize.getWidth() / 2, 15, { align: "center" });
-    
+    doc.text(
+      "AlignMate Daily Posture Report",
+      doc.internal.pageSize.getWidth() / 2,
+      15,
+      { align: "center" }
+    );
+
     yPos = headerHeight + 12; // Increased spacing after header
 
     doc.setFontSize(11);
     doc.setTextColor(...TEXT_COLOR_RGB);
     doc.setFont("helvetica", "normal");
-    doc.text(`User: ${userName || 'N/A'}`, 14, yPos);
-    doc.text(`Date: ${reportDate ? formatDateForPDF(reportDate) : 'N/A'}`, doc.internal.pageSize.getWidth() - 14, yPos, { align: "right" });
+    doc.text(`User: ${userName || "N/A"}`, 14, yPos);
+    doc.text(
+      `Date: ${reportDate ? formatDateForPDF(reportDate) : "N/A"}`,
+      doc.internal.pageSize.getWidth() - 14,
+      yPos,
+      { align: "right" }
+    );
     yPos += 7; // Adjusted spacing
     doc.setDrawColor(...BORDER_COLOR_RGB);
     doc.setLineWidth(0.2);
@@ -90,9 +103,10 @@ export const generateDailyReportPDF = async (reportData) => {
   drawHeader();
 
   const drawSectionTitle = (title) => {
-    if (yPos > doc.internal.pageSize.getHeight() - 40) { // Adjusted page break check
-        doc.addPage();
-        drawHeader();
+    if (yPos > doc.internal.pageSize.getHeight() - 40) {
+      // Adjusted page break check
+      doc.addPage();
+      drawHeader();
     }
     doc.setFontSize(15); // Slightly smaller for section titles
     doc.setFont("helvetica", "bold");
@@ -104,7 +118,7 @@ export const generateDailyReportPDF = async (reportData) => {
     doc.line(14, yPos, doc.internal.pageSize.getWidth() - 14, yPos); // Line under title
     yPos += 8; // Spacing after line
   };
-  
+
   // --- Daily Summary Section ---
   drawSectionTitle("Daily Summary");
   doc.setFontSize(11);
@@ -115,15 +129,31 @@ export const generateDailyReportPDF = async (reportData) => {
   doc.text(`Good Posture: `, 14, yPos);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...PRIMARY_COLOR_RGB);
-  doc.text(`${typeof goodPosturePercentage === 'number' ? goodPosturePercentage.toFixed(1) : 'N/A'}%`, 45, yPos);
+  doc.text(
+    `${
+      typeof goodPosturePercentage === "number"
+        ? goodPosturePercentage.toFixed(1)
+        : "N/A"
+    }%`,
+    45,
+    yPos
+  );
   yPos += summaryLineHeight;
-  
+
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...TEXT_COLOR_RGB);
   doc.text(`Poor/Warning Posture: `, 14, yPos);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...DANGER_RGB);
-  doc.text(`${typeof badPosturePercentage === 'number' ? badPosturePercentage.toFixed(1) : 'N/A'}%`, 60, yPos);
+  doc.text(
+    `${
+      typeof badPosturePercentage === "number"
+        ? badPosturePercentage.toFixed(1)
+        : "N/A"
+    }%`,
+    60,
+    yPos
+  );
   yPos += summaryLineHeight;
 
   doc.setFont("helvetica", "normal");
@@ -139,13 +169,13 @@ export const generateDailyReportPDF = async (reportData) => {
     doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...TEXT_COLOR_RGB);
-    
-    const predictions = mlData.map(item => item.prediction || "Unknown"); // Handle undefined predictions
+
+    const predictions = mlData.map((item) => item.prediction || "Unknown"); // Handle undefined predictions
     const predictionCounts = predictions.reduce((acc, curr) => {
       acc[curr] = (acc[curr] || 0) + 1;
       return acc;
     }, {});
-    
+
     let mostFrequentPrediction = "N/A";
     let maxCount = 0;
     for (const pred in predictionCounts) {
@@ -155,8 +185,14 @@ export const generateDailyReportPDF = async (reportData) => {
       }
     }
 
-    const totalConfidence = mlData.reduce((acc, curr) => acc + (curr.confidence || 0), 0);
-    const averageConfidence = mlData.length > 0 ? (totalConfidence / mlData.length * 100).toFixed(1) : "N/A";
+    const totalConfidence = mlData.reduce(
+      (acc, curr) => acc + (curr.confidence || 0),
+      0
+    );
+    const averageConfidence =
+      mlData.length > 0
+        ? ((totalConfidence / mlData.length) * 100).toFixed(1)
+        : "N/A";
 
     doc.text(`Most Frequent Classification: `, 14, yPos);
     doc.setFont("helvetica", "bold");
@@ -176,14 +212,14 @@ export const generateDailyReportPDF = async (reportData) => {
     doc.text("Classification Counts:", 14, yPos);
     yPos += summaryLineHeight;
     const categories = ["Good", "Warning", "Bad", "Unknown"]; // Define order for display
-    categories.forEach(cat => {
-        if (predictionCounts[cat]) {
-            doc.setFont("helvetica", "normal");
-            doc.text(`  • ${cat}: `, 18, yPos);
-            doc.setFont("helvetica", "bold");
-            doc.text(`${predictionCounts[cat]} times`, 50, yPos);
-            yPos += summaryLineHeight;
-        }
+    categories.forEach((cat) => {
+      if (predictionCounts[cat]) {
+        doc.setFont("helvetica", "normal");
+        doc.text(`  • ${cat}: `, 18, yPos);
+        doc.setFont("helvetica", "bold");
+        doc.text(`${predictionCounts[cat]} times`, 50, yPos);
+        yPos += summaryLineHeight;
+      }
     });
     yPos += 6; // Extra spacing after this sub-section
   }
@@ -197,17 +233,20 @@ export const generateDailyReportPDF = async (reportData) => {
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...TEXT_COLOR_RGB);
 
-    if (reportData.previousDaySummary && typeof goodPosturePercentage === 'number') {
-        const prevGood = reportData.previousDaySummary.goodPosturePercentage;
-        if (typeof prevGood === 'number') {
-            const diff = goodPosturePercentage - prevGood;
-            doc.text(`Compared to Previous Day (Good Posture): `, 14, yPos);
-            doc.setFont("helvetica", "bold");
-            doc.setTextColor(diff >= 0 ? PRIMARY_COLOR_RGB : DANGER_RGB);
-            doc.text(`${diff >= 0 ? '+' : ''}${diff.toFixed(1)}%`, 85, yPos);
-            yPos += summaryLineHeight;
-            doc.setTextColor(...TEXT_COLOR_RGB); // Reset color
-        }
+    if (
+      reportData.previousDaySummary &&
+      typeof goodPosturePercentage === "number"
+    ) {
+      const prevGood = reportData.previousDaySummary.goodPosturePercentage;
+      if (typeof prevGood === "number") {
+        const diff = goodPosturePercentage - prevGood;
+        doc.text(`Compared to Previous Day (Good Posture): `, 14, yPos);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(diff >= 0 ? PRIMARY_COLOR_RGB : DANGER_RGB);
+        doc.text(`${diff >= 0 ? "+" : ""}${diff.toFixed(1)}%`, 85, yPos);
+        yPos += summaryLineHeight;
+        doc.setTextColor(...TEXT_COLOR_RGB); // Reset color
+      }
     }
     // Add similar logic for previousWeekAverage if data is available
     // Example:
@@ -226,13 +265,13 @@ export const generateDailyReportPDF = async (reportData) => {
     yPos += 6;
   }
 
-
   // --- Aggregated Data (Hourly Averages) ---
   if (aggregatedData.length > 0) {
     drawSectionTitle("Hourly Posture Breakdown");
     const tableColumn = ["Period", "Avg. Pitch (°)", "Data Points"];
-    const tableRows = aggregatedData.map(item => {
-      const averageValue = typeof item.value === 'number' ? item.value.toFixed(1) : 'N/A';
+    const tableRows = aggregatedData.map((item) => {
+      const averageValue =
+        typeof item.value === "number" ? item.value.toFixed(1) : "N/A";
       return [item.label, averageValue, item.dataCount || 0];
     });
 
@@ -240,32 +279,27 @@ export const generateDailyReportPDF = async (reportData) => {
       head: [tableColumn],
       body: tableRows,
       startY: yPos,
-      theme: 'grid',
-      headStyles: { 
-        fillColor: PRIMARY_COLOR_RGB, 
-        textColor: WHITE_RGB, 
-        fontStyle: 'bold',
+      theme: "grid",
+      headStyles: {
+        fillColor: PRIMARY_COLOR_RGB,
+        textColor: WHITE_RGB,
+        fontStyle: "bold",
         fontSize: 10,
-        halign: 'center'
+        halign: "center",
       },
-      styles: { 
-        cellPadding: 2.5, // Increased padding
-        fontSize: 9.5,    // Slightly adjusted
+      styles: {
+        cellPadding: 2.5,
+        fontSize: 9.5,
         lineColor: BORDER_COLOR_RGB,
         lineWidth: 0.1,
       },
       alternateRowStyles: {
-        fillColor: LIGHT_GRAY_RGB
+        fillColor: LIGHT_GRAY_RGB,
       },
       margin: { left: 14, right: 14 },
-      tableWidth: 'auto', // or a specific width
-      didDrawPage: (data) => {
-        if (data.pageNumber > 1 && data.cursor.y < yPos && data.cursor.y < 60) { // Check if cursor is near top
-            drawHeader(); // Redraw header, yPos will be reset by drawHeader
-        }
-      }
+      tableWidth: "auto", // REMOVE THE didDrawPage HOOK HERE // didDrawPage: (data) => { //   if (data.pageNumber > 1 && data.cursor.y < yPos && data.cursor.y < 60) { //       drawHeader(); // } // }
     });
-    yPos = doc.lastAutoTable.finalY + 12; // Increased spacing
+    yPos = doc.lastAutoTable.finalY + 12;
   } else {
     if (yPos > doc.internal.pageSize.getHeight() - 30) doc.addPage();
     doc.setFontSize(11);
@@ -275,69 +309,70 @@ export const generateDailyReportPDF = async (reportData) => {
   }
 
   // --- Detailed Posture Log ---
-  if (postureData.length > 0) {
-    drawSectionTitle("Recent Posture Log Entries");
-    const maxEntriesToShow = 20;
-    const dataToDisplay = postureData.slice(-maxEntriesToShow);
-    
-    doc.setFontSize(9);
-    doc.setTextColor(...TEXT_LIGHT_COLOR_RGB);
-    doc.text(`Showing last ${dataToDisplay.length} of ${postureData.length} entries.`, 14, yPos);
-    yPos += 7; // Adjusted spacing
+  if (postureData.length > 0) {
+    drawSectionTitle("Recent Posture Log Entries");
+    const maxEntriesToShow = 20;
+    const dataToDisplay = postureData.slice(-maxEntriesToShow);
 
-    const logColumns = ["Time", "Pitch (°)", "Raw Val", "ML Prediction", "Confidence (%)"];
-    const mlDataMap = new Map(mlData.map(item => [item.timestamp, item]));
-    const logRows = dataToDisplay.map(log => {
-      const mlEntry = mlDataMap.get(log.timestamp);
-      const prediction = mlEntry ? mlEntry.prediction : "N/A";
-      const confidence = mlEntry && mlEntry.confidence ? (mlEntry.confidence * 100).toFixed(0) : "N/A";
-      return [
-        log.hour ? formatTimeForPDF(new Date(log.hour)) : 'N/A', // Assuming log.hour is a timestamp or Date object
-        log.pitch !== undefined ? log.pitch.toFixed(1) : 'N/A',
-        log.rawValue !== undefined ? log.rawValue : 'N/A',
-        prediction,
-        confidence
-      ];
-    });
+    doc.setFontSize(9);
+    doc.setTextColor(...TEXT_LIGHT_COLOR_RGB);
+    doc.text(`Showing last ${dataToDisplay.length} of ${postureData.length} entries.`, 14, yPos);
+    yPos += 7;
 
-    autoTable(doc, {
-      head: [logColumns],
-      body: logRows,
-      startY: yPos,
-      theme: 'striped', // Striped can be good for logs
-      headStyles: { 
-        fillColor: PRIMARY_COLOR_RGB, 
-        textColor: WHITE_RGB, 
-        fontStyle: 'bold',
-        fontSize: 9.5,
-        halign: 'center'
-      },
-      styles: { 
-        cellPadding: 2, 
-        fontSize: 8.5,
-        lineColor: BORDER_COLOR_RGB,
-        lineWidth: 0.1,
-      },
-      alternateRowStyles: {
-        fillColor: LIGHT_GRAY_RGB
-      },
-      columnStyles: {
-        0: { cellWidth: 25, halign: 'center' }, 
-        1: { cellWidth: 25, halign: 'right' }, 
-        2: { cellWidth: 25, halign: 'right' }, 
-        3: { cellWidth: 'auto', halign: 'center' }, 
-        4: { cellWidth: 30, halign: 'right' }
-      },
-      margin: { left: 14, right: 14 },
-      tableWidth: 'auto',
-      didDrawPage: (data) => {
-         if (data.pageNumber > 1 && data.cursor.y < yPos && data.cursor.y < 60) {
-            drawHeader();
-        }
-      }
-    });
-    yPos = doc.lastAutoTable.finalY + 12; // Increased spacing
-  } else {
+    const logColumns = ["Time", "Pitch (°)", "Raw Val", "ML Prediction", "Confidence (%)"];
+    const mlDataMap = new Map(mlData.map(item => [item.timestamp, item]));
+    const logRows = dataToDisplay.map(log => {
+      const mlEntry = mlDataMap.get(log.timestamp);
+      const prediction = mlEntry ? mlEntry.prediction : "N/A";
+      const confidence = mlEntry && mlEntry.confidence ? (mlEntry.confidence * 100).toFixed(0) : "N/A";
+      return [
+        log.hour ? formatTimeForPDF(new Date(log.hour)) : 'N/A',
+        log.pitch !== undefined ? log.pitch.toFixed(1) : 'N/A',
+        log.rawValue !== undefined ? log.rawValue : 'N/A',
+        prediction,
+        confidence
+      ];
+    });
+
+    autoTable(doc, {
+      head: [logColumns],
+      body: logRows,
+      startY: yPos,
+      theme: 'striped',
+      headStyles: {
+        fillColor: PRIMARY_COLOR_RGB,
+        textColor: WHITE_RGB,
+        fontStyle: 'bold',
+        fontSize: 9.5,
+        halign: 'center'
+      },
+      styles: {
+        cellPadding: 2,
+        fontSize: 8.5,
+        lineColor: BORDER_COLOR_RGB,
+        lineWidth: 0.1,
+      },
+      alternateRowStyles: {
+        fillColor: LIGHT_GRAY_RGB
+      },
+      columnStyles: {
+        0: { cellWidth: 25, halign: 'center' },
+        1: { cellWidth: 25, halign: 'right' },
+        2: { cellWidth: 25, halign: 'right' },
+        3: { cellWidth: 'auto', halign: 'center' },
+        4: { cellWidth: 30, halign: 'right' }
+      },
+      margin: { left: 14, right: 14 },
+      tableWidth: 'auto',
+      // REMOVE THE didDrawPage HOOK HERE
+      // didDrawPage: (data) => {
+      //    if (data.pageNumber > 1 && data.cursor.y < yPos && data.cursor.y < 60) {
+      //       drawHeader();
+      //   }
+      // }
+    });
+    yPos = doc.lastAutoTable.finalY + 12;
+  } else {
     if (yPos > doc.internal.pageSize.getHeight() - 30) doc.addPage();
     doc.setFontSize(11);
     doc.setTextColor(...TEXT_LIGHT_COLOR_RGB);
@@ -346,7 +381,8 @@ export const generateDailyReportPDF = async (reportData) => {
   }
 
   // --- General Posture Tips ---
-  if (yPos > doc.internal.pageSize.getHeight() - 70) { // Adjusted space check
+  if (yPos > doc.internal.pageSize.getHeight() - 70) {
+    // Adjusted space check
     doc.addPage();
     drawHeader();
   }
@@ -358,24 +394,31 @@ export const generateDailyReportPDF = async (reportData) => {
     "- Take short breaks every 30-60 minutes to stretch and move.",
     "- Ensure your chair and desk are ergonomically set up.",
     "- Be mindful of your posture when sitting, standing, and walking.",
-    "- Strengthen your core and back muscles with regular exercise."
+    "- Strengthen your core and back muscles with regular exercise.",
   ];
-  tips.forEach(tip => {
-    if (yPos > doc.internal.pageSize.getHeight() - 25) { // Adjusted page break
-        doc.addPage();
-        drawHeader(); 
-        // yPos is reset by drawHeader, add some padding for the title if it's a new page for tips
-        doc.setFontSize(10); // Re-set font for tips after header
-        doc.setTextColor(...TEXT_COLOR_RGB);
+  tips.forEach((tip) => {
+    const tipLineHeight = 6; // Estimated height for one line of tip
+    if (yPos + tipLineHeight > doc.internal.pageSize.getHeight() - 25) {
+      // Adjusted page break check, before drawing tip
+      doc.addPage();
+      drawHeader();
+      // Redraw section title on the new page
+      drawSectionTitle("General Posture Tips");
+      // Reset font settings for tips as drawSectionTitle changes them
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(...TEXT_COLOR_RGB);
     }
-    doc.text(tip, 14, yPos, { maxWidth: doc.internal.pageSize.getWidth() - 28 });
-    yPos += 6;
+    doc.text(tip, 14, yPos, {
+      maxWidth: doc.internal.pageSize.getWidth() - 28,
+    });
+    yPos += tipLineHeight; // Increment yPos by the estimated height
   });
   yPos += 12;
 
-
   // --- Notes & Glossary ---
-  if (yPos > doc.internal.pageSize.getHeight() - 60) { // Adjusted space check
+  if (yPos > doc.internal.pageSize.getHeight() - 60) {
+    // Adjusted space check
     doc.addPage();
     drawHeader();
   }
@@ -389,21 +432,27 @@ export const generateDailyReportPDF = async (reportData) => {
     "• Avg. Pitch: The average pitch angle recorded during a specific period (e.g., an hour).",
     // Add more if needed, e.g., if calibrationStatus is passed:
     // reportData.calibrationStatus ? `• Calibration: ${reportData.calibrationStatus}` : "",
-  ].filter(note => note); // Filter out empty strings
+  ].filter((note) => note); // Filter out empty strings
 
-  notes.forEach(note => {
-    if (yPos > doc.internal.pageSize.getHeight() - 20) {
-        doc.addPage();
-        drawHeader(); 
-        yPos += 10; 
-        doc.setFontSize(10);
-        doc.setTextColor(...TEXT_COLOR_RGB);
+  notes.forEach((note) => {
+    const noteLineHeight = 6; // Estimated height for one line of note
+    if (yPos + noteLineHeight > doc.internal.pageSize.getHeight() - 20) {
+      // Check before drawing note
+      doc.addPage();
+      drawHeader();
+      // Redraw section title on the new page
+      drawSectionTitle("Notes & Glossary");
+      // Reset font settings for notes as drawSectionTitle changes them
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(...TEXT_COLOR_RGB);
     }
-    doc.text(note, 14, yPos, { maxWidth: doc.internal.pageSize.getWidth() - 28 });
-    yPos += 6;
+    doc.text(note, 14, yPos, {
+      maxWidth: doc.internal.pageSize.getWidth() - 28,
+    });
+    yPos += noteLineHeight; // Increment yPos by the estimated height
   });
   yPos += 10;
-
 
   // --- Footer ---
   const pageCount = doc.internal.getNumberOfPages();
@@ -415,20 +464,36 @@ export const generateDailyReportPDF = async (reportData) => {
     doc.setPage(i);
     doc.setFontSize(8.5);
     doc.setTextColor(...TEXT_LIGHT_COLOR_RGB);
-    doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.getWidth() / 2, footerY, { align: 'center' });
+    doc.text(
+      `Page ${i} of ${pageCount}`,
+      doc.internal.pageSize.getWidth() / 2,
+      footerY,
+      { align: "center" }
+    );
     doc.text("Generated by AlignMate", 14, footerY);
-    
-    // Add contact link to the right
-    doc.text(contactText, doc.internal.pageSize.getWidth() - 14 - contactTextWidth, footerY);
 
-    if (i === pageCount && yPos < footerY - 5) { 
-        doc.setDrawColor(...BORDER_COLOR_RGB);
-        doc.setLineWidth(0.1);
-        doc.line(14, footerY - 5, doc.internal.pageSize.getWidth() - 14, footerY - 5);
+    // Add contact link to the right
+    doc.text(
+      contactText,
+      doc.internal.pageSize.getWidth() - 14 - contactTextWidth,
+      footerY
+    );
+
+    if (i === pageCount && yPos < footerY - 5) {
+      doc.setDrawColor(...BORDER_COLOR_RGB);
+      doc.setLineWidth(0.1);
+      doc.line(
+        14,
+        footerY - 5,
+        doc.internal.pageSize.getWidth() - 14,
+        footerY - 5
+      );
     }
   }
 
-  const fileNameDate = reportDate ? formatDateForPDF(reportDate).replace(/\s+/g, '_').replace(/,/g, '') : 'UnknownDate';
-  doc.save(`AlignMate_Report_${userName || 'User'}_${fileNameDate}.pdf`);
+  const fileNameDate = reportDate
+    ? formatDateForPDF(reportDate).replace(/\s+/g, "_").replace(/,/g, "")
+    : "UnknownDate";
+  doc.save(`AlignMate_Report_${userName || "User"}_${fileNameDate}.pdf`);
   console.log("[DataExport] PDF generation complete.");
 };

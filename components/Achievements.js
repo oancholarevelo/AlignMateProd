@@ -813,15 +813,15 @@ const Achievements = ({
   const userUID = parentUserUID || localStorage.getItem("userUID");
   const [isResearchMode, setIsResearchMode] = useState(true);
 
-  // Point display configuration - Adjusted for 20-minute sessions
+  // Point display configuration
   const POINT_DISPLAY_CONFIG = {
-    pointsPerDisplayPoint: 18,
+    pointsPerDisplayPoint: 9, // Changed from 18 to 16
     pointUnit: "minute",
     pointUnitPlural: "minutes",
-    maxSessionPoints: isResearchMode ? 20 : 180, // 20 min for research, 3 hours for release
+    maxSessionPoints: isResearchMode ? 20 : 180,
   };
 
-  // Theme-specific reward rates - Adjusted for 20-minute max
+  // Theme-specific reward rates
   const THEME_REWARD_RATES = {
     pet: 1,
     city: 1,
@@ -883,84 +883,119 @@ const Achievements = ({
   };
 
   useEffect(() => {
-    if (!userUID) return;
-
-    console.log("Achievements component mounted");
-
-    if (parentAchievementsData) {
-      const rawPoints = parentAchievementsData.points || 0;
-      const displayPoints = convertToDisplayPoints(rawPoints);
-
-      setAchievementsData({
-        points: displayPoints,
-        themeRewards: calculateThemeRewards(displayPoints),
-        history: parentAchievementsData.history || [],
-        streaks: {
-          current: convertToDisplayPoints(
-            parentAchievementsData.streaks?.current || 0
-          ),
-          longest: convertToDisplayPoints(
-            parentAchievementsData.streaks?.longest || 0
-          ),
-        },
-      });
+    if (!userUID) {
       setLoading(false);
-    } else {
-      const achievementsRef = ref(database, `users/${userUID}/achievements`);
-      const unsubscribe = onValue(achievementsRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          const rawPoints = data.points || 0;
-          const displayPoints = convertToDisplayPoints(rawPoints);
-
-          setAchievementsData({
-            points: displayPoints,
-            themeRewards: calculateThemeRewards(displayPoints),
-            history: data.history || [],
-            streaks: {
-              current: convertToDisplayPoints(data.streaks?.current || 0),
-              longest: convertToDisplayPoints(data.streaks?.longest || 0),
-            },
-          });
-        }
-        setLoading(false);
+      setAchievementsData({
+        points: 0,
+        themeRewards: 0,
+        history: [],
+        streaks: { current: 0, longest: 0 },
       });
-
-      return () => unsubscribe();
+      return;
     }
 
+    setLoading(true);
+    // console.log("Achievements: Main useEffect triggered. userUID:", userUID, "isResearchMode:", isResearchMode, "parentProvided:", !!parentAchievementsData);
+
+    const achievementsRef = ref(database, `users/${userUID}/achievements`);
+    const unsubscribeAchievements = onValue(
+      achievementsRef,
+      (snapshot) => {
+        const firebaseRawData = snapshot.val();
+        // console.log("Achievements: Firebase raw data received:", firebaseRawData);
+
+        let sourceRawPoints = 0;
+        let sourceRawStreaks = { current: 0, longest: 0 };
+        let sourceHistory = [];
+
+        if (firebaseRawData) {
+          sourceRawPoints = firebaseRawData.points || 0;
+          sourceRawStreaks = {
+            current: firebaseRawData.streaks?.current || 0,
+            longest: firebaseRawData.streaks?.longest || 0,
+          };
+          sourceHistory = firebaseRawData.history || [];
+        }
+
+        // If parentAchievementsData is provided, it overrides the Firebase data for raw values.
+        // This assumes parentAchievementsData is the more current/intended source when available.
+        if (parentAchievementsData) {
+          // console.log("Achievements: parentAchievementsData provided, using its values as source.", parentAchievementsData);
+          sourceRawPoints =
+            typeof parentAchievementsData.points === "number"
+              ? parentAchievementsData.points
+              : sourceRawPoints;
+          if (parentAchievementsData.streaks) {
+            sourceRawStreaks = {
+              current:
+                typeof parentAchievementsData.streaks.current === "number"
+                  ? parentAchievementsData.streaks.current
+                  : sourceRawStreaks.current,
+              longest:
+                typeof parentAchievementsData.streaks.longest === "number"
+                  ? parentAchievementsData.streaks.longest
+                  : sourceRawStreaks.longest,
+            };
+          }
+          // For history, use parent's if it's explicitly provided and non-empty, otherwise stick with Firebase's or empty.
+          if (
+            parentAchievementsData.history &&
+            parentAchievementsData.history.length > 0
+          ) {
+            sourceHistory = parentAchievementsData.history;
+          }
+        }
+
+        const displayPoints = convertToDisplayPoints(sourceRawPoints);
+        const displayStreaks = {
+          current: convertToDisplayPoints(sourceRawStreaks.current),
+          longest: convertToDisplayPoints(sourceRawStreaks.longest),
+        };
+
+        // Theme rewards will be calculated by the dedicated useEffect for it
+
+        setAchievementsData((prevData) => ({
+          ...prevData, // Keep other potential state parts
+          points: displayPoints,
+          // themeRewards will be updated by its own effect
+          history: sourceHistory,
+          streaks: displayStreaks,
+        }));
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Achievements: Firebase onValue error:", error);
+        setLoading(false);
+      }
+    );
+
     const sensorStatusRef = ref(database, `users/${userUID}/sensorStatus`);
-    const sensorUnsubscribe = onValue(sensorStatusRef, (snapshot) => {
+    const unsubscribeSensor = onValue(sensorStatusRef, (snapshot) => {
       const status = snapshot.val();
       setSensorConnected(status?.connected === true);
     });
 
     return () => {
-      sensorUnsubscribe();
+      // console.log("Achievements: Cleaning up Firebase listeners.");
+      unsubscribeAchievements();
+      unsubscribeSensor();
     };
-  }, [userUID, parentAchievementsData]);
+  }, [userUID, parentAchievementsData, isResearchMode]); // isResearchMode affects POINT_DISPLAY_CONFIG
 
-  // Update when parent data or theme changes
+  // Effect to re-calculate themeRewards ONLY if selectedTheme or display points change
   useEffect(() => {
-    if (parentAchievementsData) {
-      const rawPoints = parentAchievementsData.points || 0;
-      const displayPoints = convertToDisplayPoints(rawPoints);
-
-      setAchievementsData({
-        points: displayPoints,
-        themeRewards: calculateThemeRewards(displayPoints),
-        history: parentAchievementsData.history || [],
-        streaks: {
-          current: convertToDisplayPoints(
-            parentAchievementsData.streaks?.current || 0
-          ),
-          longest: convertToDisplayPoints(
-            parentAchievementsData.streaks?.longest || 0
-          ),
-        },
-      });
+    // console.log("Achievements: selectedTheme or points changed. Updating themeRewards.");
+    // Ensure calculateThemeRewards and setAchievementsData are defined and accessible
+    if (
+      typeof calculateThemeRewards === "function" &&
+      typeof setAchievementsData === "function"
+    ) {
+      setAchievementsData((prevData) => ({
+        ...prevData,
+        themeRewards: calculateThemeRewards(prevData.points), // prevData.points is display points
+      }));
     }
-  }, [parentAchievementsData, selectedTheme]);
+  }, [selectedTheme, achievementsData.points]);
 
   // Enhanced Current Status Component
   const CurrentStatus = () => {

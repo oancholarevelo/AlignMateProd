@@ -1915,6 +1915,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1, // Allows the date picker to take available space
     marginRight: 8, // Add some space if "Today" button is visible
+    paddingHorizontal: 8, // ADDED: This will add space on the left and right inside the group
   },
 
   calendarIcon: {
