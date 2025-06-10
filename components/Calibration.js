@@ -325,7 +325,7 @@ const Calibration = () => {
       case 3:
         return "Step 3: Sit with SEVERE SLOUCH. Slouch forward significantly, as if hunching over a desk, to create a pronounced spinal tilt. Keep still for accurate measurements. Hold this position until the timer completes.";
       case 3.5:
-        return "Processing... Please wait while the device analyzes your posture data and builds the machine learning model. This may take up to 30 seconds. The LED on your device will indicate when processing is complete.";
+        return "Processing... Please wait while the device analyzes your posture data and builds the machine learning model. This may take up to 30 seconds.";
       case 4:
         return "Calibration complete! Your device is now calibrated to your specific posture patterns using IMU data. It can accurately detect when you're sitting upright or need a reminder to correct your posture.";
       default:
@@ -335,15 +335,17 @@ const Calibration = () => {
 
   // Icons
   const uprightPostureIcon =
-    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%235CA377' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2L12 22'/%3E%3Ccircle cx='12' cy='5' r='2'/%3E%3C/svg%3E";
-  const slouchPostureIcon =
-    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23F87A53' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2C12 2 10 4 10 7C10 10 12 12 12 12'/%3E%3Cpath d='M12 12C12 12 14 14 14 17C14 20 12 22 12 22'/%3E%3Ccircle cx='12' cy='5' r='2'/%3E%3C/svg%3E";
-  const calibrationIcon =
-    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234299E1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z'/%3E%3C/svg%3E";
-  const completeIcon =
-    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%235CA377' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 11.08V12a10 10 0 1 1-5.93-9.14'/%3E%3Cpolyline points='22 4 12 14.01 9 11.01'/%3E%3C/svg%3E";
-  const processingIcon =
-    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234299E1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83'/%3E%3C/svg%3E";
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%235CA377' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4v16'/%3E%3Ccircle cx='12' cy='5' r='2.5'/%3E%3Cpath d='M9 20h6'/%3E%3C/svg%3E";
+  const slightSlouchPostureIcon = // New icon for Step 2 (Slight Slouch) with a warning color
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23FFC107' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4c-2 3-2 6 0 9s0 7 0 7'/%3E%3Ccircle cx='12' cy='5' r='2.5'/%3E%3Cpath d='M9 20h6'/%3E%3C/svg%3E";
+  const slouchPostureIcon = // Original icon for Step 3 (Severe Slouch)
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23F87A53' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4c-2 3-2 6 0 9s0 7 0 7'/%3E%3Ccircle cx='12' cy='5' r='2.5'/%3E%3Cpath d='M9 20h6'/%3E%3C/svg%3E";
+  const calibrationIcon = // Sliders/Adjustment Icon
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234299E1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='4' y1='21' x2='4' y2='14'%3E%3C/line%3E%3Cline x1='4' y1='10' x2='4' y2='3'%3E%3C/line%3E%3Cline x1='12' y1='21' x2='12' y2='12'%3E%3C/line%3E%3Cline x1='12' y1='8' x2='12' y2='3'%3E%3C/line%3E%3Cline x1='20' y1='21' x2='20' y2='16'%3E%3C/line%3E%3Cline x1='20' y1='12' x2='20' y2='3'%3E%3C/line%3E%3Cline x1='1' y1='14' x2='7' y2='14'%3E%3C/line%3E%3Cline x1='9' y1='8' x2='15' y2='8'%3E%3C/line%3E%3Cline x1='17' y1='16' x2='23' y2='16'%3E%3C/line%3E%3C/svg%3E";
+  const completeIcon = // Bolder checkmark in a lightly filled circle
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10' fill='rgba(92,163,119,0.1)' stroke='%235CA377' stroke-width='2'/%3E%3Cpath d='M8 12l3 3l5-6' stroke='%235CA377' stroke-width='2.5'/%3E%3C/svg%3E";
+  const processingIcon = // Modern circular loader
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234299E1' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 12a9 9 0 1 1-6.219-8.56'/%3E%3C/svg%3E";
 
   // Get step icon
   const getStepIcon = () => {
@@ -351,8 +353,9 @@ const Calibration = () => {
       case 1:
         return uprightPostureIcon;
       case 2:
+        return slightSlouchPostureIcon; // Use new icon for slight slouch
       case 3:
-        return slouchPostureIcon;
+        return slouchPostureIcon; // Keep original for severe slouch
       case 3.5:
         return processingIcon;
       case 4:
@@ -474,7 +477,6 @@ const Calibration = () => {
                   <Text style={styles.processingText}>
                     ML Model Building in Progress
                   </Text>
-                  <View style={styles.spinner}></View>
                 </View>
               ) : currentStep === 4 ? (
                 <TouchableOpacity
