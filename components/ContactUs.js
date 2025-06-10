@@ -291,9 +291,6 @@ const ContactUs = ({
           You can also reach us directly at:{'\n'}
           <Text style={styles.footerEmail}>support.alignmate@gmail.com</Text>
         </Text>
-        <Text style={styles.footerNote}>
-          We typically respond within 24-48 hours during business days.
-        </Text>
       </View>
     </View>
   );
@@ -337,7 +334,7 @@ const ContactUs = ({
         onRequestClose={handleClose}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
+          <View style={styles.modalContainer}> {/* This is the white card for modal */}
             {/* Header */}
             <View style={styles.header}>
               <View style={styles.headerLeft}>
@@ -376,65 +373,87 @@ const ContactUs = ({
 
   // Render as standalone page
   return (
-    <View style={styles.container}>
-      <View style={styles.standaloneHeader}>
-        <View style={styles.headerLeft}>
-          <Image 
-            source={{ uri: CONTACT_ICONS.contact }} 
-            style={styles.headerIcon} 
-          />
-          <Text style={styles.headerTitle}>
-            {showSuccess ? "Thank You" : "Contact AlignMate Support"}
-          </Text>
+    <View style={styles.container}> {/* This is the outer gray page background from ContactUs itself */}
+      <View style={styles.pageFormContainer}> {/* This is the white card for the form content */}
+        {/* Header (Green Bar) */}
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <Image 
+              source={{ uri: CONTACT_ICONS.contact }} 
+              style={styles.headerIcon} 
+            />
+            <Text style={styles.headerTitle}>
+              {showSuccess ? "Thank You" : "Contact AlignMate Support"}
+            </Text>
+          </View>
+          {/* Optionally, add a close button or other elements if needed for standalone header */}
         </View>
+        
+        {/* Scrollable Content Area */}
+        <ScrollView 
+          style={styles.content} // Ensures ScrollView takes space within the card
+          contentContainerStyle={styles.contentContainer} // Padding for content within ScrollView
+          showsVerticalScrollIndicator={false}
+        >
+          {content} {/* This will now render on the white pageFormContainer */}
+        </ScrollView>
       </View>
-      
-      <ScrollView 
-        style={styles.content}
-        contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        {content}
-      </ScrollView>
     </View>
   );
 };
 
 // Styles matching ResearchForm
 const styles = StyleSheet.create({
-  container: {
+  container: { // For standalone page view
     flex: 1,
+    alignItems: 'center', 
+    paddingVertical: 20,
+    paddingHorizontal: 16,
     backgroundColor: THEME.background,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)', // Matched ResearchForm
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 16, // Matched ResearchForm
   },
-  modalContainer: {
+  modalContainer: { // Applied to the main card in modal view
     backgroundColor: THEME.cardBackground,
     borderRadius: 16,
     width: '100%',
-    maxWidth: 600,
+    maxWidth: 600, // Consistent with ResearchForm
     maxHeight: '90%',
     overflow: 'hidden',
+    elevation: 8,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    display: 'flex', 
+    flexDirection: 'column',
+  },
+  pageFormContainer: { // Applied to the main card in standalone page view
+    backgroundColor: THEME.cardBackground,
+    borderRadius: 16,
+    width: '100%',
+    maxWidth: 700, 
+    overflow: 'hidden',
+    elevation: 8, 
+    shadowColor: '#000000', 
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    display: 'flex', 
+    flexDirection: 'column',
+    flexShrink: 1, 
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: THEME.border,
-    backgroundColor: THEME.primary,
-  },
-  standaloneHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
+    paddingHorizontal: 20, // Matched ResearchForm
+    paddingVertical: 16, // Matched ResearchForm
     borderBottomWidth: 1,
     borderBottomColor: THEME.border,
     backgroundColor: THEME.primary,
@@ -454,7 +473,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    flex: 1,
+    flexShrink: 1,
+    marginRight: 8,
   },
   closeButton: {
     padding: 4,
@@ -462,83 +482,90 @@ const styles = StyleSheet.create({
   closeIcon: {
     width: 24,
     height: 24,
-    tintColor: '#FFFFFF',
+    tintColor: '#FFFFFF', // Ensured white tint for close icon
   },
   content: {
-    flex: 1,
+    flex: 1, // Allows ScrollView to take available space
   },
   contentContainer: {
-    padding: 20,
+    paddingHorizontal: 24, // Matched ResearchForm
+    paddingBottom: 24, // Matched ResearchForm
   },
-  stepContainer: {
+  stepContainer: { // Renamed from formContainer for consistency if multi-step was planned
     flex: 1,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 20, // Matched ResearchForm
     fontWeight: 'bold',
     color: THEME.text,
-    marginBottom: 8,
+    marginBottom: 8, // Adjusted from 24 to be less for this context
     textAlign: 'center',
+    marginTop: 16,
   },
   subtitle: {
     fontSize: 16,
     color: THEME.textLight,
     textAlign: 'center',
     lineHeight: 24,
-    marginBottom: 32,
+    marginBottom: 24, // Matched ResearchForm
   },
   inputGroup: {
-    marginBottom: 20,
+    marginBottom: 24, // Matched ResearchForm
   },
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
     color: THEME.text,
-    marginBottom: 8,
+    marginBottom: 10, // Matched ResearchForm
   },
   textInput: {
-    borderWidth: 2,
-    borderColor: THEME.border,
+    borderWidth: 1, // Matched ResearchForm
+    borderColor: '#D1D5DB', // Matched ResearchForm
     borderRadius: 8,
-    padding: 12,
+    paddingHorizontal: 14, // Matched ResearchForm
+    paddingVertical: 12, // Matched ResearchForm
     fontSize: 16,
     color: THEME.text,
-    backgroundColor: THEME.cardBackground,
+    backgroundColor: '#F9FAFB', // Matched ResearchForm
   },
   textArea: {
-    borderWidth: 2,
-    borderColor: THEME.border,
+    borderWidth: 1, // Matched ResearchForm
+    borderColor: '#D1D5DB', // Matched ResearchForm
     borderRadius: 8,
-    padding: 12,
+    paddingHorizontal: 14, // Matched ResearchForm
+    paddingVertical: 12, // Matched ResearchForm
     fontSize: 16,
     color: THEME.text,
-    backgroundColor: THEME.cardBackground,
-    minHeight: 120,
+    backgroundColor: '#F9FAFB', // Matched ResearchForm
+    minHeight: 120, // Matched ResearchForm
+    textAlignVertical: 'top',
   },
   charCount: {
     fontSize: 12,
     color: THEME.textLight,
     textAlign: 'right',
-    marginTop: 4,
+    marginTop: 6, // Adjusted slightly
   },
   inputHint: {
     fontSize: 12,
     color: THEME.textLight,
-    marginTop: 4,
+    marginTop: 6, // Adjusted slightly
+    fontStyle: 'italic',
   },
   categoriesContainer: {
-    gap: 12,
+    gap: 12, // Consistent with ResearchForm's gap usage
   },
   categoryCard: {
-    backgroundColor: THEME.cardBackground,
-    borderRadius: 12,
+    backgroundColor: THEME.cardBackground, // Use cardBackground for consistency
+    borderRadius: 8, // Matched ResearchForm's input/button radius
     padding: 16,
-    borderWidth: 2,
-    borderColor: THEME.border,
+    borderWidth: 1, // Thinner border
+    borderColor: '#D1D5DB', // Softer border
   },
   selectedCategoryCard: {
     borderColor: THEME.primary,
-    backgroundColor: `${THEME.primary}15`,
+    backgroundColor: `${THEME.primary}1A`, // Slightly more subtle selection background
+    borderWidth: 2, // Make selected border more prominent
   },
   categoryHeader: {
     flexDirection: 'row',
@@ -546,9 +573,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   categoryIcon: {
-    width: 24,
+    width: 24, // Keep size
     height: 24,
     marginRight: 12,
+    // tintColor will be applied directly in component
   },
   categoryTitle: {
     fontSize: 16,
@@ -556,7 +584,7 @@ const styles = StyleSheet.create({
     color: THEME.text,
   },
   selectedCategoryTitle: {
-    color: THEME.primary,
+    color: THEME.primary, // Keep primary color for selected
   },
   categoryDescription: {
     fontSize: 14,
@@ -564,94 +592,94 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   selectedCategoryDescription: {
-    color: THEME.primary,
+    color: THEME.primary, // Keep primary color for selected
+    // fontWeight: '500', // Optional: slightly bolder
   },
   submitButton: {
     backgroundColor: THEME.primary,
-    borderRadius: 8,
-    padding: 16,
+    borderRadius: 8, // Matched ResearchForm
+    paddingVertical: 14, // Matched ResearchForm
+    paddingHorizontal: 20, // Matched ResearchForm
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 16,
+    marginTop: 24, // Increased top margin
   },
   disabledButton: {
-    opacity: 0.5,
+    opacity: 0.5, // Matched ResearchForm
   },
   submitIcon: {
     width: 20,
     height: 20,
-    marginRight: 8,
+    marginRight: 10, // Adjusted margin
     tintColor: '#FFFFFF',
   },
   submitButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#FFFFFF', // Matched ResearchForm
   },
   footer: {
     marginTop: 32,
     padding: 20,
-    backgroundColor: THEME.background,
-    borderRadius: 12,
+    backgroundColor: THEME.background, // Use page background for footer section
+    borderRadius: 8, // Consistent border radius
     alignItems: 'center',
+    borderTopWidth: 1, // Add a subtle separator
+    borderTopColor: THEME.border,
   },
   footerText: {
     fontSize: 14,
     color: THEME.textLight,
     textAlign: 'center',
     marginBottom: 8,
+    lineHeight: 20,
   },
   footerEmail: {
     color: THEME.primary,
     fontWeight: '600',
   },
-  footerNote: {
-    fontSize: 12,
-    color: THEME.textLight,
-    textAlign: 'center',
-    fontStyle: 'italic',
-  },
-  thankYouContainer: {
+  thankYouContainer: { // Matched ResearchForm
     alignItems: 'center',
     paddingVertical: 40,
+    paddingHorizontal: 20,
   },
-  successIcon: {
+  successIcon: { // Matched ResearchForm
     width: 80,
     height: 80,
     marginBottom: 24,
   },
-  thankYouTitle: {
+  thankYouTitle: { // Matched ResearchForm
     fontSize: 24,
     fontWeight: 'bold',
     color: THEME.text,
     textAlign: 'center',
     marginBottom: 16,
   },
-  thankYouMessage: {
+  thankYouMessage: { // Matched ResearchForm
     fontSize: 16,
     color: THEME.text,
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: 16,
-    paddingHorizontal: 20,
+    paddingHorizontal: 20, // Keep this for text wrapping
   },
-  thankYouSubMessage: {
+  thankYouSubMessage: { // Matched ResearchForm
     fontSize: 14,
     color: THEME.textLight,
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 32,
-    paddingHorizontal: 20,
+    paddingHorizontal: 20, // Keep this for text wrapping
   },
-  thankYouButton: {
+  thankYouButton: { // Matched ResearchForm
     backgroundColor: THEME.primary,
     paddingHorizontal: 40,
     paddingVertical: 16,
     borderRadius: 8,
     minWidth: 120,
   },
-  thankYouButtonText: {
+  thankYouButtonText: { // Matched ResearchForm
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',

@@ -9,7 +9,8 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import PostureGraph from "./components/PostureGraph";
-import ContactPage from "./components/ContactPage"; // Add this import
+import ContactPage from "./components/ContactPage";
+import ResearchPage from "./components/ResearchPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
 
@@ -30,6 +31,9 @@ function App() {
           />
           {/* Add the contact page route - accessible without authentication */}
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/contact-us" element={<Navigate to="/contact" />} />
+          <Route path="/research" element={<ResearchPage />} />
+          <Route path="/research-form" element={<Navigate to="/research" />} />
           <Route path="/" element={<Navigate to="/login" />} />
         </Routes>
       </Router>

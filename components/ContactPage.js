@@ -2,19 +2,24 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import ContactUs from './ContactUs';
 
+const THEME = {
+  primary: '#5CA377',
+  cardBackground: '#FFFFFF',
+  border: '#E5E7EB',
+  text: '#1F2937',
+  textLight: '#6B7280',
+  background: '#F9FAFB',
+};
+
 const ContactPage = () => {
-  // Get user info from URL params or localStorage if available
-  const urlParams = new URLSearchParams(window.location.search);
-  const userUID = urlParams.get('uid') || localStorage.getItem('userUID');
-  const userName = urlParams.get('name') || localStorage.getItem('userName');
 
   return (
     <View style={styles.container}>
       <ContactUs
-        isVisible={true}
+        isVisible={true}SS
         onClose={null}
-        userUID={userUID}
-        userName={userName}
+        userUID={null}
+        userName={null}
         isModal={false}
       />
     </View>
@@ -24,7 +29,7 @@ const ContactPage = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: THEME.background,
   },
 });
 

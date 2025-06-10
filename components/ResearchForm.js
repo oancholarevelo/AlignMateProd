@@ -21,6 +21,7 @@ const THEME = {
   border: '#E5E7EB',
   text: '#1F2937',
   textLight: '#6B7280',
+  background: '#F9FAFB', // Added for page background consistency
 };
 
 // Icons for the feedback form
@@ -30,7 +31,7 @@ const FEEDBACK_ICONS = {
   feedback: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%235CA377' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'/%3E%3C/svg%3E",
 };
 
-const ResearchForm = ({ isVisible, onClose, userUID, userName }) => {
+const ResearchForm = ({ isVisible, onClose, userUID = null, userName = null, isModal = true }) => {
   // Form state
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -309,35 +310,14 @@ const ResearchForm = ({ isVisible, onClose, userUID, userName }) => {
   ]);
 
   // Handle closing with proper cleanup
-  const handleClose = useCallback(() => {
+  const handleActualClose = useCallback(() => {
     if (showThankYou) {
       resetForm();
-      onClose();
+      if (onClose) onClose(); // Call onClose only if it exists
       return;
     }
-
-    // Simple direct close without Alert - you can uncomment the Alert version if needed
     resetForm();
-    onClose();
-
-    // Alternative with Alert (comment out the above two lines and uncomment below if you want confirmation)
-    /*
-    Alert.alert(
-      "Close Form?",
-      "Are you sure you want to close? Your progress will be lost.",
-      [
-        { text: "Continue", style: "cancel" },
-        { 
-          text: "Close", 
-          style: "destructive",
-          onPress: () => {
-            resetForm();
-            onClose();
-          }
-        }
-      ]
-    );
-    */
+    if (onClose) onClose(); // Call onClose only if it exists
   }, [showThankYou, resetForm, onClose]);
 
   // Utility components
@@ -956,7 +936,7 @@ const ResearchForm = ({ isVisible, onClose, userUID, userName }) => {
           {isSubmitting ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
-            <Text style={styles.submitButtonText}>Submit Research Form</Text>
+            <Text style={styles.submitButtonText}>Submit</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -990,92 +970,105 @@ const ResearchForm = ({ isVisible, onClose, userUID, userName }) => {
     </View>
   );
 
-  if (!isVisible) return null;
-
-  return (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={isVisible}
-      onRequestClose={handleClose}
-    >
-      <View 
-        style={styles.modalOverlay}
-      >
-        <View 
-          style={styles.modalContainer}
-        >
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.headerLeft}>
-              <Image 
-                source={{ uri: FEEDBACK_ICONS.feedback }} 
-                style={styles.headerIcon} 
-              />
-              <Text style={styles.headerTitle}>
-                {showThankYou ? "Thank You" : "AlignMate Research Form"}
-              </Text>
-            </View>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={handleClose}
-            >
-              <Image 
-                source={{ uri: FEEDBACK_ICONS.close }} 
-                style={styles.closeIcon} 
-              />
-            </TouchableOpacity>
-          </View>
-
-          {/* Progress indicator */}
-          {!showThankYou && (
-            <View style={styles.progressContainer}>
-              <View style={styles.progressBar}>
-                <View 
-                  style={[
-                    styles.progressFill, 
-                    { width: `${(currentStep / totalSteps) * 100}%` }
-                  ]} 
-                />
-              </View>
-              <Text style={styles.progressText}>
-                Section {currentStep} of {totalSteps}
-              </Text>
-            </View>
-          )}
-
-          {/* Content */}
-          <ScrollView 
-            style={styles.content}
-            contentContainerStyle={styles.contentContainer}
-            showsVerticalScrollIndicator={false}
-          >
-            {showThankYou ? renderThankYou() : (
-              <>
-                {currentStep === 1 && renderStep1()}
-                {currentStep === 2 && renderStep2()}
-                {currentStep === 3 && renderStep3()}
-                {currentStep === 4 && renderStep4()}
-                {currentStep === 5 && renderStep5()}
-                {currentStep === 6 && renderStep6()}
-                {currentStep === 7 && renderStep7()}
-              </>
-            )}
-          </ScrollView>
+  const renderFormCore = () => (
+    <View style={isModal ? styles.modalContainer : styles.pageFormContainer}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
+          <Image 
+            source={{ uri: FEEDBACK_ICONS.feedback }} 
+            style={styles.headerIcon} 
+          />
+          <Text style={styles.headerTitle}>
+            {showThankYou ? "Thank You" : "AlignMate Research Form"}
+          </Text>
         </View>
+        {/* Only show close button in modal mode and if onClose is provided */}
+        {isModal && onClose && (
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={handleActualClose}
+          >
+            <Image 
+              source={{ uri: FEEDBACK_ICONS.close }} 
+              style={styles.closeIcon} 
+            />
+          </TouchableOpacity>
+        )}
       </View>
-    </Modal>
+
+      {/* Progress indicator */}
+      {!showThankYou && (
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBar}>
+            <View 
+              style={[
+                styles.progressFill, 
+                { width: `${(currentStep / totalSteps) * 100}%` }
+              ]} 
+            />
+          </View>
+          <Text style={styles.progressText}>
+            Section {currentStep} of {totalSteps}
+          </Text>
+        </View>
+      )}
+
+      {/* Content */}
+      <ScrollView 
+        style={styles.content}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        {showThankYou ? renderThankYou() : (
+          <>
+            {currentStep === 1 && renderStep1()}
+            {currentStep === 2 && renderStep2()}
+            {currentStep === 3 && renderStep3()}
+            {currentStep === 4 && renderStep4()}
+            {currentStep === 5 && renderStep5()}
+            {currentStep === 6 && renderStep6()}
+            {currentStep === 7 && renderStep7()}
+          </>
+        )}
+      </ScrollView>
+    </View>
   );
+
+  // For modal, respect isVisible. For page, it's always "visible" if rendered.
+  if (!isVisible && isModal) return null;
+
+  if (isModal) {
+    return (
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isVisible}
+        onRequestClose={handleActualClose}
+      >
+        <View style={styles.modalOverlay}>
+          {renderFormCore()}
+        </View>
+      </Modal>
+    );
+  } else {
+    // Non-modal rendering for a page
+    return (
+      <View style={styles.pageContainer}>
+        {renderFormCore()}
+      </View>
+    );
+  }
 };
 
 // Styles
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)', // Slightly darker overlay
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 16, // Adjusted padding
   },
   modalContainer: {
     backgroundColor: THEME.cardBackground,
@@ -1084,12 +1077,41 @@ const styles = StyleSheet.create({
     maxWidth: 600,
     maxHeight: '90%',
     overflow: 'hidden',
+    elevation: 8, // Added shadow for Android
+    shadowColor: '#000000', // Added shadow for iOS
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+  },
+  pageContainer: { // New style for page view
+    flex: 1,
+    alignItems: 'center', 
+    paddingVertical: 20, // Add some vertical padding for the page
+    paddingHorizontal: 16,
+    backgroundColor: THEME.background, 
+  },
+  pageFormContainer: { // Style for the form card when on a page
+    backgroundColor: THEME.cardBackground,
+    borderRadius: 16,
+    width: '100%',
+    maxWidth: 700, // Max width for page view can be larger
+    // maxHeight: '95%', // Let height be determined by content or ScrollView within
+    overflow: 'hidden',
+    elevation: 8, 
+    shadowColor: '#000000', 
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    display: 'flex', 
+    flexDirection: 'column',
+    flexShrink: 1, // Allow shrinking if page content is constrained
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 16, // Adjusted padding
     borderBottomWidth: 1,
     borderBottomColor: THEME.border,
     backgroundColor: THEME.primary,
@@ -1109,7 +1131,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    flex: 1,
+    flexShrink: 1, // Allow title to shrink if needed
+    marginRight: 8, // Space before close button
   },
   closeButton: {
     padding: 4,
@@ -1120,8 +1143,9 @@ const styles = StyleSheet.create({
     tintColor: '#FFFFFF',
   },
   progressContainer: {
-    padding: 20,
-    paddingBottom: 10,
+    paddingHorizontal: 20,
+    paddingTop: 16, // Adjusted padding
+    paddingBottom: 12, // Adjusted padding
   },
   progressBar: {
     height: 6,
@@ -1143,7 +1167,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    padding: 20,
+    paddingHorizontal: 24, // Increased horizontal padding
+    paddingBottom: 24, // Ensure space at the bottom
   },
   stepContainer: {
     flex: 1,
@@ -1152,50 +1177,54 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: THEME.text,
-    marginBottom: 20,
+    marginBottom: 24, // Increased spacing
   },
   subsectionTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: THEME.primary,
-    marginTop: 20,
-    marginBottom: 15,
+    marginTop: 24, // Increased spacing
+    marginBottom: 16, // Increased spacing
   },
   inputGroup: {
-    marginBottom: 20,
+    marginBottom: 24, // Increased spacing
   },
   halfInputGroup: {
     flex: 1,
-    marginRight: 10,
+    // Removed marginRight, will use gap in twoColumnRow if needed or adjust parent
   },
   twoColumnRow: {
     flexDirection: 'row',
-    marginBottom: 20,
+    marginBottom: 24, // Increased spacing
+    gap: 16, // Added gap for spacing between columns
   },
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
     color: THEME.text,
-    marginBottom: 8,
+    marginBottom: 10, // Increased spacing
   },
   textInput: {
-    borderWidth: 2,
-    borderColor: THEME.border,
+    borderWidth: 1, // Slightly thinner border
+    borderColor: '#D1D5DB', // Softer border color
     borderRadius: 8,
-    padding: 12,
+    paddingHorizontal: 14, // Adjusted padding
+    paddingVertical: 12, // Adjusted padding
     fontSize: 16,
     color: THEME.text,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F9FAFB', // Subtle background for inputs
   },
   textArea: {
-    borderWidth: 2,
-    borderColor: THEME.border,
+    borderWidth: 1, // Slightly thinner border
+    borderColor: '#D1D5DB', // Softer border color
     borderRadius: 8,
-    padding: 12,
+    paddingHorizontal: 14, // Adjusted padding
+    paddingVertical: 12, // Adjusted padding
     fontSize: 16,
     color: THEME.text,
-    backgroundColor: '#FFFFFF',
-    minHeight: 100,
+    backgroundColor: '#F9FAFB', // Subtle background for inputs
+    minHeight: 120, // Slightly increased minHeight
+    textAlignVertical: 'top', // Ensure text starts from top
   },
   radioGroup: {
     flexDirection: 'row',
@@ -1249,7 +1278,7 @@ const styles = StyleSheet.create({
   scaleNumbers: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 10,
+    paddingHorizontal: 0, // Adjusted from 10 to 0, or remove if not needed, let scaleNumber handle spacing
   },
   scaleNumber: {
     width: 36,
@@ -1274,28 +1303,33 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   scaleDescription: {
-    fontSize: 12,
+    fontSize: 13, // Slightly larger for readability
     color: THEME.textLight,
-    marginBottom: 10,
+    marginBottom: 12, // Increased spacing
     fontStyle: 'italic',
+    lineHeight: 18, // Improved line height
   },
   likertGroup: {
-    marginBottom: 20,
-    padding: 15,
+    marginBottom: 24, // Increased spacing
+    padding: 16, // Adjusted padding
     backgroundColor: '#F9FAFB',
     borderRadius: 8,
+    borderWidth: 1, // Add a subtle border to the group
+    borderColor: THEME.border,
   },
   likertStatement: {
     fontSize: 14,
     color: THEME.text,
     marginBottom: 12,
     fontWeight: '500',
+    lineHeight: 20, // Improved line height
   },
   likertContainer: {
-    gap: 8,
+    gap: 10, // Increased gap
   },
   likertOption: {
-    padding: 10,
+    paddingVertical: 12, // Adjusted padding
+    paddingHorizontal: 10, // Adjusted padding
     borderRadius: 6,
     borderWidth: 1,
     borderColor: THEME.border,
@@ -1306,7 +1340,7 @@ const styles = StyleSheet.create({
     backgroundColor: `${THEME.primary}15`,
   },
   likertText: {
-    fontSize: 12,
+    fontSize: 13, // Increased font size
     color: THEME.text,
     textAlign: 'center',
   },
@@ -1317,26 +1351,28 @@ const styles = StyleSheet.create({
   stepNavigation: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 12,
-    marginTop: 20,
+    gap: 16, // Increased gap
+    marginTop: 32, // Increased spacing
   },
   backButton: {
     flex: 1,
-    padding: 16,
+    paddingVertical: 14, // Adjusted padding
+    paddingHorizontal: 20, // Adjusted padding
     borderRadius: 8,
-    borderWidth: 2,
-    borderColor: THEME.border,
+    borderWidth: 1, // Thinner border
+    borderColor: THEME.textLight, // Softer border for back button
     backgroundColor: '#FFFFFF',
   },
   backButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: THEME.text,
+    color: THEME.textLight, // Softer text color
     textAlign: 'center',
   },
   nextButton: {
     flex: 1,
-    padding: 16,
+    paddingVertical: 14, // Adjusted padding
+    paddingHorizontal: 20, // Adjusted padding
     borderRadius: 8,
     backgroundColor: THEME.primary,
   },
@@ -1348,7 +1384,8 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     flex: 1,
-    padding: 16,
+    paddingVertical: 14, // Adjusted padding
+    paddingHorizontal: 20, // Adjusted padding
     borderRadius: 8,
     backgroundColor: THEME.primary,
   },
@@ -1364,6 +1401,7 @@ const styles = StyleSheet.create({
   thankYouContainer: {
     alignItems: 'center',
     paddingVertical: 40,
+    paddingHorizontal: 20, // Added horizontal padding
   },
   successIcon: {
     width: 80,
