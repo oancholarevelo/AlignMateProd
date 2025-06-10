@@ -503,7 +503,9 @@ const Register = () => {
             autoCapitalize="none"
           />
           {emailApiError ? (
-            <Text style={styles.errorText}>{emailApiError}</Text>
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorMessageText}>{emailApiError}</Text>
+            </View>
           ) : null}
 
           <View style={styles.passwordContainer}>

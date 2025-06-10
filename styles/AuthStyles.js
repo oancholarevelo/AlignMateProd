@@ -292,11 +292,20 @@ export const registerStyles = StyleSheet.create({
     color: "#5CA377",
     fontWeight: "600",
   },
-  errorText: {
-    color: "#e74c3c",
-    fontSize: 12,
-    marginTop: 4,
-    fontWeight: "500",
+  errorContainer: {
+    width: "80%",
+    backgroundColor: "#FFF5F5",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: "#FF6B6B",
+  },
+  errorMessageText: {
+    fontSize: 14,
+    color: "#FF6B6B",
+    fontWeight: "600",
+    textAlign: "center",
   },
 });
 
