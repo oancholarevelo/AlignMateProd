@@ -146,38 +146,53 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+    borderBottomLeftRadius: 10, // Added
+    borderBottomRightRadius: 10, // Added
   },
   content: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 12,
+    paddingHorizontal: 16, // Adjusted padding
+    paddingVertical: 12,   // Adjusted padding
   },
   iconContainer: {
-    marginRight: 12,
+    marginRight: 15, // Adjusted margin
+    padding: 5,      // Added padding
+    borderRadius: 20, // Make it circular if desired
+    // backgroundColor: "rgba(255, 255, 255, 0.2)", // Optional: subtle background for icon
   },
   icon: {
     fontSize: 24,
+    // color: "white", // Ensure icon color contrasts with its background if changed
   },
   textContainer: {
     flex: 1,
+    marginRight: 10, // Add some space before the dismiss button
   },
   title: {
     color: "white",
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: 17, // Slightly larger title
   },
   message: {
     color: "white",
     fontSize: 14,
-    marginTop: 2,
+    marginTop: 4, // Increased spacing
   },
   dismissButton: {
     padding: 8,
+    borderRadius: 15, // Make it circular
+    // backgroundColor: "rgba(0, 0, 0, 0.1)", // Optional: subtle background for dismiss
+    justifyContent: "center", // Center the 'x'
+    alignItems: "center",     // Center the 'x'
+    width: 30,                // Fixed width
+    height: 30,               // Fixed height
   },
   dismissText: {
     color: "white",
-    fontSize: 24,
+    fontSize: 20, // Adjusted size
     fontWeight: "bold",
+    lineHeight: 20, // Adjust line height for better centering
   },
 });
 
