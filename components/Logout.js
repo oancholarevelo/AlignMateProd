@@ -4,6 +4,7 @@ import { ref, remove, set } from "firebase/database";
 import { useNavigate } from "react-router-dom";
 import { database } from "../firebase";
 import { TouchableOpacity, Text, StyleSheet } from "react-native";
+import { logoutStyles as styles } from "../styles/AuthStyles";
 
 const Logout = () => {
   const navigate = useNavigate();
@@ -49,29 +50,5 @@ const Logout = () => {
     </TouchableOpacity>
   );
 };
-
-const styles = StyleSheet.create({
-  logoutButton: {
-    backgroundColor: "#F87A53",
-    padding: 14,
-    borderRadius: 12,
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "center",
-    width: "100%", 
-    marginTop: 8,
-    marginBottom: 8,
-    shadowColor: "rgba(0, 0, 0, 0.1)",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  logoutButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-});
 
 export default Logout;
