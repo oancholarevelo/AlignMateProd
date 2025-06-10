@@ -47,6 +47,7 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [emailApiError, setEmailApiError] = useState("");
   const navigate = useNavigate();
   const googleProvider = new GoogleAuthProvider(); // Keep for web
   const githubProvider = new GithubAuthProvider();
@@ -138,6 +139,7 @@ const Register = () => {
   };
 
   const handleRegister = () => {
+    setEmailApiError("");
     if (!name.trim()) {
       Alert.alert("Validation Error", "Please enter your name");
       return;
@@ -212,28 +214,30 @@ const Register = () => {
           });
       })
       .catch((error) => {
-        let errorMessage = "Registration failed. Please try again.";
-        switch (error.code) {
-          case "auth/email-already-in-use":
-            errorMessage =
-              "This email is already registered. Please use a different email or try logging in.";
-            break;
-          case "auth/weak-password":
-            errorMessage =
-              "Password is too weak. Please choose a stronger password.";
-            break;
-          case "auth/invalid-email":
-            errorMessage = "Please enter a valid email address.";
-            break;
-          case "auth/operation-not-allowed":
-            errorMessage =
-              "Email registration is not enabled. Please contact support.";
-            break;
-          default:
-            console.error("Registration error:", error);
+        setIsLoading(false); // Ensure loading is stopped
+        if (error.code === "auth/email-already-in-use") {
+          setEmailApiError(
+            "This email is already registered. Please use a different email or try logging in."
+          );
+        } else {
+          let errorMessage = "Registration failed. Please try again.";
+          switch (error.code) {
+            case "auth/weak-password":
+              errorMessage =
+                "Password is too weak. Please choose a stronger password.";
+              break;
+            case "auth/invalid-email":
+              errorMessage = "Please enter a valid email address.";
+              break;
+            case "auth/operation-not-allowed":
+              errorMessage =
+                "Email registration is not enabled. Please contact support.";
+              break;
+            default:
+              console.error("Registration error:", error);
+          }
+          Alert.alert("Registration Error", errorMessage);
         }
-        Alert.alert("Registration Error", errorMessage);
-        setIsLoading(false);
       });
   };
 
@@ -486,15 +490,21 @@ const Register = () => {
           <TextInput
             style={[
               styles.input,
-              !validateEmail(email) && email !== "" && styles.inputError,
+              ((!validateEmail(email) && email !== "") || emailApiError) && styles.inputError,
             ]}
             placeholder="Email"
             placeholderTextColor="#1B1212"
-            onChangeText={setEmail}
+            onChangeText={(text) => {
+              setEmail(text);
+              setEmailApiError(""); // Clear API error when email changes
+            }}
             value={email}
             keyboardType="email-address"
             autoCapitalize="none"
           />
+          {emailApiError ? (
+            <Text style={styles.errorText}>{emailApiError}</Text>
+          ) : null}
 
           <View style={styles.passwordContainer}>
             <TextInput

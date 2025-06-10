@@ -292,6 +292,12 @@ export const registerStyles = StyleSheet.create({
     color: "#5CA377",
     fontWeight: "600",
   },
+  errorText: {
+    color: "#e74c3c",
+    fontSize: 12,
+    marginTop: 4,
+    fontWeight: "500",
+  },
 });
 
 export const loginStyles = StyleSheet.create({

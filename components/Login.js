@@ -152,7 +152,7 @@ const Login = () => {
       // Consider a deep link or a specific URL for your app.
       const actionCodeSettings = {
         // url: `${window.location.origin}/login?emailVerified=true`, // Example for web
-        url: "https://test-alignmate.firebaseapp.com/__/auth/action", // Replace with your actual URL or deep link
+        url: "https://alignmate.vercel.app/login", // Replace with your actual URL or deep link
         handleCodeInApp: false, // Set to true if you handle the link in-app
       };
       await sendPasswordResetEmail(auth, resetEmail, actionCodeSettings);
