@@ -66,6 +66,7 @@ export const generateDailyReportPDF = async (reportData) => {
 
   const doc = new jsPDF();
   let yPos = 0;
+  let mostFrequentPrediction = "N/A"; // Declare and initialize here
 
   const drawHeader = () => {
     const headerHeight = 25;
@@ -176,11 +177,11 @@ export const generateDailyReportPDF = async (reportData) => {
       return acc;
     }, {});
 
-    let mostFrequentPrediction = "N/A";
+    // mostFrequentPrediction = "N/A"; // Remove declaration from here
     let maxCount = 0;
     for (const pred in predictionCounts) {
       if (predictionCounts[pred] > maxCount) {
-        mostFrequentPrediction = pred;
+        mostFrequentPrediction = pred; // Assign to the higher-scoped variable
         maxCount = predictionCounts[pred];
       }
     }
@@ -381,44 +382,76 @@ export const generateDailyReportPDF = async (reportData) => {
   }
 
   // --- General Posture Tips ---
-  if (yPos > doc.internal.pageSize.getHeight() - 70) {
-    // Adjusted space check
+  if (yPos > doc.internal.pageSize.getHeight() - 70) { // Initial check before section title
     doc.addPage();
     drawHeader();
   }
-  drawSectionTitle("General Posture Tips");
+  drawSectionTitle("ML-Driven Posture Guidance"); // Sets font to bold, primary, size 15 and updates yPos
+
+  // Set font for the tips content
   doc.setFontSize(10);
-  doc.setFont("helvetica", "normal"); // Ensure normal font for tips
+  doc.setFont("helvetica", "normal");
   doc.setTextColor(...TEXT_COLOR_RGB);
-  const tips = [
-    "- Take short breaks every 30-60 minutes to stretch and move.",
-    "- Ensure your chair and desk are ergonomically set up.",
-    "- Be mindful of your posture when sitting, standing, and walking.",
-    "- Strengthen your core and back muscles with regular exercise.",
-  ];
-  tips.forEach((tip) => {
-    const tipLineHeight = 6; // Estimated height for one line of tip
-    if (yPos + tipLineHeight > doc.internal.pageSize.getHeight() - 25) {
-      // Adjusted page break check, before drawing tip
-      doc.addPage();
-      drawHeader();
-      // Redraw section title on the new page
-      drawSectionTitle("General Posture Tips");
-      // Reset font settings for tips as drawSectionTitle changes them
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(...TEXT_COLOR_RGB);
-    }
-    doc.text(tip, 14, yPos, {
-      maxWidth: doc.internal.pageSize.getWidth() - 28,
+
+  const mlDrivenTips = [];
+  mlDrivenTips.push(
+    "- Your ESP32's ML model actively learns your posture patterns. Use its feedback to make conscious adjustments throughout the day."
+  );
+
+  if (typeof goodPosturePercentage === "number" && goodPosturePercentage > 75) {
+    mlDrivenTips.push(
+      `- Great job! The ML analysis indicates predominantly good posture (${goodPosturePercentage.toFixed(
+        0
+      )}%). Reinforce this by maintaining ergonomic awareness.`
+    );
+  } else if (typeof badPosturePercentage === "number" && badPosturePercentage > 40) {
+    mlDrivenTips.push(
+      `- The ML model detected frequent poor posture (${badPosturePercentage.toFixed(
+        0
+      )}%). Focus on exercises that counteract your common non-ideal positions.`
+    );
+  } else {
+    mlDrivenTips.push(
+      "- Pay attention to the ML model's classifications. If 'Warning' or 'Bad' postures are frequent, identify triggers like prolonged sitting or screen use."
+    );
+  }
+
+  if (mostFrequentPrediction && mostFrequentPrediction !== "N/A" && mostFrequentPrediction !== "Good") {
+     mlDrivenTips.push(
+       `- The ML model most frequently classified your posture as '${mostFrequentPrediction}'. Consider specific stretches or ergonomic adjustments to address this pattern.`
+     );
+  }
+   mlDrivenTips.push(
+    "- Regularly review your detailed posture log and ML insights to understand how different activities impact your alignment."
+  );
+
+  const tipMaxWidth = doc.internal.pageSize.getWidth() - 28;
+  // Use a tighter line height: fontSize * 1.05 (default is ~1.15)
+  // Ensure getFontSize() is called after setFontSize(10)
+  const lineHeight = doc.getFontSize() * 1.00;
+
+
+  mlDrivenTips.forEach((tip) => {
+    const splitLines = doc.splitTextToSize(tip, tipMaxWidth);
+
+    splitLines.forEach((line) => {
+      if (yPos + lineHeight > doc.internal.pageSize.getHeight() - 25) {
+        doc.addPage();
+        drawHeader();
+        drawSectionTitle("ML-Driven Posture Guidance");
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(...TEXT_COLOR_RGB);
+      }
+      doc.text(line, 14, yPos);
+      yPos += lineHeight; // Increment yPos by the tighter line height
     });
-    yPos += tipLineHeight; // Increment yPos by the estimated height
   });
-  yPos += 12;
+
+  yPos += 0; // Reduced spacing after the entire block of tips (was 12)
 
   // --- Notes & Glossary ---
-  if (yPos > doc.internal.pageSize.getHeight() - 60) {
-    // Adjusted space check
+  if (yPos > doc.internal.pageSize.getHeight() - 60) { // Adjusted space check
     doc.addPage();
     drawHeader();
   }
@@ -434,25 +467,29 @@ export const generateDailyReportPDF = async (reportData) => {
     // reportData.calibrationStatus ? `• Calibration: ${reportData.calibrationStatus}` : "",
   ].filter((note) => note); // Filter out empty strings
 
+  const noteMaxWidth = doc.internal.pageSize.getWidth() - 28;
+  // Use a tighter line height: fontSize * 1.05
+  // Ensure getFontSize() is called after setFontSize(10)
+  const noteLineHeightActual = doc.getFontSize() * 1.05;
+
+
   notes.forEach((note) => {
-    const noteLineHeight = 6; // Estimated height for one line of note
-    if (yPos + noteLineHeight > doc.internal.pageSize.getHeight() - 20) {
-      // Check before drawing note
-      doc.addPage();
-      drawHeader();
-      // Redraw section title on the new page
-      drawSectionTitle("Notes & Glossary");
-      // Reset font settings for notes as drawSectionTitle changes them
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(...TEXT_COLOR_RGB);
-    }
-    doc.text(note, 14, yPos, {
-      maxWidth: doc.internal.pageSize.getWidth() - 28,
+    const splitLines = doc.splitTextToSize(note, noteMaxWidth);
+
+    splitLines.forEach((line) => {
+      if (yPos + noteLineHeightActual > doc.internal.pageSize.getHeight() - 20) {
+        doc.addPage();
+        drawHeader();
+        drawSectionTitle("Notes & Glossary");
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(...TEXT_COLOR_RGB);
+      }
+      doc.text(line, 14, yPos);
+      yPos += noteLineHeightActual; // Increment yPos by the tighter line height
     });
-    yPos += noteLineHeight; // Increment yPos by the estimated height
   });
-  yPos += 10;
+  yPos += 0; // Reduced spacing after the notes section (was 10)
 
   // --- Footer ---
   const pageCount = doc.internal.getNumberOfPages();

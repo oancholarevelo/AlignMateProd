@@ -169,6 +169,13 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.lightGray, // Or another color to indicate non-editable
     color: THEME.textSecondary,
   },
+  disabledRadioOption: {
+    backgroundColor: '#e0e0e0', // Example disabled background
+    borderColor: '#c0c0c0',    // Example disabled border
+  },
+  disabledRadioText: {
+    color: '#a0a0a0',          // Example disabled text color
+  },
   infoText: {
     fontSize: 12,
     color: THEME.textSecondary,

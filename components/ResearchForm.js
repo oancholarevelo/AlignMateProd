@@ -493,26 +493,21 @@ const ResearchForm = ({
         if (noneIsSelected) {
           if (painExperience.length > 1) {
             // This state should be corrected by the MultiSelect onChange handler.
-            // If it somehow persists, it's an error.
             newErrors.painExperience =
               "'None of the above' cannot be selected with other pain options.";
           }
           // If "None of the above" is selected, painDuration must be "N/A".
-          // The onChange handler for MultiSelect and the editable prop for TextInput should enforce this.
-          if (painDuration.trim().toUpperCase() !== "N/A") {
-            newErrors.painDuration =
-              "Duration must be 'N/A' when 'None of the above' is selected.";
+          // This is enforced by the MultiSelect onChange handler.
+          if (painDuration !== "N/A") {
+            newErrors.painDuration = // Should ideally not trigger if logic is correct
+              "Duration must be 'N/A' when 'None of the above' is selected for pain.";
           }
         } else {
           // Actual pain(s) are selected, and "None of the above" is NOT selected.
-          if (!painDuration.trim()) {
+          if (!painDuration) { // Check if painDuration is empty (i.e., no selection made)
             newErrors.painDuration =
               "Please specify how long you've experienced this pain/discomfort.";
-          } else if (painDuration.trim() === ".") {
-            newErrors.painDuration =
-              "Please provide a valid duration, not just a period.";
           }
-          // "N/A" is also acceptable here as per placeholder "e.g., 2 weeks, 3 months, or N/A"
         }
       }
 
@@ -566,10 +561,34 @@ const ResearchForm = ({
         newErrors.reducedDiscomfort = "Please rate this item.";
       if (effectiveness.improvedAwareness === 0)
         newErrors.improvedAwareness = "Please rate this item.";
+
       if (functionality.sensorAccuracy === 0)
         newErrors.sensorAccuracy = "Please rate this item.";
       if (functionality.appIntegration === 0)
         newErrors.appIntegration = "Please rate this item.";
+      if (functionality.wearableDesign === 0) // ADDED
+        newErrors.wearableDesign = "Please rate this item.";
+      if (functionality.consistentFunction === 0) // ADDED
+        newErrors.consistentFunction = "Please rate this item.";
+
+      if (reliability.consistentAlerts === 0) // ADDED
+        newErrors.consistentAlerts = "Please rate this item.";
+      if (reliability.noInterruptions === 0) // ADDED
+        newErrors.noInterruptions = "Please rate this item.";
+      if (reliability.effectiveAcrossActivities === 0) // ADDED
+        newErrors.effectiveAcrossActivities = "Please rate this item.";
+      if (reliability.batteryLife === 0) // ADDED
+        newErrors.batteryLife = "Please rate this item.";
+
+      if (security.safeFromHacking === 0) // ADDED
+        newErrors.safeFromHacking = "Please rate this item.";
+      if (security.authorizedAccess === 0) // ADDED
+        newErrors.authorizedAccess = "Please rate this item.";
+      if (security.dataControl === 0) // ADDED
+        newErrors.dataControl = "Please rate this item.";
+      if (security.dataUsageUnderstanding === 0) // ADDED
+        newErrors.dataUsageUnderstanding = "Please rate this item.";
+
     } else if (step === 6) {
       if (usability.easySetup === 0)
         newErrors.easySetup = "Please rate this item.";
@@ -579,10 +598,15 @@ const ResearchForm = ({
         newErrors.clearNotifications = "Please rate this item.";
       if (usability.comfortableWear === 0)
         newErrors.comfortableWear = "Please rate this item.";
+
       if (sensitivity.detectsSmallChanges === 0)
         newErrors.detectsSmallChanges = "Please rate this item.";
       if (sensitivity.differentiatesAdjustments === 0)
         newErrors.differentiatesAdjustments = "Please rate this item.";
+      if (sensitivity.adjustableSettings === 0) // ADDED
+        newErrors.adjustableSettings = "Please rate this item.";
+      if (sensitivity.recognizesTransitions === 0) // ADDED
+        newErrors.recognizesTransitions = "Please rate this item.";
     } else if (step === 7) {
       // Qualitative feedback is optional, but if you want to make some required:
       // if (!likedMost.trim()) newErrors.likedMost = "This field is required.";
@@ -1195,41 +1219,77 @@ const ResearchForm = ({
               );
             }
 
-            // Update painDuration state only if it actually changed
-            if (newPainDurationState !== painDuration) {
-              handleInputChange(
-                setPainDuration,
-                "painDuration",
-                newPainDurationState
-              );
+            // MODIFIED: Logic for painDuration based on painExperience
+            if (noneIsNowSelected) {
+              // If "None of the above" is selected, painDuration MUST be "N/A".
+              if (painDuration !== "N/A") { // Only update if not already "N/A"
+                handleRadioChange(setPainDuration, "painDuration", "N/A");
+              }
+            } else {
+              // "None of the above" is NOT selected.
+              // If it WAS previously selected AND painDuration was "N/A", clear painDuration to force re-selection.
+              if (
+                painExperience.includes("None of the above") && // Check old painExperience state
+                newPainDurationState === "N/A" // Check current painDuration state (which was newPainDurationState before this block)
+              ) {
+                handleRadioChange(setPainDuration, "painDuration", ""); // Clear to prompt selection
+              }
             }
           }}
           error={errors.painExperience}
         />
       </View>
 
-      {/* MODIFIED: Simplified Pain Duration Input Field */}
+      {/* MODIFIED: Pain Duration Input Field to Multiple Choice Radio */}
       <View style={styles.inputGroup}>
         <Text style={styles.inputLabel}>
           {painExperience.includes("None of the above")
             ? "Pain/Discomfort Duration:"
             : "How long have you been experiencing this pain/discomfort (if any)?"}
         </Text>
-        <TextInput
-          style={[styles.textInput, errors.painDuration && styles.inputError]}
-          placeholder={
-            painExperience.includes("None of the above")
-              ? "N/A"
-              : "e.g., 2 weeks, 3 months, or N/A"
-          }
-          value={painDuration}
-          onChangeText={(text) =>
-            handleInputChange(setPainDuration, "painDuration", text)
-          }
-          editable={!painExperience.includes("None of the above")} // Non-editable if "None of the above" is selected
-        />
+        <View style={styles.radioGroup}>
+          {[
+            { label: "Less than 1 month", value: "Less than 1 month" },
+            { label: "1-6 months", value: "1-6 months" },
+            { label: "6-12 months", value: "6-12 months" },
+            { label: "More than 1 year", value: "More than 1 year" },
+            { label: "N/A", value: "N/A" },
+          ].map((option) => (
+            <TouchableOpacity
+              key={option.value}
+              style={[
+                styles.radioOption,
+                painDuration === option.value && styles.selectedRadioOption,
+                errors.painDuration && styles.inputError, // Apply error style to container or options
+                painExperience.includes("None of the above") && option.value !== "N/A" && styles.disabledRadioOption, // Style non-"N/A" options as disabled
+                painExperience.includes("None of the above") && option.value === "N/A" && styles.selectedRadioOption, // Ensure "N/A" is styled as selected
+              ]}
+              onPress={() => {
+                if (!painExperience.includes("None of the above")) {
+                  handleRadioChange(setPainDuration, "painDuration", option.value);
+                }
+                // If "None of the above" is selected for pain, only "N/A" for duration is effectively allowed (handled by painExperience onChange)
+              }}
+              disabled={painExperience.includes("None of the above") && option.value !== "N/A"}
+            >
+              <Text
+                style={[
+                  styles.radioText,
+                  painDuration === option.value && styles.selectedRadioText,
+                  painExperience.includes("None of the above") && option.value !== "N/A" && styles.disabledRadioText,
+                  painExperience.includes("None of the above") && option.value === "N/A" && styles.selectedRadioText,
+                ]}
+              >
+                {option.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
         {errors.painDuration && (
           <Text style={styles.errorText}>{errors.painDuration}</Text>
+        )}
+        {painExperience.includes("None of the above") && (
+          <Text style={styles.infoText}>Duration is set to N/A as no pain is selected.</Text>
         )}
       </View>
 
@@ -1465,8 +1525,7 @@ const ResearchForm = ({
   // Step 4: Post-test Assessment
   const renderStep4 = () => (
     <View style={styles.stepContainer}>
-      <Text style={styles.sectionTitle}>V. Post-Test Assessment</Text>{" "}
-      {/* Typo in original: IV not V */}
+      <Text style={styles.sectionTitle}>IV. Post-Test Assessment</Text> {/* CORRECTED ROMAN NUMERAL */}
       <View style={styles.inputGroup}>
         <Text style={styles.inputLabel}>Current Posture Self-Assessment:</Text>
         <Text style={styles.scaleDescription}>
@@ -1585,7 +1644,7 @@ const ResearchForm = ({
   const renderStep5 = () => (
     <View style={styles.stepContainer}>
       <Text style={styles.sectionTitle}>
-        VI. Comprehensive Evaluation (Part 1)
+        V. Comprehensive Evaluation (Part 1) {/* CORRECTED ROMAN NUMERAL */}
       </Text>
 
       <Text style={styles.subsectionTitle}>A. Effectiveness</Text>
@@ -1704,6 +1763,185 @@ const ResearchForm = ({
         />
       </View>
 
+      {/* ADDED: Missing Functionality Questions */}
+      <View style={styles.likertGroup}>
+        <Text style={styles.likertStatement}>
+          The wearable design does not interfere with my daily activities.
+        </Text>
+        <LikertScale
+          value={functionality.wearableDesign}
+          onChange={(value) =>
+            handleLikertChange(
+              setFunctionality,
+              "functionality",
+              "wearableDesign",
+              value
+            )
+          }
+          error={errors.wearableDesign}
+        />
+      </View>
+
+      <View style={styles.likertGroup}>
+        <Text style={styles.likertStatement}>
+          The device functions consistently across different environments (home, school, etc.).
+        </Text>
+        <LikertScale
+          value={functionality.consistentFunction}
+          onChange={(value) =>
+            handleLikertChange(
+              setFunctionality,
+              "functionality",
+              "consistentFunction",
+              value
+            )
+          }
+          error={errors.consistentFunction}
+        />
+      </View>
+
+      {/* ADDED: C. Reliability Section */}
+      <Text style={styles.subsectionTitle}>C. Reliability</Text>
+      <View style={styles.likertGroup}>
+        <Text style={styles.likertStatement}>
+          AlignMate consistently provides accurate posture alerts without errors.
+        </Text>
+        <LikertScale
+          value={reliability.consistentAlerts}
+          onChange={(value) =>
+            handleLikertChange(
+              setReliability,
+              "reliability",
+              "consistentAlerts",
+              value
+            )
+          }
+          error={errors.consistentAlerts}
+        />
+      </View>
+      <View style={styles.likertGroup}>
+        <Text style={styles.likertStatement}>
+          The device operates without interruptions during prolonged use.
+        </Text>
+        <LikertScale
+          value={reliability.noInterruptions}
+          onChange={(value) =>
+            handleLikertChange(
+              setReliability,
+              "reliability",
+              "noInterruptions",
+              value
+            )
+          }
+          error={errors.noInterruptions}
+        />
+      </View>
+      <View style={styles.likertGroup}>
+        <Text style={styles.likertStatement}>
+          The posture correction feedback remains effective across different activities (e.g., studying, working).
+        </Text>
+        <LikertScale
+          value={reliability.effectiveAcrossActivities}
+          onChange={(value) =>
+            handleLikertChange(
+              setReliability,
+              "reliability",
+              "effectiveAcrossActivities",
+              value
+            )
+          }
+          error={errors.effectiveAcrossActivities}
+        />
+      </View>
+      <View style={styles.likertGroup}>
+        <Text style={styles.likertStatement}>
+          The battery life is sufficient for daily use.
+        </Text>
+        <LikertScale
+          value={reliability.batteryLife}
+          onChange={(value) =>
+            handleLikertChange(
+              setReliability,
+              "reliability",
+              "batteryLife",
+              value
+            )
+          }
+          error={errors.batteryLife}
+        />
+      </View>
+
+      {/* ADDED: D. Security Section */}
+      <Text style={styles.subsectionTitle}>D. Security</Text>
+      <View style={styles.likertGroup}>
+        <Text style={styles.likertStatement}>
+          I feel safe using AlignMate without concerns about hacking or unauthorized access.
+        </Text>
+        <LikertScale
+          value={security.safeFromHacking}
+          onChange={(value) =>
+            handleLikertChange(
+              setSecurity,
+              "security",
+              "safeFromHacking",
+              value
+            )
+          }
+          error={errors.safeFromHacking}
+        />
+      </View>
+      <View style={styles.likertGroup}>
+        <Text style={styles.likertStatement}>
+          AlignMate ensures that only authorized users can access my posture tracking history.
+        </Text>
+        <LikertScale
+          value={security.authorizedAccess}
+          onChange={(value) =>
+            handleLikertChange(
+              setSecurity,
+              "security",
+              "authorizedAccess",
+              value
+            )
+          }
+          error={errors.authorizedAccess}
+        />
+      </View>
+      <View style={styles.likertGroup}>
+        <Text style={styles.likertStatement}>
+          The app allows me to control what data is collected and shared.
+        </Text>
+        <LikertScale
+          value={security.dataControl}
+          onChange={(value) =>
+            handleLikertChange(
+              setSecurity,
+              "security",
+              "dataControl",
+              value
+            )
+          }
+          error={errors.dataControl}
+        />
+      </View>
+      <View style={styles.likertGroup}>
+        <Text style={styles.likertStatement}>
+          I understand how my posture data is used and stored.
+        </Text>
+        <LikertScale
+          value={security.dataUsageUnderstanding}
+          onChange={(value) =>
+            handleLikertChange(
+              setSecurity,
+              "security",
+              "dataUsageUnderstanding",
+              value
+            )
+          }
+          error={errors.dataUsageUnderstanding}
+        />
+      </View>
+
       <View style={styles.stepNavigation}>
         <TouchableOpacity
           style={styles.backButton}
@@ -1725,7 +1963,7 @@ const ResearchForm = ({
   const renderStep6 = () => (
     <View style={styles.stepContainer}>
       <Text style={styles.sectionTitle}>
-        VI. Comprehensive Evaluation (Part 2)
+        V. Comprehensive Evaluation (Part 2) {/* CORRECTED ROMAN NUMERAL */}
       </Text>
       <Text style={styles.subsectionTitle}>E. Usability</Text>{" "}
       {/* Assuming C & D were on a previous unseen step or combined */}
@@ -1827,6 +2065,41 @@ const ResearchForm = ({
             )
           }
           error={errors.differentiatesAdjustments}
+        />
+      </View>
+      {/* ADDED: Missing Sensitivity Questions */}
+      <View style={styles.likertGroup}>
+        <Text style={styles.likertStatement}>
+          The sensitivity settings can be adjusted to my personal needs.
+        </Text>
+        <LikertScale
+          value={sensitivity.adjustableSettings}
+          onChange={(value) =>
+            handleLikertChange(
+              setSensitivity,
+              "sensitivity",
+              "adjustableSettings",
+              value
+            )
+          }
+          error={errors.adjustableSettings}
+        />
+      </View>
+      <View style={styles.likertGroup}>
+        <Text style={styles.likertStatement}>
+          The system appropriately recognizes when I'm in transition between positions.
+        </Text>
+        <LikertScale
+          value={sensitivity.recognizesTransitions}
+          onChange={(value) =>
+            handleLikertChange(
+              setSensitivity,
+              "sensitivity",
+              "recognizesTransitions",
+              value
+            )
+          }
+          error={errors.recognizesTransitions}
         />
       </View>
       <View style={styles.stepNavigation}>
