@@ -11,6 +11,7 @@ import {
   Image,
   Modal,
   Linking,
+  Platform,
 } from "react-native";
 import { ref, push, set, get } from "firebase/database"; // Added get
 import { database } from "../firebase";
@@ -2048,29 +2049,32 @@ const ResearchForm = ({
       <TouchableOpacity
         style={styles.thankYouButton}
         onPress={async () => {
-          // MODIFIED: Make onPress async
-          const isLoggedIn = !!userUID; // Check if userUID exists
+          const isLoggedIn = !!userUID;
           const targetUrl = isLoggedIn
             ? "https://alignmate.vercel.app/app"
             : "https://alignmate.vercel.app/login";
 
           resetForm();
           if (onClose) {
-            // If it's a modal, call onClose
             onClose();
           }
 
-          // ADDED: Open the URL based on login state
-          try {
-            const supported = await Linking.canOpenURL(targetUrl);
-            if (supported) {
-              await Linking.openURL(targetUrl);
-            } else {
-              Alert.alert(`Don't know how to open this URL: ${targetUrl}`);
+          if (Platform.OS === 'web') {
+            // For web, use window.location.href to navigate in the same tab
+            window.location.href = targetUrl;
+          } else {
+            // For native platforms, continue using Linking.openURL
+            try {
+              const supported = await Linking.canOpenURL(targetUrl);
+              if (supported) {
+                await Linking.openURL(targetUrl);
+              } else {
+                Alert.alert(`Don't know how to open this URL: ${targetUrl}`);
+              }
+            } catch (error) {
+              console.error("Failed to open URL (native):", error);
+              Alert.alert("Error", "Could not open the link (native).");
             }
-          } catch (error) {
-            console.error("Failed to open URL:", error);
-            Alert.alert("Error", "Could not open the link.");
           }
         }}
       >
