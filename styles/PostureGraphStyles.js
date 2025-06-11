@@ -2183,6 +2183,29 @@ const styles = StyleSheet.create({
     color: "#2D5530",
     lineHeight: 18,
   },
+  buzzerControlRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: THEME.border || '#e0e0e0', // Use THEME.border or a fallback
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  buzzerControlLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: THEME.text || '#000000', // Use THEME.text or a fallback
+  },
+  settingsSubtleNote: {
+    fontSize: 12,
+    color: THEME.textSecondary || '#666666', // Use THEME.textSecondary or a fallback
+    marginTop: 8,
+    fontStyle: 'italic',
+    textAlign: 'center',
+  },
 });
 
 export { styles, THEME };
