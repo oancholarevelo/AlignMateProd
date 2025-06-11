@@ -169,6 +169,7 @@ const styles = StyleSheet.create({
   },
   timeTextInput: {
     flex: 1, // Allow text input to take available space
+    minWidth: 0, // Add this line to allow more aggressive shrinking
     borderWidth: 1,
     borderColor: '#D1D5DB',
     borderRadius: 8,
@@ -181,9 +182,10 @@ const styles = StyleSheet.create({
   ampmSelector: {
     flexDirection: 'row',
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: '#D1D5DB', // This specific grey is used for timeTextInput and textInput as well
     borderRadius: 8,
     overflow: 'hidden', // To clip children borderRadius
+    flexShrink: 0, // Add this line to prevent the selector from shrinking
   },
   ampmOption: {
     paddingVertical: 12,
