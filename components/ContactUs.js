@@ -16,14 +16,7 @@ import { database } from '../firebase';
 import { styles } from "../styles/ContactUsStyles";
 
 // Theme constants to match ResearchForm
-const THEME = {
-  primary: '#5CA377',
-  cardBackground: '#FFFFFF',
-  border: '#E5E7EB',
-  text: '#1F2937',
-  textLight: '#6B7280',
-  background: '#F9FAFB',
-};
+
 
 // Icons for the contact form
 const CONTACT_ICONS = {
