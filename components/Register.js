@@ -10,7 +10,7 @@ import {
   signInWithCredential, // For Native Google Sign-In
 } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
-import { ref, set, update as firebaseUpdate } from "firebase/database"; // Renamed update to firebaseUpdate to avoid conflict
+import { ref, set, update as firebaseUpdate, runTransaction } from "firebase/database"; // Renamed update to firebaseUpdate to avoid conflict
 import { auth, database } from "../firebase";
 import {
   View,
@@ -51,6 +51,28 @@ const Register = () => {
   const navigate = useNavigate();
   const googleProvider = new GoogleAuthProvider(); // Keep for web
   const githubProvider = new GithubAuthProvider();
+
+  const getNextSequentialID = async () => {
+    const counterRef = ref(database, "counters/lastUserID");
+    try {
+      const transactionResult = await runTransaction(counterRef, (currentData) => {
+        if (currentData === null) {
+          return 1; // Initialize to 1 if it doesn't exist
+        }
+        return currentData + 1; // Increment
+      });
+
+      if (transactionResult.committed) {
+        return transactionResult.snapshot.val(); // The new ID
+      } else {
+        console.error("getNextSequentialID transaction aborted.");
+        throw new Error("Failed to get next user ID due to transaction abort.");
+      }
+    } catch (error) {
+      console.error("Error in getNextSequentialID transaction:", error);
+      throw new Error(`Failed to allocate sequential user ID: ${error.message}`);
+    }
+  };
 
   const GoogleLogo = ({ size = 18, style }) => (
     <Svg width={size} height={size} viewBox="0 0 18 18" style={style}>
@@ -138,7 +160,7 @@ const Register = () => {
     return password === confirmPassword;
   };
 
-  const handleRegister = () => {
+  const handleRegister = async () => { // Made async
     setEmailApiError("");
     if (!name.trim()) {
       Alert.alert("Validation Error", "Please enter your name");
@@ -173,112 +195,137 @@ const Register = () => {
 
     setIsLoading(true);
 
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        const user = userCredential.user;
-        console.log("Registration successful", user.uid);
+    try {
+      const sequentialID = await getNextSequentialID();
 
-        const updates = {};
-        const trimmedName = name.trim();
-        updates[`users/${user.uid}/email`] = user.email;
-        updates[`users/${user.uid}/name`] = trimmedName;
-        updates[`users/${user.uid}/userInfo/name`] = trimmedName;
-        updates[`users/${user.uid}/userInfo/email`] = user.email;
-        updates[`users/${user.uid}/profile/displayName`] = trimmedName;
-        updates[`users/${user.uid}/termsAccepted`] = true;
-        updates[`users/${user.uid}/termsAcceptedDate`] =
-          new Date().toISOString();
-        updates[`users/${user.uid}/registrationDate`] =
-          new Date().toISOString();
-        updates[`users/${user.uid}/authProvider`] = "email";
+      createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          console.log("Registration successful", user.uid, "Sequential ID:", sequentialID);
 
-        firebaseUpdate(ref(database), updates)
-          .then(() => {
-            console.log("User data saved successfully with name:", trimmedName);
-            localStorage.setItem("userName", trimmedName);
-            localStorage.setItem("userEmail", user.email);
-            localStorage.setItem("userUID", user.uid);
-            Alert.alert("Success", "Registration successful! Please log in.");
-            navigate("/login");
-          })
-          .catch((error) => {
-            console.error("Error saving user data:", error);
-            Alert.alert(
-              "Partial Success",
-              "Registration completed, but there was an issue saving your details. Please update it after login."
+          const updates = {};
+          const trimmedName = name.trim();
+          updates[`users/${user.uid}/email`] = user.email;
+          updates[`users/${user.uid}/name`] = trimmedName;
+          updates[`users/${user.uid}/userInfo/name`] = trimmedName;
+          updates[`users/${user.uid}/userInfo/email`] = user.email;
+          updates[`users/${user.uid}/profile/displayName`] = trimmedName;
+          updates[`users/${user.uid}/termsAccepted`] = true;
+          updates[`users/${user.uid}/termsAcceptedDate`] =
+            new Date().toISOString();
+          updates[`users/${user.uid}/registrationDate`] =
+            new Date().toISOString();
+          updates[`users/${user.uid}/authProvider`] = "email";
+          updates[`users/${user.uid}/sequentialID`] = sequentialID; // Add sequential ID
+
+          firebaseUpdate(ref(database), updates)
+            .then(() => {
+              console.log("User data saved successfully with name:", trimmedName, "and Sequential ID:", sequentialID);
+              localStorage.setItem("userName", trimmedName);
+              localStorage.setItem("userEmail", user.email);
+              localStorage.setItem("userUID", user.uid);
+              Alert.alert("Success", "Registration successful! Please log in.");
+              navigate("/login");
+            })
+            .catch((error) => {
+              console.error("Error saving user data:", error);
+              Alert.alert(
+                "Partial Success",
+                "Registration completed, but there was an issue saving your details. Please update it after login."
+              );
+              navigate("/login"); // Or navigate to app if partial success is acceptable
+            })
+            .finally(() => {
+              setIsLoading(false);
+            });
+        })
+        .catch((error) => {
+          setIsLoading(false); // Ensure loading is stopped on auth error
+          if (error.code === "auth/email-already-in-use") {
+            setEmailApiError(
+              "This email is already registered. Please use a different email or try logging in."
             );
-            navigate("/login");
-          })
-          .finally(() => {
-            setIsLoading(false);
-          });
-      })
-      .catch((error) => {
-        setIsLoading(false); // Ensure loading is stopped
-        if (error.code === "auth/email-already-in-use") {
-          setEmailApiError(
-            "This email is already registered. Please use a different email or try logging in."
-          );
-        } else {
-          let errorMessage = "Registration failed. Please try again.";
-          switch (error.code) {
-            case "auth/weak-password":
-              errorMessage =
-                "Password is too weak. Please choose a stronger password.";
-              break;
-            case "auth/invalid-email":
-              errorMessage = "Please enter a valid email address.";
-              break;
-            case "auth/operation-not-allowed":
-              errorMessage =
-                "Email registration is not enabled. Please contact support.";
-              break;
-            default:
-              console.error("Registration error:", error);
+          } else {
+            let errorMessage = "Registration failed. Please try again.";
+            switch (error.code) {
+              case "auth/weak-password":
+                errorMessage =
+                  "Password is too weak. Please choose a stronger password.";
+                break;
+              case "auth/invalid-email":
+                errorMessage = "Please enter a valid email address.";
+                break;
+              case "auth/operation-not-allowed":
+                errorMessage =
+                  "Email registration is not enabled. Please contact support.";
+                break;
+              default:
+                console.error("Registration error:", error);
+            }
+            Alert.alert("Registration Error", errorMessage);
           }
-          Alert.alert("Registration Error", errorMessage);
-        }
-      });
+        });
+    } catch (idError) { // Catch errors from getNextSequentialID
+      setIsLoading(false);
+      console.error("Failed to get sequential ID for registration:", idError);
+      Alert.alert("Registration Error", `Could not prepare user registration (ID assignment): ${idError.message}. Please try again.`);
+    }
   };
 
-  const saveUserData = (user, providerName = "unknown") => {
-    // Added default for providerName
+  const saveUserData = async (user, providerName = "unknown") => {
     const displayName =
       user.displayName ||
-      name.trim() ||
+      name.trim() || // Use name from state if available (e.g. if user typed it before OAuth)
       `${providerName.charAt(0).toUpperCase() + providerName.slice(1)} User`;
     const userEmail = user.email;
 
-    const updates = {};
-    updates[`users/${user.uid}/email`] = userEmail;
-    updates[`users/${user.uid}/name`] = displayName;
-    updates[`users/${user.uid}/userInfo/name`] = displayName;
-    updates[`users/${user.uid}/userInfo/email`] = userEmail;
-    updates[`users/${user.uid}/profile/displayName`] = displayName;
-    updates[`users/${user.uid}/termsAccepted`] = true;
-    updates[`users/${user.uid}/termsAcceptedDate`] = new Date().toISOString();
-    updates[`users/${user.uid}/registrationDate`] = new Date().toISOString();
-    updates[`users/${user.uid}/authProvider`] = providerName;
+    try {
+      const sequentialID = await getNextSequentialID();
+      console.log(`Assigning sequential ID ${sequentialID} to ${providerName} user ${user.uid}`);
 
-    return firebaseUpdate(ref(database), updates)
-      .then(() => {
-        console.log(`${providerName} user data saved with name:`, displayName);
-        localStorage.setItem("userUID", user.uid);
-        localStorage.setItem("userEmail", userEmail);
-        localStorage.setItem("userName", displayName);
-        navigate("/app");
-      })
-      .catch((dbError) => {
-        console.error(`Error saving ${providerName} user data:`, dbError);
-        localStorage.setItem("userUID", user.uid);
-        localStorage.setItem("userEmail", userEmail);
-        localStorage.setItem("userName", displayName);
-        Alert.alert(
-          "Partial Success",
-          "Account created, but there was an issue saving some details. You can update them in your profile."
-        );
-        navigate("/app");
-      });
+      const updates = {};
+      updates[`users/${user.uid}/email`] = userEmail;
+      updates[`users/${user.uid}/name`] = displayName;
+      updates[`users/${user.uid}/userInfo/name`] = displayName;
+      updates[`users/${user.uid}/userInfo/email`] = userEmail;
+      updates[`users/${user.uid}/profile/displayName`] = displayName;
+      updates[`users/${user.uid}/termsAccepted`] = true;
+      updates[`users/${user.uid}/termsAcceptedDate`] = new Date().toISOString();
+      updates[`users/${user.uid}/registrationDate`] = new Date().toISOString();
+      updates[`users/${user.uid}/authProvider`] = providerName;
+      updates[`users/${user.uid}/sequentialID`] = sequentialID; // Add sequential ID
+
+      return firebaseUpdate(ref(database), updates)
+        .then(() => {
+          console.log(`${providerName} user data saved with name: ${displayName}, Sequential ID: ${sequentialID}`);
+          localStorage.setItem("userUID", user.uid);
+          localStorage.setItem("userEmail", userEmail);
+          localStorage.setItem("userName", displayName);
+          navigate("/app");
+        })
+        .catch((dbError) => {
+          console.error(`Error saving ${providerName} user data:`, dbError);
+          // Still set localStorage and navigate as auth was successful
+          localStorage.setItem("userUID", user.uid);
+          localStorage.setItem("userEmail", userEmail);
+          localStorage.setItem("userName", displayName);
+          Alert.alert(
+            "Partial Success",
+            "Account created, but there was an issue saving some details (like sequential ID or other info). You can update them in your profile."
+          );
+          navigate("/app"); // Or a page indicating partial success
+        });
+    } catch (idError) {
+      console.error(`Failed to get sequential ID for ${providerName} user ${user.uid}:`, idError.message);
+      // If ID assignment is critical, throw error to be caught by OAuth handlers
+      // This will prevent navigation to /app and show an error to the user.
+      Alert.alert(
+        "Sign-Up Error",
+        `Account creation with ${providerName} succeeded, but failed to finalize account details (ID assignment). Please try again. Error: ${idError.message}`
+      );
+      // Rethrow to ensure the calling OAuth handler's .catch() is triggered and setIsLoading(false) is called.
+      throw idError;
+    }
   };
 
   const handleGoogleSignIn = async () => {
@@ -291,10 +338,7 @@ const Register = () => {
     }
     setIsLoading(true);
 
-    // saveUserData function is now more generic and defined above
-
     if (Platform.OS === "web") {
-      // Web Google Sign-In
       signInWithPopup(auth, googleProvider)
         .then(async (result) => {
           const user = result.user;
@@ -302,7 +346,7 @@ const Register = () => {
           await saveUserData(user, "google-web");
         })
         .catch((error) => {
-          console.error("Google Sign In Error (Web)", error);
+          console.error("Google Sign In Error (Web) or Save User Data Error", error);
           Alert.alert(
             "Google Sign-Up Error",
             `Failed to sign up with Google: ${error.message}`
@@ -328,7 +372,7 @@ const Register = () => {
         const finalName =
           googleNativeUser.name ||
           user.displayName ||
-          name.trim() ||
+          name.trim() || // Use name from state if available
           "Google User";
         const firebaseUserWithDetails = {
           ...user,
@@ -339,7 +383,7 @@ const Register = () => {
         console.log("Google sign-in successful (Native)", user.uid);
         await saveUserData(firebaseUserWithDetails, "google-native");
       } catch (error) {
-        let message = "Google Sign-Up failed. Please try again.";
+        let message = `Google Sign-Up failed: ${error.message || error.code || "Please try again."}`;
         if (error.code === statusCodes.SIGN_IN_CANCELLED) {
           message = "Google Sign-Up was cancelled.";
         } else if (error.code === statusCodes.IN_PROGRESS) {
@@ -348,8 +392,7 @@ const Register = () => {
           message =
             "Google Play services not available or outdated. Please update them.";
         } else {
-          console.error("Google Sign In Error (Native)", error);
-          message = `Google Sign-Up Error: ${error.message || error.code}`;
+          console.error("Google Sign In Error (Native) or Save User Data Error", error);
         }
         Alert.alert("Google Sign-Up Error", message);
       } finally {
@@ -367,20 +410,14 @@ const Register = () => {
       return;
     }
     setIsLoading(true);
-    // Note: For native platforms, signInWithPopup will open a browser.
-    // For a more integrated native experience, you might need a specific GitHub SDK
-    // to get a token and then use signInWithCredential(auth, GithubAuthProvider.credential(token)).
-    // Ensure you have enabled GitHub as a sign-in provider in your Firebase console.
     signInWithPopup(auth, githubProvider)
       .then(async (result) => {
         const user = result.user;
         console.log("GitHub sign-up successful", user.uid);
-        // The name field might not be pre-filled by GitHub in the same way as Google.
-        // `saveUserData` will use the entered name if available, or "GitHub User".
         await saveUserData(user, "github");
       })
       .catch((error) => {
-        console.error("GitHub Sign Up Error", error);
+        console.error("GitHub Sign Up Error or Save User Data Error", error);
         let errorMessage = `Failed to sign up with GitHub: ${error.message}`;
         if (error.code === "auth/account-exists-with-different-credential") {
           errorMessage =

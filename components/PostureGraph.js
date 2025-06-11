@@ -202,6 +202,7 @@ const PostureGraph = () => {
 
   // Add this state variable with your other useState declarations
   const [setupType, setSetupType] = useState("unknown"); // Add this line
+  const [sequentialID, setSequentialID] = useState(null);
 
   // Simple toast notification function (can be expanded)
   const showToast = (message, type = "success") => {
@@ -403,25 +404,44 @@ const PostureGraph = () => {
   useEffect(() => {
     if (!userUID) return;
 
-    const buzzerSettingRef = ref(database, `users/${userUID}/settings/buzzerEnabled`);
-    setIsUpdatingBuzzer(true); // Indicate loading
-    const unsubscribe = onValue(buzzerSettingRef, (snapshot) => {
-      if (snapshot.exists()) {
-        setBuzzerEnabled(snapshot.val());
-      } else {
-        // If not set in Firebase, default to true and update Firebase
-        set(buzzerSettingRef, true)
-          .then(() => setBuzzerEnabled(true))
-          .catch(error => console.error("Error setting default buzzer state:", error));
-      }
-      setIsUpdatingBuzzer(false);
-    }, (error) => {
-      console.error("Error fetching buzzer setting:", error);
-      setBuzzerEnabled(true); // Fallback to true on error
-      setIsUpdatingBuzzer(false);
-    });
+    const fetchUserData = async () => {
+      // Fetch sequential ID
+      const sequentialIdRef = ref(database, `users/${userUID}/sequentialID`);
+      get(sequentialIdRef)
+        .then((snapshot) => {
+          if (snapshot.exists()) {
+            setSequentialID(snapshot.val());
+          } else {
+            console.log("Sequential ID not found for user.");
+            setSequentialID("N/A");
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching sequential ID:", error);
+          setSequentialID("Error");
+        });
 
-    return () => unsubscribe();
+      // Fetch buzzer settings (existing code)
+      const buzzerSettingRef = ref(database, `users/${userUID}/settings/buzzerEnabled`);
+      setIsUpdatingBuzzer(true); // Indicate loading
+      const unsubscribeBuzzer = onValue(buzzerSettingRef, (snapshot) => {
+        if (snapshot.exists()) {
+          setBuzzerEnabled(snapshot.val());
+        } else {
+          set(buzzerSettingRef, true)
+            .then(() => setBuzzerEnabled(true))
+            .catch(error => console.error("Error setting default buzzer state:", error));
+        }
+        setIsUpdatingBuzzer(false);
+      }, (error) => {
+        console.error("Error fetching buzzer setting:", error);
+        setBuzzerEnabled(true); // Fallback to true on error
+        setIsUpdatingBuzzer(false);
+      });
+      return () => unsubscribeBuzzer();
+    };
+
+    fetchUserData();
   }, [userUID]);
 
   // Add this handler function to toggle the buzzer setting
@@ -4618,6 +4638,23 @@ const PostureGraph = () => {
             </TouchableOpacity>
           </View>
         )}
+      </Card>
+
+      {/* User Account Information Card - NEW */}
+      <Card style={styles.settingsCard}>
+        <Text style={styles.settingsCardTitle}>Account Information</Text>
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>User ID:</Text>
+          <Text style={styles.infoValue}>{sequentialID !== null ? sequentialID : "Loading..."}</Text>
+        </View>
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Email:</Text>
+          <Text style={styles.infoValue}>{auth.currentUser?.email || "Not available"}</Text>
+        </View>
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Internal UID:</Text>
+          <Text style={styles.infoValueSmall}>{userUID || "Not available"}</Text>
+        </View>
       </Card>
 
       {/* Device Calibration */}

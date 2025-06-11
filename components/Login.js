@@ -10,7 +10,7 @@ import {
   signInWithPopup,
 } from "firebase/auth";
 import { useNavigate } from "react-router-dom"; // Note: For React Native, consider React Navigation
-import { ref, set, get, update } from "firebase/database"; // Added update
+import { ref, set, get, update, runTransaction } from "firebase/database";
 import { auth, database } from "../firebase";
 import {
   View,
@@ -123,6 +123,28 @@ const Login = () => {
     }
     return () => clearTimeout(timer);
   }, [cooldownTime]);
+
+  const getNextSequentialID = async () => {
+    const counterRef = ref(database, "counters/lastUserID");
+    try {
+      const transactionResult = await runTransaction(counterRef, (currentData) => {
+        if (currentData === null) {
+          return 1; // Initialize to 1 if it doesn't exist
+        }
+        return currentData + 1; // Increment
+      });
+
+      if (transactionResult.committed) {
+        return transactionResult.snapshot.val(); // The new ID
+      } else {
+        console.error("getNextSequentialID transaction aborted during login-based signup.");
+        throw new Error("Failed to get next user ID due to transaction abort.");
+      }
+    } catch (error) {
+      console.error("Error in getNextSequentialID transaction during login-based signup:", error);
+      throw new Error(`Failed to allocate sequential user ID: ${error.message}`);
+    }
+  };
 
   // Enhanced email validation
   const validateEmail = (emailToValidate) => {
@@ -297,8 +319,6 @@ const Login = () => {
   const handleOAuthSignIn = async (providerName, user) => {
     localStorage.setItem("userUID", user.uid);
     localStorage.setItem("userEmail", user.email);
-    // For GitHub, user.displayName might be null initially if not set on their profile or not provided by the OAuth flow.
-    // It's good to have a fallback.
     const displayName =
       user.displayName ||
       `${providerName.charAt(0).toUpperCase() + providerName.slice(1)} User`;
@@ -308,27 +328,40 @@ const Login = () => {
     try {
       const snapshot = await get(userRef);
       if (!snapshot.exists()) {
+        // User is signing up for the first time via OAuth on the login page
+        const sequentialID = await getNextSequentialID(); // Get new sequential ID
+        console.log(`New OAuth user from login page. Assigning sequential ID: ${sequentialID}`);
         await set(userRef, {
           email: user.email,
           name: displayName,
           registrationDate: new Date().toISOString(),
           lastLogin: new Date().toISOString(),
           authProvider: providerName,
+          sequentialID: sequentialID, // Save the sequential ID
+          termsAccepted: true, // Assuming OAuth sign-up implies term acceptance
+          termsAcceptedDate: new Date().toISOString(),
+          // Add any other default fields you set during registration
         });
       } else {
+        // Existing user logging in
         await update(userRef, {
           lastLogin: new Date().toISOString(),
           authProvider: providerName, // Update auth provider in case they switch
+          // Optionally update name/email if they changed in OAuth provider, though this can be complex
+          // name: displayName, // Be cautious with overwriting existing names
+          // email: user.email,
         });
       }
       await set(ref(database, "currentUserUID"), user.uid);
       navigate("/app");
     } catch (dbError) {
       console.error(
-        `Error accessing or updating ${providerName} user data in DB:`,
+        `Error accessing/updating ${providerName} user data or getting sequential ID in DB:`,
         dbError
       );
-      // Still navigate if auth was successful
+      // If ID generation failed, you might want to alert the user or handle it
+      // For now, we still navigate if auth was successful, but the ID might be missing.
+      Alert.alert("Login Issue", `There was an issue finalizing your account details (ID: ${dbError.message}). Some features might be affected.`);
       navigate("/app");
     }
   };
@@ -342,7 +375,7 @@ const Login = () => {
         const result = await signInWithPopup(auth, googleProvider);
         const user = result.user;
         console.log("Google sign-in successful (Web)", user.uid);
-        await handleOAuthSignIn("google", user);
+        await handleOAuthSignIn("google", user); // Pass "google" as providerName
       } catch (error) {
         console.error("Google Sign In Error (Web)", error);
         setLoginError(`Google Sign-In Failed (Web): ${error.message}`);
@@ -362,14 +395,13 @@ const Login = () => {
           googleCredential
         );
         const firebaseUser = userCredential.user;
-        // Ensure displayName is passed correctly, preferring Google's info
         const userWithDetails = {
           ...firebaseUser,
           displayName: googleUser.name || firebaseUser.displayName,
           email: googleUser.email || firebaseUser.email,
         };
         console.log("Google sign-in successful (Native)", userWithDetails.uid);
-        await handleOAuthSignIn("google", userWithDetails);
+        await handleOAuthSignIn("google", userWithDetails); // Pass "google"
       } catch (error) {
         let message = "Google Sign-In failed. Please try again.";
         if (error.code === statusCodes.SIGN_IN_CANCELLED) {
@@ -395,13 +427,11 @@ const Login = () => {
   const handleGitHubSignIn = async () => {
     setIsLoading(true);
     setLoginError("");
-    // Note: For native platforms, signInWithPopup will open a browser.
-    // Ensure you have enabled GitHub as a sign-in provider in your Firebase console.
     try {
       const result = await signInWithPopup(auth, githubProvider);
       const user = result.user;
       console.log("GitHub sign-in successful", user.uid);
-      await handleOAuthSignIn("github", user);
+      await handleOAuthSignIn("github", user); // Pass "github" as providerName
     } catch (error) {
       console.error("GitHub Sign In Error", error);
       let errorMessage = `GitHub Sign-In Failed: ${error.message}`;

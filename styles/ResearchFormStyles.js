@@ -161,6 +161,25 @@ const styles = StyleSheet.create({
     color: THEME.text,
     backgroundColor: '#F9FAFB', // Subtle background for inputs
   },
+  inputError: {
+    borderColor: THEME.danger,
+    borderWidth: 1,
+  },
+  disabledInput: {
+    backgroundColor: THEME.lightGray, // Or another color to indicate non-editable
+    color: THEME.textSecondary,
+  },
+  infoText: {
+    fontSize: 12,
+    color: THEME.textSecondary,
+    marginTop: 4,
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginTop: 4,
+    // marginBottom: 8, // Optional: if more space is needed below error
+  },
   // ADDED: Styles for time input row and AM/PM selector
   timeInputRow: {
     flexDirection: 'row',
@@ -267,13 +286,13 @@ const styles = StyleSheet.create({
   },
   scaleNumbers: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-evenly',
     paddingHorizontal: 0, // Adjusted from 10 to 0, or remove if not needed, let scaleNumber handle spacing
   },
   scaleNumber: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 26, // Reduced from 36
+    height: 26, // Reduced from 36
+    borderRadius: 13, // Half of new width/height
     borderWidth: 2,
     borderColor: THEME.border,
     backgroundColor: '#FFFFFF',
@@ -285,7 +304,7 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.primary,
   },
   scaleNumberText: {
-    fontSize: 14,
+    fontSize: 12, // Reduced from 14 to better fit "10"
     color: THEME.text,
     fontWeight: '600',
   },

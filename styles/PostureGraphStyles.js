@@ -1237,6 +1237,9 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: THEME.text,
     marginBottom: 12,
+    '& > :last-child > .infoRow': { // Target last infoRow within a card
+      borderBottomWidth: 0,
+    },
   },
   settingsDescription: {
     fontSize: 15,
@@ -1257,7 +1260,32 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   settingsButton: {
-    marginTop: 8,
+    marginTop: 15,
+    paddingVertical: 12, // Ensure consistent button height
+  },
+  // Add these styles for the info rows in settings
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: THEME.lightGray,
+  },
+  infoLabel: {
+    fontSize: 15,
+    color: THEME.text,
+    fontWeight: '500',
+  },
+  infoValue: {
+    fontSize: 15,
+    color: THEME.textSecondary,
+  },
+  infoValueSmall: {
+    fontSize: 12,
+    color: THEME.textSecondary,
+    maxWidth: '60%', // Prevent long UIDs from breaking layout
+    textAlign: 'right',
   },
   logoutContainer: {
     alignItems: "center",
