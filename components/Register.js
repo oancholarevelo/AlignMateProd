@@ -201,7 +201,6 @@ const Register = () => {
       createUserWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
           const user = userCredential.user;
-          console.log("Registration successful", user.uid, "Sequential ID:", sequentialID);
 
           const updates = {};
           const trimmedName = name.trim();
