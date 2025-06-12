@@ -1,7 +1,3 @@
-Of course. Here is the `README.md` file content, generated from the comprehensive analysis of all the project files you provided.
-
------
-
 # AlignMate: A Smart Posture Monitoring and Correction System
 
 **AlignMate** is an innovative web application developed as a thesis project for the Polytechnic University of the Philippines. It leverages a custom IMU (Inertial Measurement Unit) sensor to provide real-time posture analysis, personalized feedback, and gamified achievements to help users improve their postural habits.
