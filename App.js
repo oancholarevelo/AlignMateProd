@@ -39,6 +39,7 @@ function App() {
         </Routes>
       </Router>
       <SpeedInsights />
+      <Analytics/>
     </AuthProvider>
   );
 }
