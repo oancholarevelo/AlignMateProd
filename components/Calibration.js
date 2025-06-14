@@ -186,8 +186,12 @@ const Calibration = () => {
     if (step > 0 && step <= 3) {
       setStepInProgress(true); // Mark step as in progress
 
-      // Set countdown duration - MUST complete before step can be marked as done
-      setCountdown(15);
+      // Set countdown duration - MUST complete before step can be marked as donecountdownContainer
+      if (step === 1) {
+        setCountdown(30); // Step 1 is 30 seconds
+      } else {
+        setCountdown(15); // Steps 2 and 3 are 15 seconds
+      }
 
       // Log the start of this calibration step
       const stepMessages = {
@@ -494,7 +498,11 @@ const Calibration = () => {
                     <View
                       style={[
                         styles.progressFill,
-                        { width: `${(countdown / 15) * 100}%` },
+                        {
+                          width: `${
+                            (countdown / (currentStep === 1 ? 30 : 15)) * 100
+                          }%`,
+                        },
                       ]}
                     />
                   </View>

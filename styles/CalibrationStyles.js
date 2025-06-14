@@ -188,6 +188,7 @@ export const styles = StyleSheet.create({
     fontWeight: "bold",
     color: THEME.text,
     marginBottom: 12,
+    textAlign: "center",
   },
   progressBar: {
     width: "100%",
