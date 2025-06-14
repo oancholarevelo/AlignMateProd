@@ -248,11 +248,12 @@ export const registerStyles = StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
     paddingHorizontal: 16,
-    paddingRight: 50,
+    paddingRight: 50, // Space for the icon
     fontSize: 16,
     fontWeight: "600",
     color: "#1B1212",
-    borderWidth: 0,
+    borderWidth: 0, // Border is on the container
+    minWidth: 0, // Add this to ensure proper flex behavior
   },
   eyeIcon: {
     position: "absolute",
@@ -625,12 +626,12 @@ export const loginStyles = StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
     paddingHorizontal: 16,
-    paddingRight: 50,
+    paddingRight: 50, // Space for the icon
     fontSize: 16,
     fontWeight: "600",
     color: "#1B1212",
-    borderWidth: 0,
-    minWidth: 0,
+    borderWidth: 0, // Border is on the container
+    minWidth: 0, // Already present and correct
   },
   eyeIcon: {
     position: "absolute",
