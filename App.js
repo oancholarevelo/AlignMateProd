@@ -6,6 +6,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import { Analytics } from "@vercel/analytics/react"
 import Login from "./components/Login";
 import Register from "./components/Register";
 import PostureGraph from "./components/PostureGraph";
