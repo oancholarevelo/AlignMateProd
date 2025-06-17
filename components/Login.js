@@ -8,9 +8,6 @@ import {
   sendPasswordResetEmail,
   signInWithCredential, // Added for Google Sign-In
   signInWithPopup,
-  setPersistence, // Import setPersistence
-  browserLocalPersistence, // For "Remember Me"
-  browserSessionPersistence, // For not "Remembering Me"
 } from "firebase/auth";
 import { useNavigate } from "react-router-dom"; // Note: For React Native, consider React Navigation
 import { ref, set, get, update, runTransaction } from "firebase/database";
@@ -26,7 +23,6 @@ import {
   Alert,
   ActivityIndicator,
   Platform, // For potential platform-specific logic if needed
-  // Consider adding a Checkbox component if not using a simple TouchableOpacity
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import {
@@ -38,7 +34,6 @@ import { loginStyles as styles } from "../styles/AuthStyles";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(true); // Added for "Remember Me", default to true
   const [resetEmail, setResetEmail] = useState("");
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -228,7 +223,7 @@ const Login = () => {
     }
   };
 
-  const handleLogin = async () => { // Made async
+  const handleLogin = () => {
     if (!email || !password) {
       setLoginError("Please fill in all fields");
       return;
@@ -236,70 +231,64 @@ const Login = () => {
     setIsLoading(true);
     setLoginError("");
 
-    try {
-      // Set persistence based on "Remember Me"
-      // This is primarily for web. Native platforms handle persistence differently.
-      if (Platform.OS === 'web') {
-        await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
-      }
+    signInWithEmailAndPassword(auth, email, password)
+      .then(async (userCredential) => {
+        // made async
+        const user = userCredential.user;
+        setLoginError("");
 
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      // made async
-      const user = userCredential.user;
-      setLoginError("");
+        // NOTE: localStorage is for web. For React Native, use AsyncStorage.
+        localStorage.setItem("userUID", user.uid);
+        localStorage.setItem("userEmail", user.email);
 
-      // NOTE: localStorage is for web. For React Native, use AsyncStorage.
-      localStorage.setItem("userUID", user.uid);
-      localStorage.setItem("userEmail", user.email);
-
-      const userRef = ref(database, `users/${user.uid}`);
-      try {
-        const snapshot = await get(userRef);
-        if (snapshot.exists()) {
-          const userData = snapshot.val();
-          if (userData.name) {
-            localStorage.setItem("userName", userData.name);
+        const userRef = ref(database, `users/${user.uid}`);
+        try {
+          const snapshot = await get(userRef);
+          if (snapshot.exists()) {
+            const userData = snapshot.val();
+            if (userData.name) {
+              localStorage.setItem("userName", userData.name);
+            }
+            // Update lastLogin
+            await update(userRef, {
+              // Changed from set to update to avoid overwriting other data
+              lastLogin: new Date().toISOString(),
+            });
+          } else {
+            // User exists in Auth but not in DB (should ideally not happen if registered correctly)
+            await set(userRef, {
+              email: user.email,
+              name: "User", // Default name
+              registrationDate: new Date().toISOString(), // Or first login
+              lastLogin: new Date().toISOString(),
+              authProvider: "email",
+            });
           }
-          // Update lastLogin
-          await update(userRef, {
-            // Changed from set to update to avoid overwriting other data
-            lastLogin: new Date().toISOString(),
-          });
-        } else {
-          // User exists in Auth but not in DB (should ideally not happen if registered correctly)
-          await set(userRef, {
-            email: user.email,
-            name: "User", // Default name
-            registrationDate: new Date().toISOString(), // Or first login
-            lastLogin: new Date().toISOString(),
-            authProvider: "email",
-          });
+          // Write the UID to the global currentUserUID path for hardware detection
+          await set(ref(database, "currentUserUID"), user.uid);
+        } catch (dbError) {
+          console.error(
+            "Error accessing or updating user data in DB:",
+            dbError
+          );
         }
-        // Write the UID to the global currentUserUID path for hardware detection
-        await set(ref(database, "currentUserUID"), user.uid);
-      } catch (dbError) {
-        console.error(
-          "Error accessing or updating user data in DB:",
-          dbError
-        );
-      }
 
-      navigate("/app"); // Or your desired screen
-    } catch (error) { // Catching persistence error or signIn error
-      let errorMessage = "Login failed. Please try again.";
-      if (error.code && error.code.startsWith('auth/')) {
+        navigate("/app"); // Or your desired screen
+      })
+      .catch((error) => {
+        let errorMessage = "Login failed. Please try again.";
         switch (error.code) {
           case "auth/user-not-found":
             errorMessage = "No account found with this email address.";
             break;
           case "auth/wrong-password":
-          case "auth/invalid-password":
+          case "auth/invalid-password": // Deprecated, but good to keep
             errorMessage = "Incorrect password. Please try again.";
             break;
           case "auth/invalid-email":
             errorMessage = "Please enter a valid email address.";
             break;
-          case "auth/invalid-credential":
+          case "auth/invalid-credential": // General error for wrong email/password
             errorMessage =
               "Invalid email or password. Please check your credentials.";
             break;
@@ -317,18 +306,14 @@ const Login = () => {
             break;
           default:
             console.error("Login error:", error);
-            errorMessage = `Login failed: ${error.message}`;
+            errorMessage = `Login failed: ${error.message}`; // More specific error
             break;
         }
-      } else {
-        // Handle non-Firebase auth errors (e.g., persistence error)
-        console.error("Login process error:", error);
-        errorMessage = `An unexpected error occurred: ${error.message}`;
-      }
-      setLoginError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
+        setLoginError(errorMessage);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   const handleOAuthSignIn = async (providerName, user) => {
@@ -385,16 +370,21 @@ const Login = () => {
     setIsLoading(true);
     setLoginError("");
 
-    try {
-      if (Platform.OS === 'web') {
-        await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
+    if (Platform.OS === "web") {
+      try {
         const result = await signInWithPopup(auth, googleProvider);
         const user = result.user;
         console.log("Google sign-in successful (Web)", user.uid);
-        await handleOAuthSignIn("google", user);
-      } else {
-        // Native Google Sign-In
-        // Persistence is typically handled by the native SDK by default
+        await handleOAuthSignIn("google", user); // Pass "google" as providerName
+      } catch (error) {
+        console.error("Google Sign In Error (Web)", error);
+        setLoginError(`Google Sign-In Failed (Web): ${error.message}`);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      // Native Google Sign-In
+      try {
         await GoogleSignin.hasPlayServices({
           showPlayServicesUpdateDialog: true,
         });
@@ -411,14 +401,9 @@ const Login = () => {
           email: googleUser.email || firebaseUser.email,
         };
         console.log("Google sign-in successful (Native)", userWithDetails.uid);
-        await handleOAuthSignIn("google", userWithDetails);
-      }
-    } catch (error) {
-      let message = "Google Sign-In failed. Please try again.";
-      if (Platform.OS === 'web') {
-        console.error("Google Sign In Error (Web)", error);
-        message = `Google Sign-In Failed (Web): ${error.message}`;
-      } else {
+        await handleOAuthSignIn("google", userWithDetails); // Pass "google"
+      } catch (error) {
+        let message = "Google Sign-In failed. Please try again.";
         if (error.code === statusCodes.SIGN_IN_CANCELLED) {
           message = "Google Sign-In was cancelled.";
         } else if (error.code === statusCodes.IN_PROGRESS) {
@@ -432,10 +417,10 @@ const Login = () => {
           message = `Google Sign-In Error: ${error.message || error.code}`;
           Alert.alert("Google Sign-In Error", message);
         }
+        setLoginError(message);
+      } finally {
+        setIsLoading(false);
       }
-      setLoginError(message);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -443,16 +428,10 @@ const Login = () => {
     setIsLoading(true);
     setLoginError("");
     try {
-      // This is typically a web-only flow with signInWithPopup
-      if (Platform.OS === 'web') {
-        await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
-      }
-      // If you have a native GitHub sign-in, you'd handle its persistence according to its SDK.
-      // For signInWithPopup, it's web.
       const result = await signInWithPopup(auth, githubProvider);
       const user = result.user;
       console.log("GitHub sign-in successful", user.uid);
-      await handleOAuthSignIn("github", user);
+      await handleOAuthSignIn("github", user); // Pass "github" as providerName
     } catch (error) {
       console.error("GitHub Sign In Error", error);
       let errorMessage = `GitHub Sign-In Failed: ${error.message}`;
@@ -689,17 +668,6 @@ const Login = () => {
           onPress={() => setShowPassword(!showPassword)}
         />
       </View>
-
-      {/* Remember Me Checkbox */}
-      <TouchableOpacity
-        style={styles.rememberMeContainer} // Add this style
-        onPress={() => setRememberMe(!rememberMe)}
-      >
-        <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
-          {rememberMe && <Text style={styles.checkboxTick}>✓</Text>}
-        </View>
-        <Text style={styles.rememberMeText}>Remember Me</Text>
-      </TouchableOpacity>
 
       {loginError ? (
         <View style={styles.errorContainer}>
