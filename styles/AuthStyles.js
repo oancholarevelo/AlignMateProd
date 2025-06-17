@@ -643,6 +643,37 @@ export const loginStyles = StyleSheet.create({
     alignItems: "center",
     zIndex: 1,
   },
+  rememberMeContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start", // Or 'center' or remove for full width
+    marginLeft: 40, // Adjust as per your input field's alignment
+    marginRight: 40,
+    marginBottom: 15,
+    marginTop: 5,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 1,
+    borderColor: "#5CA377", // Theme color
+    borderRadius: 3,
+    marginRight: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  checkboxChecked: {
+    backgroundColor: "#5CA377", // Theme color
+  },
+  checkboxTick: {
+    color: "#FFFFFF", // White tick
+    fontSize: 12,
+    fontWeight: "bold",
+  },
+  rememberMeText: {
+    fontSize: 14,
+    color: "#1B1212", // Dark text
+  },
 });
 
 export const logoutStyles = StyleSheet.create({
