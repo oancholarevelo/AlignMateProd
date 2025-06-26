@@ -422,22 +422,31 @@ const PostureGraph = () => {
         });
 
       // Fetch buzzer settings (existing code)
-      const buzzerSettingRef = ref(database, `users/${userUID}/settings/buzzerEnabled`);
+      const buzzerSettingRef = ref(
+        database,
+        `users/${userUID}/settings/buzzerEnabled`
+      );
       setIsUpdatingBuzzer(true); // Indicate loading
-      const unsubscribeBuzzer = onValue(buzzerSettingRef, (snapshot) => {
-        if (snapshot.exists()) {
-          setBuzzerEnabled(snapshot.val());
-        } else {
-          set(buzzerSettingRef, true)
-            .then(() => setBuzzerEnabled(true))
-            .catch(error => console.error("Error setting default buzzer state:", error));
+      const unsubscribeBuzzer = onValue(
+        buzzerSettingRef,
+        (snapshot) => {
+          if (snapshot.exists()) {
+            setBuzzerEnabled(snapshot.val());
+          } else {
+            set(buzzerSettingRef, true)
+              .then(() => setBuzzerEnabled(true))
+              .catch((error) =>
+                console.error("Error setting default buzzer state:", error)
+              );
+          }
+          setIsUpdatingBuzzer(false);
+        },
+        (error) => {
+          console.error("Error fetching buzzer setting:", error);
+          setBuzzerEnabled(true); // Fallback to true on error
+          setIsUpdatingBuzzer(false);
         }
-        setIsUpdatingBuzzer(false);
-      }, (error) => {
-        console.error("Error fetching buzzer setting:", error);
-        setBuzzerEnabled(true); // Fallback to true on error
-        setIsUpdatingBuzzer(false);
-      });
+      );
       return () => unsubscribeBuzzer();
     };
 
@@ -445,23 +454,29 @@ const PostureGraph = () => {
   }, [userUID]);
 
   // Add this handler function to toggle the buzzer setting
-  const handleToggleBuzzer = useCallback(async (value) => {
-    if (!userUID) return;
-    setIsUpdatingBuzzer(true);
-    try {
-      const buzzerSettingRef = ref(database, `users/${userUID}/settings/buzzerEnabled`);
-      await set(buzzerSettingRef, value);
-      // setBuzzerEnabled(value); // State will be updated by the onValue listener
-      showToast(`Posture alarm ${value ? 'enabled' : 'disabled'}.`, 'info');
-    } catch (error) {
-      console.error("Error updating buzzer setting:", error);
-      showToast('Failed to update buzzer setting.', 'error');
-      // Optionally revert local state if Firebase update fails and listener doesn't catch it
-      // setBuzzerEnabled(!value); 
-    } finally {
-      // setIsUpdatingBuzzer(false); // Listener will set this
-    }
-  }, [userUID, showToast]);
+  const handleToggleBuzzer = useCallback(
+    async (value) => {
+      if (!userUID) return;
+      setIsUpdatingBuzzer(true);
+      try {
+        const buzzerSettingRef = ref(
+          database,
+          `users/${userUID}/settings/buzzerEnabled`
+        );
+        await set(buzzerSettingRef, value);
+        // setBuzzerEnabled(value); // State will be updated by the onValue listener
+        showToast(`Posture alarm ${value ? "enabled" : "disabled"}.`, "info");
+      } catch (error) {
+        console.error("Error updating buzzer setting:", error);
+        showToast("Failed to update buzzer setting.", "error");
+        // Optionally revert local state if Firebase update fails and listener doesn't catch it
+        // setBuzzerEnabled(!value);
+      } finally {
+        // setIsUpdatingBuzzer(false); // Listener will set this
+      }
+    },
+    [userUID, showToast]
+  );
 
   // Animate component on mount
   useEffect(() => {
@@ -873,15 +888,23 @@ const PostureGraph = () => {
       // 3. Get aggregated data for the selected date
       //    The existing useEffect for aggregatedData also updates based on selectedDate.
 
-      console.log("Exporting - goodPosturePercentage:", goodPosturePercentage, typeof goodPosturePercentage);
-    console.log("Exporting - badPosturePercentage:", badPosturePercentage, typeof badPosturePercentage);
+      console.log(
+        "Exporting - goodPosturePercentage:",
+        goodPosturePercentage,
+        typeof goodPosturePercentage
+      );
+      console.log(
+        "Exporting - badPosturePercentage:",
+        badPosturePercentage,
+        typeof badPosturePercentage
+      );
 
       const reportData = {
         userName: userName || "AlignMate User",
         reportDate: selectedDate,
         postureData: dailyPostureData,
         mlData: dailyMlData,
-        aggregatedData: aggregatedData.filter(item => item.dataCount > 0), // Use current aggregatedData state
+        aggregatedData: aggregatedData.filter((item) => item.dataCount > 0), // Use current aggregatedData state
         goodPosturePercentage: goodPosturePercentage,
         badPosturePercentage: badPosturePercentage,
         latestPrediction: latestPrediction, // This is the overall latest, might need to be specific to the day
@@ -2093,7 +2116,7 @@ const PostureGraph = () => {
 
     if (selectedDateData.length === 0) {
       setGoodPosturePercentage(0); // Store as number
-      setBadPosturePercentage(0);  // Store as number
+      setBadPosturePercentage(0); // Store as number
       return;
     }
 
@@ -2124,8 +2147,14 @@ const PostureGraph = () => {
     } else {
       selectedDateData.forEach((entry) => {
         // Ensure customThresholds are numbers before comparison
-        const goodThreshold = typeof customThresholds.good === 'number' ? customThresholds.good : PITCH_GOOD_THRESHOLD;
-        const warningThreshold = typeof customThresholds.warning === 'number' ? customThresholds.warning : PITCH_WARNING_THRESHOLD;
+        const goodThreshold =
+          typeof customThresholds.good === "number"
+            ? customThresholds.good
+            : PITCH_GOOD_THRESHOLD;
+        const warningThreshold =
+          typeof customThresholds.warning === "number"
+            ? customThresholds.warning
+            : PITCH_WARNING_THRESHOLD;
 
         if (entry.pitch <= goodThreshold) {
           goodCount++;
@@ -2140,7 +2169,7 @@ const PostureGraph = () => {
     const total = goodCount + badCount + warningCount;
     if (total === 0) {
       setGoodPosturePercentage(0); // Store as number
-      setBadPosturePercentage(0);  // Store as number
+      setBadPosturePercentage(0); // Store as number
       return;
     }
 
@@ -2150,7 +2179,6 @@ const PostureGraph = () => {
 
     setGoodPosturePercentage(goodPercentageNumber);
     setBadPosturePercentage(badPercentageNumber);
-
   }, [data, mlData, selectedDate, customThresholds]);
 
   useEffect(() => {
@@ -3364,13 +3392,19 @@ const PostureGraph = () => {
         <Card style={[styles.statsBox, { backgroundColor: THEME.primary }]}>
           <Text style={styles.statsLabel}>Good Posture</Text>
           <Text style={styles.statsPercentage}>
-            {typeof goodPosturePercentage === 'number' ? goodPosturePercentage.toFixed(1) : '0.0'}%
+            {typeof goodPosturePercentage === "number"
+              ? goodPosturePercentage.toFixed(1)
+              : "0.0"}
+            %
           </Text>
         </Card>
         <Card style={[styles.statsBox, { backgroundColor: THEME.danger }]}>
           <Text style={styles.statsLabel}>Poor Posture</Text>
           <Text style={styles.statsPercentage}>
-            {typeof badPosturePercentage === 'number' ? badPosturePercentage.toFixed(1) : '0.0'}%
+            {typeof badPosturePercentage === "number"
+              ? badPosturePercentage.toFixed(1)
+              : "0.0"}
+            %
           </Text>
         </Card>
       </View>
@@ -4645,15 +4679,21 @@ const PostureGraph = () => {
         <Text style={styles.settingsCardTitle}>Account Information</Text>
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>User ID:</Text>
-          <Text style={styles.infoValue}>{sequentialID !== null ? sequentialID : "Loading..."}</Text>
+          <Text style={styles.infoValue}>
+            {sequentialID !== null ? sequentialID : "Loading..."}
+          </Text>
         </View>
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Email:</Text>
-          <Text style={styles.infoValue}>{auth.currentUser?.email || "Not available"}</Text>
+          <Text style={styles.infoValue}>
+            {auth.currentUser?.email || "Not available"}
+          </Text>
         </View>
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Internal UID:</Text>
-          <Text style={styles.infoValueSmall}>{userUID || "Not available"}</Text>
+          <Text style={styles.infoValueSmall}>
+            {userUID || "Not available"}
+          </Text>
         </View>
       </Card>
 
@@ -4687,24 +4727,39 @@ const PostureGraph = () => {
       <Card style={styles.settingsCard}>
         <Text style={styles.settingsCardTitle}>Posture Alarm (Buzzer)</Text>
         <Text style={styles.settingsDescription}>
-          Control the audible alarm from your AlignMate device. This is typically used for "Experimental" mode feedback.
+          Control the audible alarm from your AlignMate device. This is
+          typically used for "Experimental" mode feedback.
         </Text>
         <View style={styles.buzzerControlRow}>
           <Text style={styles.buzzerControlLabel}>
             Device Alarm: {buzzerEnabled ? "ON" : "OFF"}
           </Text>
           <Switch
-            trackColor={{ false: THEME.lightGray || "#d3d3d3", true: THEME.primaryLight || "#a9d8b8" }}
-            thumbColor={buzzerEnabled ? (THEME.primary || "#5CA377") : (THEME.mediumGray || "#8e8e8e")}
+            trackColor={{
+              false: THEME.lightGray || "#d3d3d3",
+              true: THEME.primaryLight || "#a9d8b8",
+            }}
+            thumbColor={
+              buzzerEnabled
+                ? THEME.primary || "#5CA377"
+                : THEME.mediumGray || "#8e8e8e"
+            }
             ios_backgroundColor={THEME.lightGray || "#d3d3d3"}
             onValueChange={handleToggleBuzzer}
             value={buzzerEnabled}
             disabled={isUpdatingBuzzer}
           />
         </View>
-        {isUpdatingBuzzer && <ActivityIndicator size="small" color={THEME.primary || "#5CA377"} style={{ alignSelf: 'center', marginVertical: 10 }} />}
+        {isUpdatingBuzzer && (
+          <ActivityIndicator
+            size="small"
+            color={THEME.primary || "#5CA377"}
+            style={{ alignSelf: "center", marginVertical: 10 }}
+          />
+        )}
         <Text style={styles.settingsSubtleNote}>
-          Note: For research purposes, the "Controlled" group typically has the alarm disabled by researchers, regardless of this setting.
+          Note: For research purposes, the "Controlled" group typically has the
+          alarm disabled by researchers, regardless of this setting.
         </Text>
       </Card>
 
@@ -4734,10 +4789,20 @@ const PostureGraph = () => {
       <Card style={styles.settingsCard}>
         <Text style={styles.settingsCardTitle}>Data Export</Text>
         <Text style={styles.settingsDescription}>
-          Export your posture data for {isViewingToday ? "today" : `the selected day (${formatSelectedDate()})`} as a PDF document.
+          Export your posture data for{" "}
+          {isViewingToday
+            ? "today"
+            : `the selected day (${formatSelectedDate()})`}{" "}
+          as a PDF document.
         </Text>
         <Button
-          title={isExporting ? "Exporting..." : `Export ${isViewingToday ? "Today's" : "Selected Day's"} Report (PDF)`}
+          title={
+            isExporting
+              ? "Exporting..."
+              : `Export ${
+                  isViewingToday ? "Today's" : "Selected Day's"
+                } Report (PDF)`
+          }
           type="primary"
           onPress={handleExportDailyReport}
           style={styles.settingsButton}
@@ -4747,10 +4812,10 @@ const PostureGraph = () => {
 
       {/* Research Section */}
       <Card style={styles.settingsCard}>
-        <Text style={styles.settingsCardTitle}>Research & Support</Text>
+        <Text style={styles.settingsCardTitle}>Help Improve AlignMate</Text>
         <Text style={styles.settingsDescription}>
-          Help us improve AlignMate by sharing your experience, suggestions, or
-          reporting issues.
+          Share your experience and suggestions to help us make AlignMate
+          better. We value your detailed evaluation of the system.
         </Text>
 
         <Button
